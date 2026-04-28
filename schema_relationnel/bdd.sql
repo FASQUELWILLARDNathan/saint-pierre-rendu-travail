@@ -11,6 +11,7 @@ CREATE TABLE users(
 CREATE TABLE eleves(
    id_user BIGINT PRIMARY KEY,
    classe VARCHAR(50),
+   annee VARCHAR(11),
    FOREIGN KEY(id_user) REFERENCES users(id_user) ON DELETE CASCADE
 );
 

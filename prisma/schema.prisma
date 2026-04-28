@@ -18,7 +18,7 @@ model User {
   prenom            String      @db.VarChar(50)
   login             String      @unique @db.VarChar(50)
   hashed_password   String      @db.VarChar(255)
-  role              String      @db.VarChar(50) // admin, professeur, eleve
+  role              String      @db.VarChar(50)
   created_at        DateTime    @default(now())
 
   eleve             Eleve?
@@ -29,6 +29,7 @@ model User {
 model Eleve {
   id_user   BigInt    @id
   classe    String?   @db.VarChar(50)
+  annee     String?   @db.VarChar(50)
   user      User      @relation(fields: [id_user], references: [id_user], onDelete: Cascade)
   rendus    Rendu[]
 }
