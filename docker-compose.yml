@@ -1,0 +1,69 @@
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: saint-pierre-postgres
+    environment:
+      POSTGRES_USER: ${DB_USER:-nathanf}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-Nathan17111983!}
+      POSTGRES_DB: ${DB_NAME:-saintpierrestage}
+    ports:
+      - '${DB_PORT:-5432}:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${DB_USER:-nathanf} -d ${DB_NAME:-saintpierrestage}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend API
+  backend:
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile.backend
+    container_name: saint-pierre-backend
+    environment:
+      DATABASE_URL: postgresql://nathanf:Nathan17111983!@postgres:5432/saintpierrestage
+      NODE_ENV: ${NODE_ENV:-development}
+      PORT: ${API_PORT:-3000}
+    ports:
+      - '${API_PORT:-3000}:3000'
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - app-network
+    volumes:
+      - .:/app
+      - /app/node_modules
+    command: sh -c "npm run prisma:setup && npm run dev:api"
+
+  # Frontend Application
+  frontend:
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile.frontend
+    container_name: saint-pierre-frontend
+    environment:
+      VITE_API_URL: ${VITE_API_URL:-http://localhost:3000}
+    ports:
+      - '${FRONTEND_PORT:-5173}:5173'
+    depends_on:
+      - backend
+    networks:
+      - app-network
+    volumes:
+      - .:/app
+      - /app/node_modules
+    command: npm run dev
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  app-network:
+    driver: bridge

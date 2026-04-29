@@ -15,6 +15,7 @@ CREATE TABLE "User" (
 CREATE TABLE "Eleve" (
     "id_user" BIGINT NOT NULL,
     "classe" VARCHAR(50),
+    "annee" VARCHAR(50),
 
     CONSTRAINT "Eleve_pkey" PRIMARY KEY ("id_user")
 );

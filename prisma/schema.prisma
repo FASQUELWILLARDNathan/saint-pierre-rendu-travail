@@ -4,15 +4,14 @@
 // Get a free hosted Postgres database in seconds: `npx create-db`
 
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
 }
 
-model User {
+model user {
   id_user           BigInt      @id @default(autoincrement())
   nom               String      @db.VarChar(50)
   prenom            String      @db.VarChar(50)
@@ -21,66 +20,66 @@ model User {
   role              String      @db.VarChar(50)
   created_at        DateTime    @default(now())
 
-  eleve             Eleve?
-  professeur        Professeur?
-  rendus            Rendu[]
+  eleve             eleve?
+  professeur        professeur?
+  rendus            rendu[]
 }
 
-model Eleve {
+model eleve {
   id_user   BigInt    @id
   classe    String?   @db.VarChar(50)
   annee     String?   @db.VarChar(50)
-  user      User      @relation(fields: [id_user], references: [id_user], onDelete: Cascade)
-  rendus    Rendu[]
+  user      user      @relation(fields: [id_user], references: [id_user], onDelete: Cascade)
+  rendus    rendu[]
 }
 
-model Professeur {
+model professeur {
   id_user               BigInt    @id
   matiere               String?   @db.VarChar(50)
-  user                  User      @relation(fields: [id_user], references: [id_user], onDelete: Cascade)
-  cours                 Cours[]
-  asso_professeur_devoirs AssProfDevoir[]
+  user                  user      @relation(fields: [id_user], references: [id_user], onDelete: Cascade)
+  cours                 cours[]
+  asso_professeur_devoirs assprofdevoir[]
 }
 
-model Cours {
+model cours {
   id_cours              BigInt      @id @default(autoincrement())
   id_user               BigInt
   nom_cours             String      @db.VarChar(50)
   description_cours     String?     @db.Text
-  professeur            Professeur  @relation(fields: [id_user], references: [id_user])
-  devoirs               Devoir[]
+  professeur            professeur  @relation(fields: [id_user], references: [id_user])
+  devoirs               devoir[]
 }
 
-model Devoir {
+model devoir {
   id_devoir             BigInt      @id @default(autoincrement())
   id_cours              BigInt
   nom_devoir            String      @db.VarChar(255)
   description_devoir    String?     @db.Text
   coefficient           Decimal?    @db.Decimal(5, 2)
-  cours                 Cours       @relation(fields: [id_cours], references: [id_cours])
-  rendus                Rendu[]
-  professeurs           AssProfDevoir[]
+  cours                 cours       @relation(fields: [id_cours], references: [id_cours])
+  rendus                rendu[]
+  professeurs           assprofdevoir[]
 }
 
-model AssProfDevoir {
+model assprofdevoir {
   id_user               BigInt
   id_devoir             BigInt
-  professeur            Professeur  @relation(fields: [id_user], references: [id_user])
-  devoir                Devoir      @relation(fields: [id_devoir], references: [id_devoir])
+  professeur            professeur  @relation(fields: [id_user], references: [id_user])
+  devoir                devoir      @relation(fields: [id_devoir], references: [id_devoir])
 
   @@id([id_user, id_devoir])
 }
 
-model Rendu {
+model rendu {
   id_rendu              BigInt      @id @default(autoincrement())
   id_devoir             BigInt
   id_user               BigInt
   date_rendu            DateTime?
   note                  Decimal?    @db.Decimal(5, 2)
   retour                String?     @db.VarChar(255)
-  devoir                Devoir      @relation(fields: [id_devoir], references: [id_devoir])
-  eleve                 Eleve       @relation(fields: [id_user], references: [id_user])
+  devoir                devoir      @relation(fields: [id_devoir], references: [id_devoir])
+  eleve                 eleve       @relation(fields: [id_user], references: [id_user])
 
   @@unique([id_devoir, id_user])
-  users User[]
+  users user[]
 }
