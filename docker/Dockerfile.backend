@@ -1,25 +1,22 @@
-# Backend API Dockerfile
 FROM node:22-alpine
 
 WORKDIR /app
 
-# Copier UNIQUEMENT package.json pour que le cache fonctionne
+# 1. package.json d'abord (cache Docker)
 COPY package*.json ./
 
-# Installer les dépendances
-RUN npm ci --only=production && npm ci --also=dev
+# 2. install unique propre
+RUN npm ci
 
-# Copier la configuration Prisma
+# 3. Prisma schema seulement
 COPY prisma ./prisma/
 
-# Générer le client Prisma
+# 4. generate Prisma client
 RUN npx prisma generate
 
-# Maintenant copier le reste du code (après que npm cache soit construit)
+# 5. reste du code
 COPY . .
 
-# Exposer le port API
 EXPOSE 3000
 
-# CMD exécutera la commande définie dans docker-compose.yml
 CMD ["npm", "run", "dev:api"]

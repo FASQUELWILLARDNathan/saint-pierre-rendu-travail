@@ -1,6 +1,8 @@
 import express from 'express'
 import { PrismaClient } from '@prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'
+import bcrypt from 'bcrypt'
+import jwt from 'jsonwebtoken'
 
 const app = express()
 
@@ -9,12 +11,14 @@ if (!connectionString) {
   throw new Error('DATABASE_URL environment variable is required')
 }
 
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-this'
+
 const adapter = new PrismaPg({
   connectionString,
 })
 
 const prisma = new PrismaClient({ adapter })
-const PORT = process.env.PORT || 3000
+const PORT = process.env.PORT
 
 // Middleware
 app.use(express.json())
@@ -45,6 +49,25 @@ app.use((req, res, next) => {
   }
 })
 
+// BigInt JSON Serializer Middleware
+app.use((req, res, next) => {
+  const originalJson = res.json
+  res.json = function (data: any) {
+    return originalJson.call(
+      this,
+      JSON.parse(
+        JSON.stringify(data, (key, value) => {
+          if (typeof value === 'bigint') {
+            return value.toString()
+          }
+          return value
+        }),
+      ),
+    )
+  }
+  next()
+})
+
 // Utility functions
 function isValidBigInt(value: string): boolean {
   try {
@@ -62,10 +85,130 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() })
 })
 
+// Authentication Routes
+app.post('/auth/sign-up', async (req, res) => {
+  try {
+    const { nom, prenom, login, password, role } = req.body
+
+    if (!nom || !prenom || !login || !password || !role) {
+      return res.status(400).json({ error: 'Missing required fields' })
+    }
+
+    // Check if login already exists
+    const existingUser = await prisma.utilisateur.findUnique({
+      where: { login },
+    })
+
+    if (existingUser) {
+      return res.status(409).json({ error: 'Login already exists' })
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10)
+
+    // Create utilisateur
+    const user = await prisma.utilisateur.create({
+      data: {
+        nom,
+        prenom,
+        login,
+        hashed_password: hashedPassword,
+        role,
+      },
+      include: {
+        eleve: true,
+        professeur: true,
+      },
+    })
+
+    // If role is eleve, create eleve record
+    if (role === 'eleve') {
+      await prisma.eleve.create({
+        data: {
+          id_user: user.id_user,
+        },
+      })
+    }
+
+    // Generate JWT token
+    const token = jwt.sign({ id_user: user.id_user.toString(), login: user.login }, JWT_SECRET)
+
+    res.json({
+      token,
+      user: {
+        id_user: user.id_user.toString(),
+        nom: user.nom,
+        prenom: user.prenom,
+        login: user.login,
+        role: user.role,
+      },
+    })
+  } catch (error) {
+    console.error('Error during sign up:', error)
+    res.status(500).json({ error: 'Failed to sign up' })
+  }
+})
+
+app.post('/auth/sign-in', async (req, res) => {
+  try {
+    const { login, password } = req.body
+
+    if (!login || !password) {
+      return res.status(400).json({ error: 'Missing login or password' })
+    }
+
+    // Find user by login
+    const user = await prisma.utilisateur.findUnique({
+      where: { login },
+      include: {
+        eleve: true,
+        professeur: true,
+      },
+    })
+
+    if (!user) {
+      return res.status(401).json({ error: 'Invalid login or password' })
+    }
+
+    // Verify password
+    const isPasswordValid = await bcrypt.compare(password, user.hashed_password)
+
+    if (!isPasswordValid) {
+      return res.status(401).json({ error: 'Invalid login or password' })
+    }
+
+    // Generate JWT token
+    const token = jwt.sign({ id_user: user.id_user.toString(), login: user.login }, JWT_SECRET)
+
+    res.json({
+      token,
+      user: {
+        id_user: user.id_user.toString(),
+        nom: user.nom,
+        prenom: user.prenom,
+        login: user.login,
+        role: user.role,
+      },
+    })
+  } catch (error) {
+    console.error('Error during sign in:', error)
+    res.status(500).json({ error: 'Failed to sign in' })
+  }
+})
+
+app.post('/auth/logout', async (req, res) => {
+  try {
+    res.json({ message: 'Logged out successfully' })
+  } catch (error) {
+    console.error('Error during logout:', error)
+    res.status(500).json({ error: 'Failed to logout' })
+  }
+})
+
 // Users
 app.get('/api/users', async (req, res) => {
   try {
-    const users = await prisma.user.findMany({
+    const users = await prisma.utilisateur.findMany({
       include: {
         eleve: true,
         professeur: true,
@@ -86,7 +229,7 @@ app.get('/api/users/:id', async (req, res) => {
       return res.status(400).json({ error: 'Invalid user ID' })
     }
 
-    const user = await prisma.user.findUnique({
+    const user = await prisma.utilisateur.findUnique({
       where: { id_user: BigInt(id) },
       include: {
         eleve: true,
