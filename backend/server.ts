@@ -4,8 +4,10 @@ import { PrismaPg } from '@prisma/adapter-pg'
 
 const app = express()
 
-const connectionString =
-  process.env.DATABASE_URL || 'postgresql://nathanf:Nathan17111983!@postgres:5432/saintpierrestage'
+const connectionString = process.env.DATABASE_URL
+if (!connectionString) {
+  throw new Error('DATABASE_URL environment variable is required')
+}
 
 const adapter = new PrismaPg({
   connectionString,
@@ -17,17 +19,41 @@ const PORT = process.env.PORT || 3000
 // Middleware
 app.use(express.json())
 
-// CORS pour le frontend
+// CORS - Accepter seulement le frontend local
+const ALLOWED_ORIGINS = [
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'http://127.0.0.1:5173',
+  'http://127.0.0.1:3000',
+]
+
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*')
+  const origin = req.headers.origin
+
+  if (ALLOWED_ORIGINS.includes(origin as string)) {
+    res.header('Access-Control-Allow-Origin', origin)
+  }
+
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+  res.header('Access-Control-Allow-Credentials', 'true')
+
   if (req.method === 'OPTIONS') {
     res.sendStatus(200)
   } else {
     next()
   }
 })
+
+// Utility functions
+function isValidBigInt(value: string): boolean {
+  try {
+    BigInt(value)
+    return !isNaN(Number(value)) && Number(value) > 0
+  } catch {
+    return false
+  }
+}
 
 // Routes API
 
@@ -47,26 +73,35 @@ app.get('/api/users', async (req, res) => {
     })
     res.json(users)
   } catch (error) {
-    res.status(500).json({ error: String(error) })
+    console.error('Error fetching users:', error)
+    res.status(500).json({ error: 'Failed to fetch users' })
   }
 })
 
 app.get('/api/users/:id', async (req, res) => {
   try {
+    const { id } = req.params
+
+    if (!isValidBigInt(id)) {
+      return res.status(400).json({ error: 'Invalid user ID' })
+    }
+
     const user = await prisma.user.findUnique({
-      where: { id_user: BigInt(req.params.id) },
+      where: { id_user: BigInt(id) },
       include: {
         eleve: true,
         professeur: true,
       },
     })
+
     if (!user) {
-      res.status(404).json({ error: 'User not found' })
-    } else {
-      res.json(user)
+      return res.status(404).json({ error: 'User not found' })
     }
+
+    res.json(user)
   } catch (error) {
-    res.status(500).json({ error: String(error) })
+    console.error('Error fetching user:', error)
+    res.status(500).json({ error: 'Failed to fetch user' })
   }
 })
 
@@ -81,7 +116,8 @@ app.get('/api/professeurs', async (req, res) => {
     })
     res.json(professeurs)
   } catch (error) {
-    res.status(500).json({ error: String(error) })
+    console.error('Error fetching professeurs:', error)
+    res.status(500).json({ error: 'Failed to fetch professeurs' })
   }
 })
 
@@ -96,7 +132,8 @@ app.get('/api/eleves', async (req, res) => {
     })
     res.json(eleves)
   } catch (error) {
-    res.status(500).json({ error: String(error) })
+    console.error('Error fetching eleves:', error)
+    res.status(500).json({ error: 'Failed to fetch eleves' })
   }
 })
 
@@ -115,7 +152,8 @@ app.get('/api/cours', async (req, res) => {
     })
     res.json(cours)
   } catch (error) {
-    res.status(500).json({ error: String(error) })
+    console.error('Error fetching cours:', error)
+    res.status(500).json({ error: 'Failed to fetch cours' })
   }
 })
 
@@ -138,7 +176,8 @@ app.get('/api/devoirs', async (req, res) => {
     })
     res.json(devoirs)
   } catch (error) {
-    res.status(500).json({ error: String(error) })
+    console.error('Error fetching devoirs:', error)
+    res.status(500).json({ error: 'Failed to fetch devoirs' })
   }
 })
 
@@ -161,25 +200,43 @@ app.get('/api/rendus', async (req, res) => {
     })
     res.json(rendus)
   } catch (error) {
-    res.status(500).json({ error: String(error) })
+    console.error('Error fetching rendus:', error)
+    res.status(500).json({ error: 'Failed to fetch rendus' })
   }
 })
 
-// Error handling
+// Global error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error(err)
+  console.error('Unhandled error:', err)
   res.status(500).json({ error: 'Internal Server Error' })
 })
 
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({ error: 'Route not found' })
+})
+
 // Start server
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`🚀 API Server running on http://localhost:${PORT}`)
   console.log(`📚 Health check: http://localhost:${PORT}/api/health`)
 })
 
 // Graceful shutdown
-process.on('SIGINT', async () => {
+const gracefulShutdown = async () => {
   console.log('\n🛑 Shutting down gracefully...')
-  await prisma.$disconnect()
-  process.exit(0)
-})
+  server.close(async () => {
+    await prisma.$disconnect()
+    console.log('✅ Server closed and database disconnected')
+    process.exit(0)
+  })
+
+  // Force close after 10 seconds
+  setTimeout(() => {
+    console.error('⚠️  Forcing shutdown')
+    process.exit(1)
+  }, 10000)
+}
+
+process.on('SIGINT', gracefulShutdown)
+process.on('SIGTERM', gracefulShutdown)
