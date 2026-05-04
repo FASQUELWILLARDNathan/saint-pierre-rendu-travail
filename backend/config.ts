@@ -15,13 +15,13 @@ const adapter = new PrismaPg({
 export const prisma = new PrismaClient({ adapter })
 
 // API Configuration
-export const PORT = process.env.PORT
-export const NODE_ENV = process.env.NODE_ENV
+export const PORT = process.env.PORT || 3000
+export const NODE_ENV = process.env.NODE_ENV || 'development'
 
 // CORS Configuration
-export const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS
-  ? process.env.ALLOWED_ORIGINS.split(',')
-  : []
+export const ALLOWED_ORIGINS = (
+  process.env.ALLOWED_ORIGINS || 'http://localhost:5173,http://localhost:3000'
+).split(',')
 
 // Initialize services
 startKeyRotation()
