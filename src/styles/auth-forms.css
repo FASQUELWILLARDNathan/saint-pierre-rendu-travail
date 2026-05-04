@@ -1,0 +1,209 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+* {
+  font-family: 'Inter', sans-serif;
+}
+
+/* Base container */
+.auth-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #205781 0%, #1a3a5c 100%);
+  padding: 20px;
+}
+
+/* Logo section */
+.logo-section {
+  margin-top: 20px;
+  margin-bottom: 20px;
+  animation: slideDown 0.6s ease-out;
+}
+
+.logo {
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.15));
+}
+
+/* Card */
+.auth-card {
+  width: 100%;
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 50px 40px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  animation: slideUp 0.6s ease-out;
+}
+
+/* Title */
+.title {
+  color: #205781;
+  font-size: 48px;
+  font-weight: 800;
+  margin: 0 0 16px 0;
+  letter-spacing: -0.5px;
+}
+
+/* Subtitle */
+.subtitle {
+  color: #000000;
+  opacity: 0.5;
+  font-size: 18px;
+  font-weight: 400;
+  margin: 0 0 32px 0;
+  line-height: 1.5;
+}
+
+/* Form */
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 24px;
+}
+
+/* Form group */
+.form-group {
+  position: relative;
+}
+
+/* Form input */
+.form-input {
+  width: 100%;
+  padding: 14px 18px;
+  font-size: 16px;
+  font-weight: 400;
+  border: 2px solid #656262;
+  border-radius: 20px;
+  background: #ffffff;
+  color: #000000;
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+}
+
+.form-input::placeholder {
+  color: #656262;
+  opacity: 0.7;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #4f959d;
+  box-shadow: 0 0 0 3px rgba(79, 149, 157, 0.1);
+}
+
+/* Form select */
+.form-select {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23656262' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 18px center;
+  padding-right: 45px;
+}
+
+/* Submit button */
+.submit-btn {
+  width: 100%;
+  padding: 16px 24px;
+  background-color: #4f959d;
+  color: #ffffff;
+  border: none;
+  border-radius: 20px;
+  font-size: 24px;
+  font-weight: 500;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 8px;
+}
+
+.submit-btn:hover:not(:disabled) {
+  background-color: #438a92;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(79, 149, 157, 0.3);
+}
+
+.submit-btn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 4px 12px rgba(79, 149, 157, 0.2);
+}
+
+.submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Footer */
+.footer {
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 400;
+  opacity: 0.9;
+  text-align: center;
+  margin-top: 60px;
+  padding-bottom: 10px;
+}
+
+/* Links */
+.auth-link {
+  color: #4f959d;
+  font-size: 15px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: opacity 0.2s ease;
+}
+
+.auth-link:hover {
+  opacity: 0.8;
+  text-decoration: underline;
+}
+
+/* Animations */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive design */
+@media (max-width: 600px) {
+  .auth-card {
+    padding: 30px 20px;
+  }
+
+  .title {
+    font-size: 36px;
+  }
+
+  .subtitle {
+    font-size: 14px;
+    margin-bottom: 24px;
+  }
+
+  .submit-btn {
+    font-size: 18px;
+    padding: 14px 20px;
+  }
+
+  .form-input {
+    padding: 12px 16px;
+    font-size: 14px;
+  }
+}
