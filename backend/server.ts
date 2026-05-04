@@ -3,6 +3,7 @@ import { prisma, PORT } from './config.ts'
 import { corsMiddleware } from './middleware/cors.ts'
 import { bigintMiddleware } from './middleware/bigint.ts'
 import authRoutes from './routes/auth.ts'
+import usersRoutes from './routes/users.ts'
 
 const app = express()
 
@@ -18,6 +19,7 @@ app.get('/api/health', (req, res) => {
 
 // Routes
 app.use('/auth', authRoutes)
+app.use('/api/users', usersRoutes)
 
 // Error handling
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
