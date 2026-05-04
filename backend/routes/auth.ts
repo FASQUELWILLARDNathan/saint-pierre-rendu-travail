@@ -11,10 +11,6 @@ router.post('/sign-up', async (req: express.Request, res: express.Response) => {
     const { nom, prenom, login, password, role, classe, annee } = req.body
     let eleve: eleve | undefined
 
-    console.log('BODY SIGNUP:', req.body)
-    console.log('CLASSE TYPE:', typeof classe, classe)
-    console.log('ANNEE TYPE:', typeof annee, annee)
-
     if (!nom || !prenom || !login || !password || !role) {
       return res.status(400).json({ error: 'Missing required fields' })
     }

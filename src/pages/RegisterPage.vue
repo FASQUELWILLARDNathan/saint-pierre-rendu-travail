@@ -80,22 +80,28 @@ const isEleve = computed(() => role.value === 'eleve')
 
 const handleSignUp = async () => {
   if (!nom.value || !prenom.value || !password.value || !annee.value || !role.value) {
-  alert('Veuillez remplir tous les champs')
-  return
-}
+    alert('Veuillez remplir tous les champs')
+    return
+  }
 
-if (role.value === 'eleve' && !classe.value) {
-  alert('Classe obligatoire pour un élève')
-  return
-}
+  if (role.value === 'eleve' && !classe.value) {
+    alert('Classe obligatoire pour un élève')
+    return
+  }
 
-  // Générer le login: 3 premières lettres du nom + 2 derniers chiffres première année + 3 premières lettres du prénom + 2 derniers chiffres deuxième année
+
+
+  // création du login
   const [year1, year2] = annee.value.map((t) => new Date(t).getFullYear())
+  const clean = (str: string) =>
+  str
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // enlève accents
+    .replace(/\s+/g, '')
+
   const generatedLogin =
-    nom.value.substring(0, 3) +
-    String(year1).slice(-2) +
-    prenom.value.substring(0, 3) +
-    String(year2).slice(-2)
+    clean(nom.value) + '.' + clean(prenom.value)
 
   isLoading.value = true
   try {
