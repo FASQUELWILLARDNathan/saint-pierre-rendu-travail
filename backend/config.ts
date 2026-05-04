@@ -1,6 +1,6 @@
 import { PrismaClient } from '@prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'
-import { startKeyRotation } from './jwt-manager'
+import { startKeyRotation } from './jwt-manager.ts'
 
 // Database Configuration
 const connectionString = process.env.DATABASE_URL
@@ -15,13 +15,13 @@ const adapter = new PrismaPg({
 export const prisma = new PrismaClient({ adapter })
 
 // API Configuration
-export const PORT = process.env.PORT || 3000
-export const NODE_ENV = process.env.NODE_ENV || 'development'
+export const PORT = process.env.PORT
+export const NODE_ENV = process.env.NODE_ENV
 
 // CORS Configuration
-export const ALLOWED_ORIGINS = (
-  process.env.ALLOWED_ORIGINS || 'http://localhost:5173,http://localhost:3000'
-).split(',')
+export const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(',')
+  : []
 
 // Initialize services
 startKeyRotation()

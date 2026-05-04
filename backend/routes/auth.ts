@@ -1,8 +1,8 @@
 import express, { Router } from 'express'
 import bcrypt from 'bcrypt'
 import type { eleve } from '@prisma/client'
-import { prisma } from '../config'
-import { signToken } from '../jwt-manager'
+import { prisma } from '../config.ts'
+import { signToken } from '../jwt-manager.ts'
 
 const router = Router()
 

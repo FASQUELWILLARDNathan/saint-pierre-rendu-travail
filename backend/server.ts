@@ -1,8 +1,8 @@
 import express from 'express'
-import { prisma, PORT } from './config'
-import { corsMiddleware } from './middleware/cors'
-import { bigintMiddleware } from './middleware/bigint'
-import authRoutes from './routes/auth'
+import { prisma, PORT } from './config.ts'
+import { corsMiddleware } from './middleware/cors.ts'
+import { bigintMiddleware } from './middleware/bigint.ts'
+import authRoutes from './routes/auth.ts'
 
 const app = express()
 

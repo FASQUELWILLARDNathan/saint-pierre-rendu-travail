@@ -1,5 +1,5 @@
 import express from 'express'
-import { ALLOWED_ORIGINS } from '../config'
+import { ALLOWED_ORIGINS } from '../config.ts'
 
 export const corsMiddleware = (
   req: express.Request,
