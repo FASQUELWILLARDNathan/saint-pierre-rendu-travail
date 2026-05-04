@@ -9,7 +9,7 @@ const router = Router()
 router.post('/sign-up', async (req: express.Request, res: express.Response) => {
   try {
     const { nom, prenom, login, password, role, classe, annee } = req.body
-    let eleveRecord: eleve | undefined
+    let eleve: eleve | undefined
 
     console.log('BODY SIGNUP:', req.body)
     console.log('CLASSE TYPE:', typeof classe, classe)
@@ -54,13 +54,7 @@ router.post('/sign-up', async (req: express.Request, res: express.Response) => {
       const safeClasse = String(req.body.classe)
       const safeAnnee = String(req.body.annee)
 
-      console.log('➡️ INSERT ELEVE:', {
-        id_user: user.id_user,
-        classe: safeClasse,
-        annee: safeAnnee,
-      })
-
-      eleveRecord = await prisma.eleve.create({
+      eleve = await prisma.eleve.create({
         data: {
           id_user: user.id_user,
           classe: safeClasse,
@@ -79,7 +73,7 @@ router.post('/sign-up', async (req: express.Request, res: express.Response) => {
         prenom: user.prenom,
         login: user.login,
         role: user.role,
-        eleve: eleveRecord,
+        eleve: eleve,
       },
     })
   } catch (error) {
