@@ -20,4 +20,6 @@ export interface SignUpPayload {
   login: string
   password: string
   role: string
+  classe: string
+  annee: string
 }

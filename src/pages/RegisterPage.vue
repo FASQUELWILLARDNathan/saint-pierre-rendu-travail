@@ -6,15 +6,20 @@
     <NFormItem label="Prenom" required>
       <NInput v-model:value="prenom" type="text" placeholder="Nathan" />
     </NFormItem>
-    <n-form-item label="Classe" path="selectValue">
+    <NFormItem label="Role" required>
       <n-select
-        v-model:value="model.selectValue"
-        placeholder="Premiere"
-        :options="generalOptions"
+        v-model:value="role"
+        :options="[
+          { label: 'Élève', value: 'eleve' },
+          { label: 'Professeur', value: 'professeur' }
+        ]"
       />
+    </NFormItem>
+    <n-form-item v-if="isEleve" label="Classe">
+      <n-select v-model:value="classe" :options="generalOptions" />
     </n-form-item>
-    <NFormItem label="Annee Scolaire" requied>
-      <n-date-picker v-model:value="timestamp" type="yearrange" clearable />
+    <NFormItem label="Annee Scolaire">
+      <n-date-picker v-model:value="annee" type="yearrange" clearable />
     </NFormItem>
     <NFormItem label="Mot de passe" required>
       <NInput
@@ -34,7 +39,7 @@
 
 <script setup lang="ts">
 import { NButton, NFormItem } from 'naive-ui'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { ROUTES } from '@/router'
@@ -49,7 +54,9 @@ const password = ref('')
 const isLoading = ref(false)
 const now = Date.now()
 const oneYearAgo = new Date().setFullYear(new Date().getFullYear() - 1)
-const timestamp = ref<[number, number]>([oneYearAgo, now])
+const annee = ref<[number, number]>([oneYearAgo, now])
+const role = ref<'eleve' | 'professeur'>('eleve')
+const classe = ref<string | null>(null)
 
 const model = ref({
   selectValue: null,
@@ -69,20 +76,21 @@ const generalOptions = [
   value: v,
 }))
 
+const isEleve = computed(() => role.value === 'eleve')
+
 const handleSignUp = async () => {
-  if (
-    !nom.value ||
-    !prenom.value ||
-    !password.value ||
-    !timestamp.value ||
-    !model.value.selectValue
-  ) {
-    alert('Veuillez remplir tous les champs')
-    return
-  }
+  if (!nom.value || !prenom.value || !password.value || !annee.value || !role.value) {
+  alert('Veuillez remplir tous les champs')
+  return
+}
+
+if (role.value === 'eleve' && !classe.value) {
+  alert('Classe obligatoire pour un élève')
+  return
+}
 
   // Générer le login: 3 premières lettres du nom + 2 derniers chiffres première année + 3 premières lettres du prénom + 2 derniers chiffres deuxième année
-  const [year1, year2] = timestamp.value.map((t) => new Date(t).getFullYear())
+  const [year1, year2] = annee.value.map((t) => new Date(t).getFullYear())
   const generatedLogin =
     nom.value.substring(0, 3) +
     String(year1).slice(-2) +
@@ -96,7 +104,9 @@ const handleSignUp = async () => {
       prenom: prenom.value,
       login: generatedLogin,
       password: password.value,
-      role: model.value.selectValue,
+      role: role.value,
+      classe: role.value === 'eleve' ? classe.value ?? '' : '',
+      annee: `${year1}-${year2}`,
     })
     router.push(ROUTES.HOME)
   } catch (error) {

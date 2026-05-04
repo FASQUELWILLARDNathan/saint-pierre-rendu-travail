@@ -29,7 +29,7 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   const signUp = async (payload: SignUpPayload) => {
-    const { nom, prenom, login, password, role } = payload
+    const { nom, prenom, login, password, role, classe, annee } = payload
     const useAPI = useApi()
     const response = await useAPI.signUp({
       nom: nom,
@@ -37,6 +37,8 @@ export const useAuthStore = defineStore('auth', () => {
       login: login,
       password: password,
       role: role,
+      classe: classe,
+      annee: annee
     })
     set('token', response.token)
     set('user', response.user)

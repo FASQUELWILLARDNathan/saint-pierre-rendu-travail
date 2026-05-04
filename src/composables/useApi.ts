@@ -45,10 +45,18 @@ export function useApi() {
     })
 
   /** Crée un nouveau compte. Retourne le token JWT et les infos utilisateur. */
-  const signUp = ({ nom, prenom, login, password, role }: SignUpPayload) =>
+  const signUp = ({ nom, prenom, login, password, role, classe, annee }: SignUpPayload) =>
     request<AuthResponse>('/auth/sign-up', {
       method: 'POST',
-      body: JSON.stringify({ nom, prenom, login, password, role }),
+      body: JSON.stringify({
+        nom,
+        prenom,
+        login,
+        password,
+        role,
+        classe,
+        annee,
+      }),
     })
 
   /** Déconnecte l'utilisateur */
