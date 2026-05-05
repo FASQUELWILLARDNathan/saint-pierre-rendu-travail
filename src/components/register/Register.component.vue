@@ -265,19 +265,21 @@ const handleSignUp = async () => {
 
 /* Register specific overrides */
 .register-card {
-  max-width: 520px;
+  max-width: 650px;
 }
 
 .register-form {
-  gap: 16px;
+  gap: 20px;
 }
 
 .title {
-  text-align: center;
+  text-align: left;
+  margin-left: 5px;
 }
 
 .subtitle {
-  text-align: center;
+  text-align: left;
+  margin-left: 10px;
 }
 
 .form-row {
@@ -339,9 +341,8 @@ const handleSignUp = async () => {
   color: #1a5f7a;
 }
 
-.password-toggle svg {
+.password-icon {
   width: 20px;
   height: 20px;
-  stroke: currentColor;
 }
 </style>

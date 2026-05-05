@@ -252,10 +252,9 @@ onMounted(() => {
   color: #1a5f7a;
 }
 
-.password-toggle svg {
+.password-icon {
   width: 20px;
   height: 20px;
-  stroke: currentColor;
 }
 
 .status-message {
