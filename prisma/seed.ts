@@ -25,7 +25,8 @@ async function main() {
     create: {
       nom: 'Dupont',
       prenom: 'Jean',
-      login: 'jdupont',
+      login: 'dupont.jean',
+      email: 'dupont.jean@gmail.com',
       hashed_password: passwordProf,
       role: 'professeur',
     },
@@ -40,7 +41,8 @@ async function main() {
     create: {
       nom: 'Martin',
       prenom: 'Marie',
-      login: 'mmartin',
+      login: 'martin.marie',
+      email: 'martin.marie@gmail.com',
       hashed_password: passwordProf,
       role: 'professeur',
     },
@@ -52,7 +54,8 @@ async function main() {
     create: {
       nom: 'Moreau',
       prenom: 'Pierre',
-      login: 'pmoreau',
+      login: 'moreau.pierre',
+      email: 'moreau.pierre@cs-saintpierrecalais.fr',
       hashed_password: passwordEleve,
       role: 'eleve',
     },
@@ -64,7 +67,8 @@ async function main() {
     create: {
       nom: 'Bernard',
       prenom: 'Sophie',
-      login: 'sbernard',
+      login: 'bernard.sophie',
+      email: 'bernard.sophie@cs-saintpierrecalais.fr',
       hashed_password: passwordEleve,
       role: 'eleve',
     },
@@ -76,7 +80,8 @@ async function main() {
     create: {
       nom: 'Thomas',
       prenom: 'Luc',
-      login: 'lthomas',
+      login: 'thomas.luc',
+      email: 'thomas.luc@cs-saintpierrecalais.fr',
       hashed_password: passwordEleve,
       role: 'eleve',
     },

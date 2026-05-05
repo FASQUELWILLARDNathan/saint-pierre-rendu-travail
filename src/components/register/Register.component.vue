@@ -25,7 +25,7 @@
           </div>
         </div>
 
-        <!-- Role and Classe row -->
+        <!-- Role and Classe/Email row -->
         <div class="form-row">
           <div class="form-group">
             <select v-model="role" class="form-input form-select" required>
@@ -47,6 +47,23 @@
               <option value="autre">Autre</option>
             </select>
           </div>
+          <div v-else-if="role === 'professeur'" class="form-group">
+            <input v-model="email" type="email" placeholder="Email" class="form-input" required />
+          </div>
+        </div>
+
+        <!-- Auto-generated email for students -->
+        <div v-if="role === 'eleve'" class="form-group">
+          <input
+            :value="emailDisplay"
+            type="text"
+            placeholder="Email (généré automatiquement)"
+            class="form-input"
+            disabled
+          />
+          <small style="color: #656262; margin-top: 4px; display: block"
+            >Email généré: nom.prenom@cs-saintpierrecalais.fr</small
+          >
         </div>
 
         <!-- Année scolaire input (full width) -->
@@ -105,6 +122,7 @@ const authStore = useAuthStore()
 const nom = ref('')
 const prenom = ref('')
 const password = ref('')
+const email = ref('')
 const isLoading = ref(false)
 const now = Date.now()
 const oneYearAgo = new Date().setFullYear(new Date().getFullYear() - 1)
@@ -140,6 +158,20 @@ const anneeDisplay = computed(() => {
   return ''
 })
 
+const emailDisplay = computed(() => {
+  if (role.value === 'eleve' && nom.value && prenom.value) {
+    const clean = (str: string) =>
+      str
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '') // remove accents
+        .replace(/\s+/g, '') // remove spaces
+
+    return `${clean(nom.value)}.${clean(prenom.value)}@cs-saintpierrecalais.fr`
+  }
+  return ''
+})
+
 const handleSignUp = async () => {
   if (!nom.value || !prenom.value || !password.value || !annee.value || !role.value) {
     alert('Veuillez remplir tous les champs')
@@ -148,6 +180,11 @@ const handleSignUp = async () => {
 
   if (role.value === 'eleve' && !classe.value) {
     alert('Classe obligatoire pour un élève')
+    return
+  }
+
+  if (role.value === 'professeur' && !email.value) {
+    alert('Email obligatoire pour un professeur')
     return
   }
 
@@ -162,6 +199,9 @@ const handleSignUp = async () => {
 
   const generatedLogin = clean(nom.value) + '.' + clean(prenom.value)
 
+  // For students, email is auto-generated
+  const finalEmail = role.value === 'eleve' ? emailDisplay.value : email.value
+
   isLoading.value = true
   try {
     await authStore.signUp({
@@ -172,6 +212,7 @@ const handleSignUp = async () => {
       role: role.value,
       classe: role.value === 'eleve' ? (classe.value ?? '') : '',
       annee: `${year1}-${year2}`,
+      email: finalEmail,
     })
     router.push(ROUTES.HOME)
   } catch (error) {

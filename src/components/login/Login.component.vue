@@ -39,7 +39,9 @@
 
         <!-- Forgot password link -->
         <div class="forgot-password">
-          <a href="#" class="forgot-link auth-link">Mot de passe oublié ?</a>
+          <router-link to="/forgot-password" class="forgot-link auth-link"
+            >Mot de passe oublié ?</router-link
+          >
         </div>
 
         <!-- Submit button -->

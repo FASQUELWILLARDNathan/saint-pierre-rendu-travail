@@ -3,6 +3,8 @@ import { createRouter, createWebHistory, type RouteLocationNormalized } from 'vu
 import LoginPage from './pages/LoginPage.vue'
 import RegisterPage from './pages/RegisterPage.vue'
 import HomePage from './pages/HomePage.vue'
+import ForgotPasswordPage from './pages/ForgotPasswordPage.vue'
+import ResetPasswordPage from './pages/ResetPasswordPage.vue'
 import { useAuthStore } from './stores/auth.store'
 
 export const ROUTES = {
@@ -10,6 +12,8 @@ export const ROUTES = {
   LOGIN: '/login',
   REGISTER: '/register',
   LOGOUT: '/logout',
+  FORGOT_PASSWORD: '/forgot-password',
+  RESET_PASSWORD: '/reset-password',
 } as const
 
 const routes = [
@@ -26,6 +30,16 @@ const routes = [
   {
     path: ROUTES.REGISTER,
     component: RegisterPage,
+    meta: { requiresAuth: false },
+  },
+  {
+    path: ROUTES.FORGOT_PASSWORD,
+    component: ForgotPasswordPage,
+    meta: { requiresAuth: false },
+  },
+  {
+    path: ROUTES.RESET_PASSWORD,
+    component: ResetPasswordPage,
     meta: { requiresAuth: false },
   },
   {
