@@ -92,21 +92,24 @@ const handleForgotPassword = async () => {
 @import '@/styles/auth-forms.css';
 
 .forgot-password-card {
-  max-width: 420px;
+  max-width: 600px;
 }
 
 .forgot-form {
-  gap: 16px;
+  gap: 20px;
 }
 
 .title {
-  text-align: center;
+  text-align: left;
+  margin-left: 10px;
+  font-size: 35px;
 }
 
 .subtitle {
-  text-align: center;
+  text-align: left;
   color: #656262;
   margin-bottom: 20px;
+  margin-left: 10px
 }
 
 .logo {
