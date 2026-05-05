@@ -11,9 +11,12 @@ model utilisateur {
   nom             String      @db.VarChar(50)
   prenom          String      @db.VarChar(50)
   login           String      @unique @db.VarChar(50)
+  email           String      @unique @db.VarChar(255)
   hashed_password String      @db.VarChar(255)
   role            String      @db.VarChar(50)
   created_at      DateTime    @default(now())
+  reset_token     String?
+  reset_token_expiry DateTime?
   eleve           eleve?
   professeur      professeur?
   rendus          rendu[]     @relation("renduToutilisateur")

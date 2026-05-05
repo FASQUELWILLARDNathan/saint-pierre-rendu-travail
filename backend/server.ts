@@ -1,3 +1,4 @@
+import 'dotenv/config'
 import express from 'express'
 import { prisma, PORT } from './config.ts'
 import { corsMiddleware } from './middleware/cors.ts'

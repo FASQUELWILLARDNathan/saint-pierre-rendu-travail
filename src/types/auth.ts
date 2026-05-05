@@ -2,6 +2,7 @@ export interface User {
   id: number
   login: string
   username: string
+  email?: string
 }
 
 export interface AuthResponse {
@@ -22,4 +23,5 @@ export interface SignUpPayload {
   role: string
   classe: string
   annee: string
+  email: string
 }
