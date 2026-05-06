@@ -6,77 +6,90 @@ datasource db {
   provider = "postgresql"
 }
 
+// Represente un utilisateur du systeme
+// Il peut etre eleve ou professeur ou administrateur mais a inserer dans la base de donnees pour une question de securité
 model utilisateur {
-  id_user         BigInt      @id @default(autoincrement())
-  nom             String      @db.VarChar(50)
-  prenom          String      @db.VarChar(50)
-  login           String      @unique @db.VarChar(50)
-  email           String      @unique @db.VarChar(255)
-  hashed_password String      @db.VarChar(255)
-  role            String      @db.VarChar(50)
-  created_at      DateTime    @default(now())
-  reset_token     String?
-  reset_token_expiry DateTime?
-  eleve           eleve?
-  professeur      professeur?
-  rendus          rendu[]     @relation("renduToutilisateur")
+  id_user                 BigInt            @id @default(autoincrement())
+  nom                     String            @db.VarChar(50)
+  prenom                  String            @db.VarChar(50)
+  login                   String            @unique @db.VarChar(50)
+  email                   String            @unique @db.VarChar(255)
+  hashed_password         String            @db.VarChar(255)
+  role                    String            @db.VarChar(50)
+  created_at              DateTime          @default(now())
+  reset_token             String?
+  reset_token_expiry      DateTime?
+  eleve                   eleve?
+  professeur              professeur?
 }
 
+
+// Extension de utilisateur pour eleve
 model eleve {
-  id_user BigInt      @id
-  classe  String?     @db.VarChar(50)
-  annee   String?     @db.VarChar(50)
-  user    utilisateur @relation(fields: [id_user], references: [id_user], onDelete: Cascade)
-  rendus  rendu[]
+  id_user                 BigInt            @id
+  classe                  String?           @db.VarChar(50)
+  annee                   String?           @db.VarChar(50)
+  user                    utilisateur       @relation(fields: [id_user], references: [id_user], onDelete: Cascade)
+  rendus                  rendu[]
 }
 
+// Extension de utilisateur pour professeur
 model professeur {
-  id_user                 BigInt          @id
-  matiere                 String?         @db.VarChar(50)
+  id_user                 BigInt            @id
+  matiere                 String?           @db.VarChar(50)
   asso_professeur_devoirs assprofdevoir[]
   cours                   cours[]
-  user                    utilisateur     @relation(fields: [id_user], references: [id_user], onDelete: Cascade)
+  user                    utilisateur       @relation(fields: [id_user], references: [id_user], onDelete: Cascade)
 }
 
+
+// Un cours est créé par un professeur unique
 model cours {
-  id_cours          BigInt     @id @default(autoincrement())
-  id_user           BigInt
-  nom_cours         String     @unique @db.VarChar(50)
-  description_cours String?
-  professeur        professeur @relation(fields: [id_user], references: [id_user])
-  devoirs           devoir[]
+  id_cours              BigInt              @id @default(autoincrement())
+  id_user               BigInt
+  nom_cours             String              @unique @db.VarChar(50)
+  description_cours     String?
+  professeur            professeur          @relation(fields: [id_user], references: [id_user])
+  devoirs               devoir[]
 }
 
+
+// Un devoirs appartient a un seul cours
 model devoir {
-  id_devoir          BigInt          @id @default(autoincrement())
-  id_cours           BigInt
-  nom_devoir         String          @unique @db.VarChar(255)
-  description_devoir String?
-  coefficient        Decimal?        @db.Decimal(5, 2)
-  professeurs        assprofdevoir[]
-  cours              cours           @relation(fields: [id_cours], references: [id_cours])
-  rendus             rendu[]
+  id_devoir             BigInt              @id @default(autoincrement())
+  id_cours              BigInt
+  nom_devoir            String              @unique @db.VarChar(255)
+  description_devoir    String?
+  coefficient           Decimal?            @db.Decimal(5, 2)
+  professeurs           assprofdevoir[]
+  cours                 cours               @relation(fields: [id_cours], references: [id_cours])
+  rendus                rendu[]
 }
 
+
+// Table de liaison entre professeur et devoir (relation N:N)
 model assprofdevoir {
-  id_user    BigInt
-  id_devoir  BigInt
-  devoir     devoir     @relation(fields: [id_devoir], references: [id_devoir])
-  professeur professeur @relation(fields: [id_user], references: [id_user])
+  id_user               BigInt
+  id_devoir             BigInt
+  devoir                devoir              @relation(fields: [id_devoir], references: [id_devoir])
+  professeur            professeur          @relation(fields: [id_user], references: [id_user])
 
   @@id([id_user, id_devoir])
 }
 
+
+// Represente le rendu d'un devoir par un eleve
+// Un eleve ne peut rendre qu'une seul fois un devoir
+// Contient la note et le retour du professeur
 model rendu {
-  id_rendu   BigInt        @id @default(autoincrement())
-  id_devoir  BigInt
-  id_user    BigInt
-  date_rendu DateTime?
-  note       Decimal?      @db.Decimal(5, 2)
-  retour     String?       @db.VarChar(255)
-  devoir     devoir        @relation(fields: [id_devoir], references: [id_devoir])
-  eleve      eleve         @relation(fields: [id_user], references: [id_user])
-  users      utilisateur[] @relation("renduToutilisateur")
+  id_rendu              BigInt              @id @default(autoincrement())
+  id_devoir             BigInt
+  id_user               BigInt
+  date_rendu            DateTime?
+  note                  Decimal?            @db.Decimal(5, 2)
+  retour                String?             @db.VarChar(255)
+  devoir                devoir              @relation(fields: [id_devoir], references: [id_devoir])
+  eleve                 eleve               @relation(fields: [id_user], references: [id_user])
 
   @@unique([id_devoir, id_user])
 }
