@@ -13,11 +13,6 @@
       <!-- Subtitle -->
       <p class="subtitle">Entrez votre email pour recevoir un lien de réinitialisation</p>
 
-      <!-- Status message -->
-      <div v-if="message" :class="['status-message', messageType]">
-        {{ message }}
-      </div>
-
       <!-- Form -->
       <form @submit.prevent="handleForgotPassword" class="forgot-form auth-form">
         <div class="form-group">
@@ -45,16 +40,17 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useMessage } from 'naive-ui'
 
 const email = ref('')
 const isLoading = ref(false)
-const message = ref('')
-const messageType = ref<'success' | 'error'>('error')
+const message = useMessage()
 
 const handleForgotPassword = async () => {
   if (!email.value) {
-    message.value = 'Veuillez entrer votre email'
-    messageType.value = 'error'
+    message.warning('Veuillez entrer votre email', {
+      duration: 3000,
+    })
     return
   }
 
@@ -75,12 +71,14 @@ const handleForgotPassword = async () => {
       throw new Error('Erreur lors de la demande')
     }
 
-    message.value = 'Si cet email existe, un lien de réinitialisation a été envoyé.'
-    messageType.value = 'success'
+    message.success('Si cet email existe, un lien de réinitialisation a été envoyé.', {
+      duration: 3000,
+    })
     email.value = ''
   } catch (error) {
-    message.value = 'Erreur lors de la demande. Veuillez réessayer.'
-    messageType.value = 'error'
+    message.error('Erreur lors de la demande. Veuillez réessayer.', {
+      duration: 3000,
+    })
     console.error('Forgot password error:', error)
   } finally {
     isLoading.value = false
@@ -109,7 +107,7 @@ const handleForgotPassword = async () => {
   text-align: left;
   color: #656262;
   margin-bottom: 20px;
-  margin-left: 10px
+  margin-left: 10px;
 }
 
 .logo {

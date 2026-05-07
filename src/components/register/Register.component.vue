@@ -88,6 +88,7 @@
               :type="showPassword ? 'text' : 'password'"
               placeholder="Mot de passe"
               class="form-input"
+              autocomplete="new-password"
               required
             />
             <button
@@ -141,18 +142,40 @@
     <div class="footer">
       <p>Copyright © 2026, Tous droits réservés.</p>
     </div>
+
+    <!-- Modal for displaying generated login -->
+    <div v-if="showLoginModal" class="modal-overlay" @click.self="closeModal">
+      <div class="modal-content">
+        <h2>Compte créé avec succès!</h2>
+        <p style="margin: 20px 0; font-size: 16px; color: #656262">Votre identifiant est:</p>
+        <div class="login-display">
+          <span class="login-value">{{ generatedLogin }}</span>
+          <div class="login-actions">
+            <button type="button" class="copy-btn" @click="copyToClipboard" title="Copier">
+              <img src="/copy-icon.svg" alt="Copier" />
+            </button>
+          </div>
+        </div>
+        <p style="margin-top: 16px; font-size: 14px; color: #656262">
+          Conservez cet identifiant pour vos connexions ultérieures.
+        </p>
+        <button type="button" class="modal-btn" @click="closeModal">Valider</button>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useMessage } from 'naive-ui'
 
 import { ROUTES } from '@/router'
 import { useAuthStore } from '@/stores/auth.store'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const message = useMessage()
 
 const nom = ref('')
 const prenom = ref('')
@@ -160,6 +183,8 @@ const password = ref('')
 const showPassword = ref(false)
 const email = ref('')
 const isLoading = ref(false)
+const showLoginModal = ref(false)
+const generatedLogin = ref('')
 const now = Date.now()
 const oneYearAgo = new Date().setFullYear(new Date().getFullYear() - 1)
 const annee = ref<[number, number]>([oneYearAgo, now])
@@ -208,19 +233,43 @@ const emailDisplay = computed(() => {
   return ''
 })
 
+const copyToClipboard = async () => {
+  try {
+    await navigator.clipboard.writeText(generatedLogin.value)
+    message.success('Identifiant copié!', {
+      duration: 2000,
+    })
+  } catch (err) {
+    message.error('Erreur lors de la copie', {
+      duration: 2000,
+    })
+  }
+}
+
+const closeModal = () => {
+  showLoginModal.value = false
+  router.push(ROUTES.HOME)
+}
+
 const handleSignUp = async () => {
   if (!nom.value || !prenom.value || !password.value || !annee.value || !role.value) {
-    alert('Veuillez remplir tous les champs')
+    message.warning('Veuillez remplir tous les champs', {
+      duration: 3000,
+    })
     return
   }
 
   if (role.value === 'eleve' && !classe.value) {
-    alert('Classe obligatoire pour un élève')
+    message.warning('Classe obligatoire pour un élève', {
+      duration: 3000,
+    })
     return
   }
 
   if (role.value === 'professeur' && !email.value) {
-    alert('Email obligatoire pour un professeur')
+    message.warning('Email obligatoire pour un professeur', {
+      duration: 3000,
+    })
     return
   }
 
@@ -233,7 +282,8 @@ const handleSignUp = async () => {
       .replace(/[\u0300-\u036f]/g, '') // enlève accents
       .replace(/\s+/g, '')
 
-  const generatedLogin = clean(nom.value) + '.' + clean(prenom.value)
+  const login = clean(nom.value) + '.' + clean(prenom.value)
+  generatedLogin.value = login
 
   // For students, email is auto-generated
   const finalEmail = role.value === 'eleve' ? emailDisplay.value : email.value
@@ -243,17 +293,22 @@ const handleSignUp = async () => {
     await authStore.signUp({
       nom: nom.value,
       prenom: prenom.value,
-      login: generatedLogin,
+      login: login,
       password: password.value,
       role: role.value,
       classe: role.value === 'eleve' ? (classe.value ?? '') : '',
       annee: `${year1}-${year2}`,
       email: finalEmail,
     })
-    router.push(ROUTES.HOME)
+    message.success('Compte créé avec succès!', {
+      duration: 3000,
+    })
+    showLoginModal.value = true
   } catch (error) {
     console.error('Sign up error:', error)
-    alert("Erreur lors de l'inscription")
+    message.error("Erreur lors de l'inscription", {
+      duration: 3000,
+    })
   } finally {
     isLoading.value = false
   }
@@ -344,5 +399,151 @@ const handleSignUp = async () => {
 .password-icon {
   width: 20px;
   height: 20px;
+}
+
+/* Modal styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 20px;
+  padding: 40px;
+  max-width: 500px;
+  width: 90%;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  animation: slideUp 0.3s ease-out;
+}
+
+.modal-content h2 {
+  color: #205781;
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0 0 16px 0;
+  text-align: center;
+}
+
+.login-display {
+  background-color: #f5f5f5;
+  border: 2px solid #4f959d;
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 20px 0;
+  font-family: 'Courier New', monospace;
+}
+
+.login-value {
+  font-size: 18px;
+  font-weight: 600;
+  color: #205781;
+  flex: 1;
+}
+
+.login-actions {
+  display: flex;
+  gap: 8px;
+  margin-left: 12px;
+}
+
+.copy-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #4f959d;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+}
+
+.copy-btn:hover {
+  color: #438a92;
+}
+
+.copy-btn img {
+  width: 16px;
+  height: 16px;
+}
+
+.download-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #4f959d;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+}
+
+.download-btn:hover {
+  color: #438a92;
+}
+
+.download-btn img {
+  width: 16px;
+  height: 16px;
+}
+
+.modal-btn {
+  width: 100%;
+  padding: 16px 24px;
+  background-color: #4f959d;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  font-size: 16px;
+  font-weight: 500;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 20px;
+}
+
+.modal-btn:hover {
+  background-color: #438a92;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(79, 149, 157, 0.3);
+}
+
+.modal-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 12px rgba(79, 149, 157, 0.2);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 </style>

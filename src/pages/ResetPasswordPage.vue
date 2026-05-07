@@ -10,11 +10,6 @@
       <!-- Title -->
       <h1 class="title">Réinitialiser le mot de passe</h1>
 
-      <!-- Status message -->
-      <div v-if="message" :class="['status-message', messageType]">
-        {{ message }}
-      </div>
-
       <!-- Form -->
       <form v-if="!tokenValid" @submit.prevent="handleResetPassword" class="reset-form auth-form">
         <div class="form-group password-group">
@@ -24,6 +19,7 @@
               :type="showNewPassword ? 'text' : 'password'"
               placeholder="Nouveau mot de passe"
               class="form-input"
+              autocomplete="new-password"
               required
             />
             <button
@@ -55,6 +51,7 @@
               :type="showConfirmPassword ? 'text' : 'password'"
               placeholder="Confirmer le mot de passe"
               class="form-input"
+              autocomplete="new-password"
               required
             />
             <button
@@ -102,37 +99,38 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { useApi } from '@/composables/useApi'
+import { useMessage } from 'naive-ui'
 
 const router = useRouter()
+const message = useMessage()
+
 const newPassword = ref('')
 const confirmPassword = ref('')
 const showNewPassword = ref(false)
 const showConfirmPassword = ref(false)
 const isLoading = ref(false)
-const message = ref('')
-const messageType = ref<'success' | 'error'>('error')
 const tokenValid = ref(false)
 const token = ref('')
 
 const handleResetPassword = async () => {
   if (newPassword.value !== confirmPassword.value) {
-    message.value = 'Les mots de passe ne correspondent pas'
-    messageType.value = 'error'
+    message.error('Les mots de passe ne correspondent pas', {
+      duration: 3000,
+    })
     return
   }
 
   if (newPassword.value.length < 6) {
-    message.value = 'Le mot de passe doit contenir au moins 6 caractères'
-    messageType.value = 'error'
+    message.warning('Le mot de passe doit contenir au moins 6 caractères', {
+      duration: 3000,
+    })
     return
   }
 
   isLoading.value = true
 
   try {
-    const useAPI = useApi()
-    await fetch(`${import.meta.env.VITE_API_URL}/auth/reset-password`, {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/reset-password`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -143,16 +141,22 @@ const handleResetPassword = async () => {
       }),
     })
 
-    message.value = 'Mot de passe réinitialisé avec succès! Redirection vers la connexion...'
-    messageType.value = 'success'
+    if (!response.ok) {
+      throw new Error('Erreur lors de la réinitialisation')
+    }
+
+    message.success('Mot de passe réinitialisé avec succès!', {
+      duration: 3000,
+    })
     tokenValid.value = true
 
     setTimeout(() => {
       router.push('/login')
     }, 2000)
   } catch (error) {
-    message.value = 'Erreur lors de la réinitialisation du mot de passe'
-    messageType.value = 'error'
+    message.error('Erreur lors de la réinitialisation du mot de passe', {
+      duration: 3000,
+    })
     console.error('Reset password error:', error)
   } finally {
     isLoading.value = false
@@ -164,8 +168,9 @@ onMounted(() => {
   token.value = params.get('token') || ''
 
   if (!token.value) {
-    message.value = 'Token manquant. Lien de réinitialisation invalide.'
-    messageType.value = 'error'
+    message.error('Token manquant. Lien de réinitialisation invalide.', {
+      duration: 3000,
+    })
     tokenValid.value = true
   }
 })

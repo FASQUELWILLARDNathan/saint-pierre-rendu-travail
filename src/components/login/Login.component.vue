@@ -34,6 +34,7 @@
               :type="showPassword ? 'text' : 'password'"
               placeholder="Mot de passe"
               class="form-input"
+              autocomplete="current-password"
               required
             />
             <button
@@ -100,10 +101,13 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useMessage } from 'naive-ui'
 import { useAuthStore } from '@/stores/auth.store'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const message = useMessage()
+
 const login = ref('')
 const password = ref('')
 const showPassword = ref(false)
@@ -116,9 +120,14 @@ const handleSignIn = async () => {
       login: login.value,
       password: password.value,
     })
+    message.success('Connexion réussie!', {
+      duration: 3000,
+    })
     router.push('/')
   } catch (error) {
-    alert('Identifiants incorrects')
+    message.error('Identifiants incorrects', {
+      duration: 3000,
+    })
   } finally {
     isLoading.value = false
   }

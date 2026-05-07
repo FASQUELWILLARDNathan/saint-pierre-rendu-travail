@@ -17,7 +17,7 @@ async function main() {
   const passwordEleve = await bcrypt.hash('eleve123', 10)
 
   const prof1 = await prisma.utilisateur.upsert({
-    where: { login: 'jdupont' },
+    where: { login: 'dupont.jean' },
     update: {
       nom: 'Dupont',
       prenom: 'Jean',
@@ -33,7 +33,7 @@ async function main() {
   })
 
   const prof2 = await prisma.utilisateur.upsert({
-    where: { login: 'mmartin' },
+    where: { login: 'martin.marie' },
     update: {
       nom: 'Martin',
       prenom: 'Marie',
@@ -49,7 +49,7 @@ async function main() {
   })
 
   const eleve1 = await prisma.utilisateur.upsert({
-    where: { login: 'pmoreau' },
+    where: { login: 'moreau.pierre' },
     update: {},
     create: {
       nom: 'Moreau',
@@ -62,7 +62,7 @@ async function main() {
   })
 
   const eleve2 = await prisma.utilisateur.upsert({
-    where: { login: 'sbernard' },
+    where: { login: 'bernard.sophie' },
     update: {},
     create: {
       nom: 'Bernard',
@@ -75,7 +75,7 @@ async function main() {
   })
 
   const eleve3 = await prisma.utilisateur.upsert({
-    where: { login: 'lthomas' },
+    where: { login: 'thomas.luc' },
     update: {},
     create: {
       nom: 'Thomas',
