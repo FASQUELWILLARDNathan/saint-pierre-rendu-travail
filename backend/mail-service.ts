@@ -121,10 +121,10 @@ export async function sendWelcomeEmail(email: string, nom: string, prenom: strin
 
   try {
     await request
-    console.log(`Welcome email sent to ${email}`)
+    console.log(`Mail de bienvenue envoyé à ${email}`)
     return true
   } catch (error) {
-    console.error('Error sending welcome email:', error)
+    console.error('Erreur d envoie de mail de bienvenue:', error)
     return false
   }
 }

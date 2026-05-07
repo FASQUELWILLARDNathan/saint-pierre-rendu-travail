@@ -5,17 +5,14 @@
       <img src="/saintpierre_logo_white.svg" alt="Saint-Pierre" class="logo" />
     </div>
 
-    <!-- Main content -->
+    <!-- Contenu principale -->
     <div class="register-card auth-card">
-      <!-- Title -->
       <h1 class="title">Inscription</h1>
 
-      <!-- Subtitle -->
       <p class="subtitle">Créez votre compte pour accéder à la plateforme</p>
 
-      <!-- Form -->
+      <!-- Formulaire -->
       <form @submit.prevent="handleSignUp" class="register-form auth-form">
-        <!-- Nom and Prenom row -->
         <div class="form-row">
           <div class="form-group">
             <input v-model="nom" type="text" placeholder="Nom" class="form-input" required />
@@ -25,7 +22,7 @@
           </div>
         </div>
 
-        <!-- Role and Classe/Email row -->
+        <!-- Role classe/email -->
         <div class="form-row">
           <div class="form-group">
             <select v-model="role" class="form-input form-select" required>
@@ -52,7 +49,7 @@
           </div>
         </div>
 
-        <!-- Auto-generated email for students -->
+        <!-- Mail pour les etudiants -->
         <div v-if="role === 'eleve'" class="form-group">
           <input
             :value="emailDisplay"
@@ -66,7 +63,7 @@
           >
         </div>
 
-        <!-- Année scolaire input (full width) -->
+        <!-- Année scolaire -->
         <div class="form-group">
           <input
             :value="anneeDisplay"
@@ -80,7 +77,7 @@
           >
         </div>
 
-        <!-- Password input (full width) -->
+        <!-- Champ mot de passe -->
         <div class="form-group password-group">
           <div class="password-input-wrapper">
             <input
@@ -97,41 +94,27 @@
               @click="showPassword = !showPassword"
               :aria-label="showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'"
             >
-              <svg
+              <img
                 v-if="!showPassword"
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                <circle cx="12" cy="12" r="3" />
-              </svg>
-              <svg
+                src="/eye-password-show-svgrepo-com.svg"
+                alt="Afficher"
+                class="password-icon"
+              />
+              <img
                 v-else
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <path
-                  d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"
-                />
-                <line x1="1" y1="1" x2="23" y2="23" />
-              </svg>
+                src="/eye-password-hide-svgrepo-com.svg"
+                alt="Masquer"
+                class="password-icon"
+              />
             </button>
           </div>
         </div>
 
-        <!-- Submit button -->
+        <!-- Bouton envoie -->
         <button type="submit" class="submit-btn" :disabled="isLoading">S'inscrire</button>
       </form>
 
-      <!-- Sign in link -->
+      <!-- Lien de connexion -->
       <div class="sign-in-section">
         <span>Déjà inscrit ? </span>
         <router-link to="/login" class="sign-in-link auth-link">Se connecter</router-link>
@@ -143,7 +126,7 @@
       <p>Copyright © 2026, Tous droits réservés.</p>
     </div>
 
-    <!-- Modal for displaying generated login -->
+    <!-- Composant pour afficher le login -->
     <div v-if="showLoginModal" class="modal-overlay" @click.self="closeModal">
       <div class="modal-content">
         <h2>Compte créé avec succès!</h2>
@@ -195,20 +178,6 @@ const model = ref({
   selectValue: null,
 })
 
-const generalOptions = [
-  'sixieme',
-  'cinquieme',
-  'quatrieme',
-  'troisieme',
-  'seconde',
-  'premiere',
-  'terminale',
-  'autre',
-].map((v) => ({
-  label: v,
-  value: v,
-}))
-
 const isEleve = computed(() => role.value === 'eleve')
 
 const anneeDisplay = computed(() => {
@@ -225,8 +194,8 @@ const emailDisplay = computed(() => {
       str
         .toLowerCase()
         .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '') // remove accents
-        .replace(/\s+/g, '') // remove spaces
+        .replace(/[\u0300-\u036f]/g, '') // Enleve les accents
+        .replace(/\s+/g, '') // Supprime les espaces
 
     return `${clean(nom.value)}.${clean(prenom.value)}@cs-saintpierrecalais.fr`
   }
@@ -236,7 +205,7 @@ const emailDisplay = computed(() => {
 const copyToClipboard = async () => {
   try {
     await navigator.clipboard.writeText(generatedLogin.value)
-    message.success('Identifiant copié!', {
+    message.success('Identifiant copié', {
       duration: 2000,
     })
   } catch (err) {
@@ -280,12 +249,12 @@ const handleSignUp = async () => {
       .toLowerCase()
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '') // enlève accents
-      .replace(/\s+/g, '')
+      .replace(/\s+/g, '') // enleve les espaces
 
   const login = clean(nom.value) + '.' + clean(prenom.value)
   generatedLogin.value = login
 
-  // For students, email is auto-generated
+  // Pour les etudiants le mail est autogénéré
   const finalEmail = role.value === 'eleve' ? emailDisplay.value : email.value
 
   isLoading.value = true
@@ -305,7 +274,7 @@ const handleSignUp = async () => {
     })
     showLoginModal.value = true
   } catch (error) {
-    console.error('Sign up error:', error)
+    console.error("Erreur lors de l'inscription:", error)
     message.error("Erreur lors de l'inscription", {
       duration: 3000,
     })
@@ -318,7 +287,6 @@ const handleSignUp = async () => {
 <style scoped>
 @import '@/styles/auth-forms.css';
 
-/* Register specific overrides */
 .register-card {
   max-width: 650px;
 }

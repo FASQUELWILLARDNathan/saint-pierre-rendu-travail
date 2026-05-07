@@ -8,7 +8,7 @@ interface JWTKeyStore {
 
 const initialSecret = process.env.JWT_SECRET
 if (!initialSecret) {
-  throw new Error('JWT_SECRET environment variable is required')
+  throw new Error('La variable d environnement JWT_SECRET est requis')
 }
 
 let keyStore: JWTKeyStore = {
@@ -20,6 +20,7 @@ export function signToken(payload: object): string {
   return jwt.sign(payload, keyStore.current)
 }
 
+// Verification du token
 export function verifyToken(token: string): any {
   try {
     return jwt.verify(token, keyStore.current)

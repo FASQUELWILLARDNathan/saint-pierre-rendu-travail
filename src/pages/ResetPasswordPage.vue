@@ -5,12 +5,11 @@
       <img src="/saintpierre_logo_white.svg" alt="Saint-Pierre" class="logo" />
     </div>
 
-    <!-- Main content -->
+    <!-- Contenu principal -->
     <div class="reset-password-card auth-card">
-      <!-- Title -->
       <h1 class="title">Réinitialiser le mot de passe</h1>
 
-      <!-- Form -->
+      <!-- Formulaire -->
       <form v-if="!tokenValid" @submit.prevent="handleResetPassword" class="reset-form auth-form">
         <div class="form-group password-group">
           <div class="password-input-wrapper">
@@ -83,7 +82,7 @@
         </button>
       </form>
 
-      <!-- Back to login link -->
+      <!-- Lien de retour a la connexion -->
       <div v-if="tokenValid" class="sign-in-section">
         <router-link to="/login" class="sign-in-link auth-link">Retour à la connexion</router-link>
       </div>

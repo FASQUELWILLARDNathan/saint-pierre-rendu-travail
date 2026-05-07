@@ -3,7 +3,7 @@ import { prisma } from '../config.ts'
 
 const router = express.Router()
 
-// Get all users
+// Recupere tous les utilisateurs
 router.get('/', async (req: express.Request, res: express.Response) => {
   try {
     const users = await prisma.utilisateur.findMany({
@@ -13,7 +13,7 @@ router.get('/', async (req: express.Request, res: express.Response) => {
       },
     })
 
-    // Transform bigint to string for JSON serialization
+    // Transforme les BigInt en String 
     const formattedUsers = users.map((user) => ({
       ...user,
       id_user: user.id_user.toString(),
@@ -21,12 +21,12 @@ router.get('/', async (req: express.Request, res: express.Response) => {
 
     res.json(formattedUsers)
   } catch (error) {
-    console.error('Error fetching users:', error)
-    res.status(500).json({ error: 'Failed to fetch users' })
+    console.error('Erreur lors de la recherche d utilisateur:', error)
+    res.status(500).json({ error: 'Echec lors de la recherche d utilisateur' })
   }
 })
 
-// Get user by ID
+// Recupere l'utilisateur par son ID
 router.get('/:id', async (req: express.Request, res: express.Response) => {
   try {
     const { id } = req.params
@@ -40,7 +40,7 @@ router.get('/:id', async (req: express.Request, res: express.Response) => {
     })
 
     if (!user) {
-      return res.status(404).json({ error: 'User not found' })
+      return res.status(404).json({ error: 'Utilisateur non trouvé' })
     }
 
     res.json({
@@ -48,8 +48,8 @@ router.get('/:id', async (req: express.Request, res: express.Response) => {
       id_user: user.id_user.toString(),
     })
   } catch (error) {
-    console.error('Error fetching user:', error)
-    res.status(500).json({ error: 'Failed to fetch user' })
+    console.error('Erreur lors de la recherche d utilisateur:', error)
+    res.status(500).json({ error: 'Echec lors de la recherche d utilisateur' })
   }
 })
 

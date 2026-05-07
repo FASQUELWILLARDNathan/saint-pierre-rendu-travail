@@ -8,25 +8,31 @@ import { sendResetPasswordEmail, sendWelcomeEmail } from '../mail-service.ts'
 
 const router = Router()
 
-// Helper function to generate email for student
+// Routes d'authentification de l'API.
+// Gère l'inscription, la connexion, la déconnexion, ainsi que la réinitialisation de mot de passe des utilisateurs.
+// Les mots de passe sont hashés avec bcrypt et l'authentification repose sur des tokens JWT.
+
+// Génère automatiquement l'adresse email d'un élève à partir de son nom et prénom.
 function generateStudentEmail(nom: string, prenom: string): string {
   const clean = (str: string) =>
     str
       .toLowerCase()
       .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '') // remove accents
-      .replace(/\s+/g, '') // remove spaces
+      .replace(/[\u0300-\u036f]/g, '') // Enleve les accents
+      .replace(/\s+/g, '') // Enleve les espaces
 
   return `${clean(nom)}.${clean(prenom)}@cs-saintpierrecalais.fr`
 }
 
+// Route d'inscription utilisateur.
+// Crée un compte élève ou professeur, vérifie les doublons et envoie un email de bienvenue.
 router.post('/sign-up', async (req: express.Request, res: express.Response) => {
   try {
     const { nom, prenom, login, password, role, classe, annee, email: professeurEmail } = req.body
     let eleve: eleve | undefined
 
     if (!nom || !prenom || !login || !password || !role) {
-      return res.status(400).json({ error: 'Missing required fields' })
+      return res.status(400).json({ error: 'Des champs sont manquants' })
     }
 
     if (role === 'eleve' && (!classe || !annee)) {
@@ -46,24 +52,24 @@ router.post('/sign-up', async (req: express.Request, res: express.Response) => {
     })
 
     if (existingUser) {
-      return res.status(409).json({ error: 'Login already exists' })
+      return res.status(409).json({ error: 'Ce login existe deja' })
     }
 
-    // Generate or use provided email
+    // Genere ou utilise l'email donné en fonction du role de l'utilisateur
     const email = role === 'eleve' ? generateStudentEmail(nom, prenom) : professeurEmail
 
-    // Check if email already exists
+    // Check si l'email existe deja
     const existingEmail = await prisma.utilisateur.findUnique({
       where: { email },
     })
 
     if (existingEmail) {
-      return res.status(409).json({ error: 'Email already exists' })
+      return res.status(409).json({ error: 'Cet email existe deja' })
     }
 
     const hashedPassword = await bcrypt.hash(password, 10)
 
-    // Create user
+    // Créer l'utilisateur
     const user = await prisma.utilisateur.create({
       data: {
         nom,
@@ -92,7 +98,7 @@ router.post('/sign-up', async (req: express.Request, res: express.Response) => {
       })
     }
 
-    // Send welcome email
+    // Envoie mail lors de l'inscription
     await sendWelcomeEmail(email, nom, prenom)
 
     const token = signToken({ id_user: user.id_user.toString(), login: user.login })
@@ -111,16 +117,19 @@ router.post('/sign-up', async (req: express.Request, res: express.Response) => {
     })
   } catch (error) {
     console.error(error)
-    return res.status(500).json({ error: 'Failed to sign up' })
+    return res.status(500).json({ error: 'L enregistrement a echouer' })
   }
 })
 
+
+// Route de connexion utilisateur.
+// Vérifie les identifiants et retourne un token JWT.
 router.post('/sign-in', async (req: express.Request, res: express.Response) => {
   try {
     const { login, password } = req.body
 
     if (!login || !password) {
-      return res.status(400).json({ error: 'Missing login or password' })
+      return res.status(400).json({ error: 'Champs login ou mot de passe manquant' })
     }
 
     const user = await prisma.utilisateur.findUnique({
@@ -132,13 +141,13 @@ router.post('/sign-in', async (req: express.Request, res: express.Response) => {
     })
 
     if (!user) {
-      return res.status(401).json({ error: 'Invalid login or password' })
+      return res.status(401).json({ error: 'Champs login ou mot de passe manquant' })
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.hashed_password)
 
     if (!isPasswordValid) {
-      return res.status(401).json({ error: 'Invalid login or password' })
+      return res.status(401).json({ error: 'Champs login ou mot de passe manquant' })
     }
 
     const token = signToken({ id_user: user.id_user.toString(), login: user.login })
@@ -155,17 +164,20 @@ router.post('/sign-in', async (req: express.Request, res: express.Response) => {
       },
     })
   } catch (error) {
-    console.error('Error during sign in:', error)
-    res.status(500).json({ error: 'Failed to sign in' })
+    console.error('Erreur durant l enregistrement:', error)
+    res.status(500).json({ error: 'Erreur lors de l enregistrement' })
   }
 })
 
+
+// Route permettant de demander une réinitialisation de mot de passe.
+// Génère un token temporaire envoyé par email.
 router.post('/forgot-password', async (req: express.Request, res: express.Response) => {
   try {
     const { email } = req.body
 
     if (!email) {
-      return res.status(400).json({ error: 'Email is required' })
+      return res.status(400).json({ error: 'Un mail est requis' })
     }
 
     const user = await prisma.utilisateur.findUnique({
@@ -173,15 +185,15 @@ router.post('/forgot-password', async (req: express.Request, res: express.Respon
     })
 
     if (!user) {
-      // Don't reveal if email exists for security
-      return res.json({ message: 'If email exists, reset link will be sent' })
+      // Pour des questions de securité il n'est pas précisé si l'email existe
+      return res.json({ message: 'Si cet email existe, un lien de reinitialisation sera envoyer' })
     }
 
-    // Generate reset token
+    // Generete un token de reset de mot de passe
     const resetToken = crypto.randomBytes(32).toString('hex')
-    const resetTokenExpiry = new Date(Date.now() + 3600000) // 1 hour from now
+    const resetTokenExpiry = new Date(Date.now() + 3600000)
 
-    // Save reset token to user
+    // Enregistre le token de reset de mot de passe
     await prisma.utilisateur.update({
       where: { id_user: user.id_user },
       data: {
@@ -190,25 +202,27 @@ router.post('/forgot-password', async (req: express.Request, res: express.Respon
       },
     })
 
-    // Send reset password email
+    // Envoie le mail de reinitialisation de mot de passe
     await sendResetPasswordEmail(email, resetToken)
 
-    res.json({ message: 'If email exists, reset link will be sent' })
+    res.json({ message: 'Si cet email existe, un lien de reinitialisation sera envoyer' })
   } catch (error) {
-    console.error('Error in forgot-password:', error)
-    res.status(500).json({ error: 'Failed to process forgot password request' })
+    console.error('Erreur dans forgot-password:', error)
+    res.status(500).json({ error: 'Echec lors de la requete de reinitialisation de mot de passe' })
   }
 })
 
+// Route de réinitialisation de mot de passe.
+// Vérifie le token reçu puis met à jour le mot de passe utilisateur.
 router.post('/reset-password', async (req: express.Request, res: express.Response) => {
   try {
     const { token, newPassword } = req.body
 
     if (!token || !newPassword) {
-      return res.status(400).json({ error: 'Token and new password are required' })
+      return res.status(400).json({ error: 'Un token et un nouveau mot de passe est requis' })
     }
 
-    // Find user with this reset token
+    // Trouve le user avec ce token
     const user = await prisma.utilisateur.findFirst({
       where: {
         reset_token: token,
@@ -216,18 +230,18 @@ router.post('/reset-password', async (req: express.Request, res: express.Respons
     })
 
     if (!user) {
-      return res.status(401).json({ error: 'Invalid reset token' })
+      return res.status(401).json({ error: 'Token de reset invalide' })
     }
 
-    // Check if token is expired
+    // Check si le token est expiré
     if (user.reset_token_expiry && new Date() > user.reset_token_expiry) {
-      return res.status(401).json({ error: 'Reset token has expired' })
+      return res.status(401).json({ error: 'Token de reset a expirer' })
     }
 
-    // Hash new password
+    // Encrypte le nouveau mot de passe
     const hashedPassword = await bcrypt.hash(newPassword, 10)
 
-    // Update user password and clear reset token
+    // Met a jour le user et reset le password
     await prisma.utilisateur.update({
       where: { id_user: user.id_user },
       data: {
@@ -237,19 +251,20 @@ router.post('/reset-password', async (req: express.Request, res: express.Respons
       },
     })
 
-    res.json({ message: 'Password reset successfully' })
+    res.json({ message: 'Le mot de passe a été reinitialiser' })
   } catch (error) {
     console.error('Error in reset-password:', error)
-    res.status(500).json({ error: 'Failed to reset password' })
+    res.status(500).json({ error: 'Echec lors de la reinitialisation de mot de passe' })
   }
 })
 
+// Route de deconnexion de l'utilisateur.
 router.post('/logout', async (req: express.Request, res: express.Response) => {
   try {
-    res.json({ message: 'Logged out successfully' })
+    res.json({ message: 'Deconnexion reussie' })
   } catch (error) {
-    console.error('Error during logout:', error)
-    res.status(500).json({ error: 'Failed to logout' })
+    console.error('Erreur durant la deconnexion:', error)
+    res.status(500).json({ error: 'Echec lors de la deconnexion' })
   }
 })
 

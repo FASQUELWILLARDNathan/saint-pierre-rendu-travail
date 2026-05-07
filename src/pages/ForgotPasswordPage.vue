@@ -5,15 +5,13 @@
       <img src="/saintpierre_logo_white.svg" alt="Saint-Pierre" class="logo" />
     </div>
 
-    <!-- Main content -->
+    <!-- Contenu principal -->
     <div class="forgot-password-card auth-card">
-      <!-- Title -->
       <h1 class="title">Mot de passe oublié</h1>
-
-      <!-- Subtitle -->
+      
       <p class="subtitle">Entrez votre email pour recevoir un lien de réinitialisation</p>
 
-      <!-- Form -->
+      <!-- Formulaire -->
       <form @submit.prevent="handleForgotPassword" class="forgot-form auth-form">
         <div class="form-group">
           <input v-model="email" type="email" placeholder="Email" class="form-input" required />
@@ -24,7 +22,7 @@
         </button>
       </form>
 
-      <!-- Back to login link -->
+      <!-- Lien pour le retour a la connexion -->
       <div class="sign-in-section">
         <span>Retour à la </span>
         <router-link to="/login" class="sign-in-link auth-link">connexion</router-link>

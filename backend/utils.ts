@@ -1,3 +1,4 @@
+// Vérifie si une chaîne de caractères représente un BigInt valide et strictement positif.
 export function isValidBigInt(value: string): boolean {
   try {
     BigInt(value)

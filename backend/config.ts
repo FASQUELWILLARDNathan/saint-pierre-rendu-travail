@@ -2,10 +2,10 @@ import { PrismaClient } from '@prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'
 import { startKeyRotation } from './jwt-manager.ts'
 
-// Database Configuration
+// Configuration de la base de données
 const connectionString = process.env.DATABASE_URL
 if (!connectionString) {
-  throw new Error('DATABASE_URL environment variable is required')
+  throw new Error('La variable d environnement DATABASE_URL est requis ')
 }
 
 const adapter = new PrismaPg({
@@ -14,16 +14,16 @@ const adapter = new PrismaPg({
 
 export const prisma = new PrismaClient({ adapter })
 
-// API Configuration
-export const PORT = process.env.PORT || 3000
-export const NODE_ENV = process.env.NODE_ENV || 'development'
+// Configuration de l'API
+export const PORT = process.env.PORT
+export const NODE_ENV = process.env.NODE_ENV
 
-// CORS Configuration
+// Configuration du CORS
 export const ALLOWED_ORIGINS = (
   process.env.ALLOWED_ORIGINS || 'http://localhost:5173,http://localhost:3000'
 ).split(',')
 
-// Initialize services
+// Initialisation des services
 startKeyRotation()
 
-console.log(`🔧 Config loaded: NODE_ENV=${NODE_ENV}, PORT=${PORT}`)
+console.log(`Configue chargé: NODE_ENV=${NODE_ENV}, PORT=${PORT}`)

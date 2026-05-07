@@ -22,34 +22,34 @@ app.get('/api/health', (req, res) => {
 app.use('/auth', authRoutes)
 app.use('/api/users', usersRoutes)
 
-// Error handling
+// Error de gestion
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error('Unhandled error:', err)
-  res.status(500).json({ error: 'Internal Server Error' })
+  console.error('Condition d erreur non pris en charge:', err)
+  res.status(500).json({ error: 'Erreur serveur interne' })
 })
 
-// 404 handler
+// Gestion 404
 app.use((req, res) => {
-  res.status(404).json({ error: 'Route not found' })
+  res.status(404).json({ error: 'Route non trouvé' })
 })
 
-// Server startup
+// Lancement du serveur
 const server = app.listen(PORT, () => {
-  console.log(`API Server running on http://localhost:${PORT}`)
+  console.log(`Api serveur tournant sur  http://localhost:${PORT}`)
   console.log(`Health check: http://localhost:${PORT}/api/health`)
 })
 
-// Graceful shutdown
+// Shutdown
 const gracefulShutdown = async () => {
-  console.log('\nShutting down gracefully...')
+  console.log('\nShutting down...')
   server.close(async () => {
     await prisma.$disconnect()
-    console.log('Server closed and database disconnected')
+    console.log('Serveur et base de données fermés')
     process.exit(0)
   })
 
   setTimeout(() => {
-    console.error('Forcing shutdown')
+    console.error('Shutdown forcé')
     process.exit(1)
   }, 10000)
 }

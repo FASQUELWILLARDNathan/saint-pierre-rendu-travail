@@ -1,5 +1,7 @@
 import express from 'express'
 
+// Middleware Express qui convertit automatiquement les valeurs BigInt en chaînes de caractères avant l'envoi de la réponse JSON.
+// Cela évite l'erreur "Do not know how to serialize a BigInt" de JSON.stringify.
 export const bigintMiddleware = (
   req: express.Request,
   res: express.Response,

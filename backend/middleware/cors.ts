@@ -1,6 +1,7 @@
 import express from 'express'
 import { ALLOWED_ORIGINS } from '../config.ts'
 
+// Middleware CORS permettant d'autoriser les requêtes provenant des origines définies dans ALLOWED_ORIGINS.
 export const corsMiddleware = (
   req: express.Request,
   res: express.Response,
