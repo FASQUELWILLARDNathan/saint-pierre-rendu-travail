@@ -4,7 +4,7 @@ import { PrismaPg } from '@prisma/adapter-pg'
 import * as bcrypt from 'bcrypt'
 
 const connectionString =
-  process.env.DATABASE_URL || 'postgresql://nathanf:Nathan17111983!@postgres:5432/saintpierrestage'
+  process.env.DATABASE_URL
 
 const prisma = new PrismaClient({
   adapter: new PrismaPg({ connectionString }),
@@ -18,10 +18,7 @@ async function main() {
 
   const prof1 = await prisma.utilisateur.upsert({
     where: { login: 'dupont.jean' },
-    update: {
-      nom: 'Dupont',
-      prenom: 'Jean',
-    },
+    update: {},
     create: {
       nom: 'Dupont',
       prenom: 'Jean',
@@ -34,10 +31,7 @@ async function main() {
 
   const prof2 = await prisma.utilisateur.upsert({
     where: { login: 'martin.marie' },
-    update: {
-      nom: 'Martin',
-      prenom: 'Marie',
-    },
+    update: {},
     create: {
       nom: 'Martin',
       prenom: 'Marie',
@@ -118,9 +112,7 @@ async function main() {
   }
 
   const cours1 = await prisma.cours.upsert({
-    where: {
-      nom_cours: 'Mathématiques Avancées',
-    },
+    where: { nom_cours: 'Mathématiques Avancées' },
     update: {},
     create: {
       id_user: prof1.id_user,
@@ -140,7 +132,12 @@ async function main() {
   })
 
   const devoir1 = await prisma.devoir.upsert({
-    where: { nom_devoir: 'Calcul Intégral' },
+    where: {
+      id_cours_nom_devoir: {
+        id_cours: cours1.id_cours,
+        nom_devoir: 'Calcul Intégral',
+      },
+    },
     update: {},
     create: {
       id_cours: cours1.id_cours,
@@ -151,7 +148,12 @@ async function main() {
   })
 
   const devoir2 = await prisma.devoir.upsert({
-    where: { nom_devoir: 'Algèbre Linéaire' },
+    where: {
+      id_cours_nom_devoir: {
+        id_cours: cours1.id_cours,
+        nom_devoir: 'Algèbre Linéaire',
+      },
+    },
     update: {},
     create: {
       id_cours: cours1.id_cours,
@@ -162,7 +164,12 @@ async function main() {
   })
 
   const devoir3 = await prisma.devoir.upsert({
-    where: { nom_devoir: 'Analyse de texte' },
+    where: {
+      id_cours_nom_devoir: {
+        id_cours: cours2.id_cours,
+        nom_devoir: 'Analyse de texte',
+      },
+    },
     update: {},
     create: {
       id_cours: cours2.id_cours,
@@ -201,7 +208,7 @@ async function main() {
     skipDuplicates: true,
   })
 
-  console.log('✅ Seed OK (idempotent)')
+  console.log('✅ Seed OK (idempotent propre)')
 }
 
 main()

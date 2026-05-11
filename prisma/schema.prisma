@@ -15,7 +15,7 @@ model utilisateur {
   login                   String            @unique @db.VarChar(50)
   email                   String            @unique @db.VarChar(255)
   hashed_password         String            @db.VarChar(255)
-  role                    String            @db.VarChar(50)
+  role                    Role
   created_at              DateTime          @default(now())
   reset_token             String?
   reset_token_expiry      DateTime?
@@ -58,12 +58,13 @@ model cours {
 model devoir {
   id_devoir             BigInt              @id @default(autoincrement())
   id_cours              BigInt
-  nom_devoir            String              @unique @db.VarChar(255)
+  nom_devoir            String              @db.VarChar(255)
   description_devoir    String?
   coefficient           Decimal?            @db.Decimal(5, 2)
   professeurs           assprofdevoir[]
   cours                 cours               @relation(fields: [id_cours], references: [id_cours])
   rendus                rendu[]
+  @@unique([id_cours, nom_devoir])
 }
 
 
@@ -92,4 +93,12 @@ model rendu {
   eleve                 eleve               @relation(fields: [id_user], references: [id_user])
 
   @@unique([id_devoir, id_user])
+}
+
+// Represente les roles qui peuvent etre donner à un utilisateur
+// Si vous etes le premier utilisateur alors veuillez faire une requete SQL dans le conteneur PostgreSQL
+enum Role {
+  eleve
+  professeur
+  administrateur
 }

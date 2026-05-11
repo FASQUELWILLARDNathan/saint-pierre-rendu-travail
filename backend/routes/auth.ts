@@ -1,12 +1,35 @@
 import express, { Router } from 'express'
 import bcrypt from 'bcrypt'
 import crypto from 'crypto'
-import type { eleve } from '@prisma/client'
+import type { eleve, professeur } from '@prisma/client'
 import { prisma } from '../config.ts'
 import { signToken } from '../jwt-manager.ts'
 import { sendResetPasswordEmail, sendWelcomeEmail } from '../mail-service.ts'
 
 const router = Router()
+
+// safe select pour la route users
+export const safeUserSelect = {
+  id_user: true,
+  nom: true,
+  prenom: true,
+  login: true,
+  email: true,
+  role: true,
+
+  eleve: {
+    select: {
+      classe: true,
+      annee: true,
+    },
+  },
+
+  professeur: {
+    select: {
+      matiere: true,
+    },
+  },
+}
 
 // Routes d'authentification de l'API.
 // Gère l'inscription, la connexion, la déconnexion, ainsi que la réinitialisation de mot de passe des utilisateurs.
@@ -29,7 +52,6 @@ function generateStudentEmail(nom: string, prenom: string): string {
 router.post('/sign-up', async (req: express.Request, res: express.Response) => {
   try {
     const { nom, prenom, login, password, role, classe, annee, email: professeurEmail } = req.body
-    let eleve: eleve | undefined
 
     if (!nom || !prenom || !login || !password || !role) {
       return res.status(400).json({ error: 'Des champs sont manquants' })
@@ -70,57 +92,66 @@ router.post('/sign-up', async (req: express.Request, res: express.Response) => {
     const hashedPassword = await bcrypt.hash(password, 10)
 
     // Créer l'utilisateur
-    const user = await prisma.utilisateur.create({
-      data: {
-        nom,
-        prenom,
-        login,
-        email,
-        hashed_password: hashedPassword,
-        role,
-      },
-      include: {
-        eleve: true,
-        professeur: true,
-      },
-    })
-
-    if (role === 'eleve') {
-      const safeClasse = String(req.body.classe)
-      const safeAnnee = String(req.body.annee)
-
-      eleve = await prisma.eleve.create({
+    const result = await prisma.$transaction(async (tx) => {
+      const createdUser = await tx.utilisateur.create({
         data: {
-          id_user: user.id_user,
-          classe: safeClasse,
-          annee: safeAnnee,
+          nom,
+          prenom,
+          login,
+          email,
+          hashed_password: hashedPassword,
+          role,
         },
       })
-    }
+
+      let eleve = null
+      let professeur = null
+
+      if (role === 'eleve') {
+        eleve = await tx.eleve.create({
+          data: {
+            id_user: createdUser.id_user,
+            classe: String(req.body.classe),
+            annee: String(req.body.annee),
+          },
+        })
+      }
+
+      if (role === 'professeur') {
+        professeur = await tx.professeur.create({
+          data: {
+            id_user: createdUser.id_user,
+            matiere: req.body.matiere ?? null,
+          },
+        })
+      }
+
+      return { createdUser, eleve, professeur }
+    })
 
     // Envoie mail lors de l'inscription
     await sendWelcomeEmail(email, nom, prenom)
 
-    const token = signToken({ id_user: user.id_user.toString(), login: user.login })
+    const token = signToken({
+      id_user: result.createdUser.id_user.toString(),
+      login: result.createdUser.login,
+    })
+
+    const user = await prisma.utilisateur.findUnique({
+      where: { id_user: result.createdUser.id_user },
+      select: safeUserSelect,
+    })
 
     return res.json({
       token,
-      user: {
-        id_user: user.id_user.toString(),
-        nom: user.nom,
-        prenom: user.prenom,
-        login: user.login,
-        email: user.email,
-        role: user.role,
-        eleve: eleve,
-      },
+      user,
     })
+    
   } catch (error) {
     console.error(error)
     return res.status(500).json({ error: 'L enregistrement a echouer' })
   }
 })
-
 
 // Route de connexion utilisateur.
 // Vérifie les identifiants et retourne un token JWT.
@@ -134,9 +165,27 @@ router.post('/sign-in', async (req: express.Request, res: express.Response) => {
 
     const user = await prisma.utilisateur.findUnique({
       where: { login },
-      include: {
-        eleve: true,
-        professeur: true,
+      select: {
+        id_user: true,
+        nom: true,
+        prenom: true,
+        login: true,
+        email: true,
+        role: true,
+        hashed_password: true,
+
+        eleve: {
+          select: {
+            classe: true,
+            annee: true,
+          },
+        },
+
+        professeur: {
+          select: {
+            matiere: true,
+          },
+        },
       },
     })
 
@@ -150,25 +199,23 @@ router.post('/sign-in', async (req: express.Request, res: express.Response) => {
       return res.status(401).json({ error: 'Champs login ou mot de passe manquant' })
     }
 
-    const token = signToken({ id_user: user.id_user.toString(), login: user.login })
+    const token = signToken({
+      id_user: user.id_user.toString(),
+      login: user.login,
+    })
+
+    // Supprime le mot de passe hashé avant de renvoyer l'utilisateur
+    const { hashed_password, ...safeUser } = user
 
     res.json({
       token,
-      user: {
-        id_user: user.id_user.toString(),
-        nom: user.nom,
-        prenom: user.prenom,
-        login: user.login,
-        email: user.email,
-        role: user.role,
-      },
+      user: safeUser,
     })
   } catch (error) {
     console.error('Erreur durant l enregistrement:', error)
     res.status(500).json({ error: 'Erreur lors de l enregistrement' })
   }
 })
-
 
 // Route permettant de demander une réinitialisation de mot de passe.
 // Génère un token temporaire envoyé par email.
@@ -182,6 +229,10 @@ router.post('/forgot-password', async (req: express.Request, res: express.Respon
 
     const user = await prisma.utilisateur.findUnique({
       where: { email },
+      select: {
+        id_user: true,
+        email: true,
+      },
     })
 
     if (!user) {
@@ -226,6 +277,10 @@ router.post('/reset-password', async (req: express.Request, res: express.Respons
     const user = await prisma.utilisateur.findFirst({
       where: {
         reset_token: token,
+      },
+      select: {
+        id_user: true,
+        reset_token_expiry: true,
       },
     })
 

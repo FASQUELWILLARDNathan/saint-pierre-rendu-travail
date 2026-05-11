@@ -7,13 +7,32 @@ const router = express.Router()
 router.get('/', async (req: express.Request, res: express.Response) => {
   try {
     const users = await prisma.utilisateur.findMany({
-      include: {
-        eleve: true,
-        professeur: true,
+      select: {
+        id_user: true,
+        nom: true,
+        prenom: true,
+        login: true,
+        email: true,
+        role: true,
+
+        eleve: {
+          select: {
+            id_user: true,
+            classe: true,
+            annee: true,
+          },
+        },
+
+        professeur: {
+          select: {
+            id_user: true,
+            matiere: true,
+          },
+        },
       },
     })
 
-    // Transforme les BigInt en String 
+    // Transforme les BigInt en String
     const formattedUsers = users.map((user) => ({
       ...user,
       id_user: user.id_user.toString(),
@@ -33,9 +52,28 @@ router.get('/:id', async (req: express.Request, res: express.Response) => {
 
     const user = await prisma.utilisateur.findUnique({
       where: { id_user: BigInt(id) },
-      include: {
-        eleve: true,
-        professeur: true,
+      select: {
+        id_user: true,
+        nom: true,
+        prenom: true,
+        login: true,
+        email: true,
+        role: true,
+
+        eleve: {
+          select: {
+            id_user: true,
+            classe: true,
+            annee: true,
+          },
+        },
+
+        professeur: {
+          select: {
+            id_user: true,
+            matiere: true,
+          },
+        },
       },
     })
 
