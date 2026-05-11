@@ -1,9 +1,22 @@
 // Représente un utilisateur authentifié.
 export interface User {
-  id: number
+  id_user?: string | number
+  id?: number
+  nom?: string
+  prenom?: string
   login: string
-  username: string
+  username?: string
   email?: string
+  role?: string
+  eleve?: {
+    id_user?: string | number
+    classe?: string
+    annee?: string
+  }
+  professeur?: {
+    id_user?: string | number
+    matiere?: string
+  }
 }
 
 // Structure de la réponse renvoyée après authentification.

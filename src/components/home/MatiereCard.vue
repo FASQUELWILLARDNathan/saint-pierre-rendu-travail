@@ -1,6 +1,6 @@
 <template>
   <div class="matiere-card">
-    <div class="matiere-icon">
+    <div class="matiere-icon" :style="{ backgroundColor: iconBackgroundColor }">
       <img v-if="icon" :src="icon" :alt="nom" />
       <div v-else class="icon-placeholder">📚</div>
     </div>
@@ -9,7 +9,9 @@
 </template>
 
 <script setup lang="ts">
-defineProps({
+import { computed } from 'vue'
+
+const props = defineProps({
   nom: {
     type: String,
     required: true,
@@ -18,6 +20,19 @@ defineProps({
     type: String,
     default: null,
   },
+  color: {
+    type: String,
+    default: '#70BEFA',
+  },
+})
+
+const iconBackgroundColor = computed(() => {
+  // Convertir hex en rgb avec opacité 50%
+  const hex = props.color.replace('#', '')
+  const r = parseInt(hex.substring(0, 2), 16)
+  const g = parseInt(hex.substring(2, 4), 16)
+  const b = parseInt(hex.substring(4, 6), 16)
+  return `rgba(${r}, ${g}, ${b}, 0.5)`
 })
 </script>
 
