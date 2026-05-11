@@ -8,6 +8,9 @@ import usersRoutes from './routes/users.ts'
 
 const app = express()
 
+// Trust proxy pour récupérer l'IP réelle derrière un proxy/load balancer
+app.set('trust proxy', 1)
+
 // Middleware
 app.use(express.json())
 app.use(corsMiddleware)

@@ -5,6 +5,7 @@ import type { eleve, professeur } from '@prisma/client'
 import { prisma } from '../config.ts'
 import { signToken } from '../jwt-manager.ts'
 import { sendResetPasswordEmail, sendWelcomeEmail } from '../mail-service.ts'
+import { authLimiter, signInLimiter, forgotPasswordLimiter } from '../middleware/rate-limit.ts'
 
 const router = Router()
 
@@ -49,7 +50,7 @@ function generateStudentEmail(nom: string, prenom: string): string {
 
 // Route d'inscription utilisateur.
 // Crée un compte élève ou professeur, vérifie les doublons et envoie un email de bienvenue.
-router.post('/sign-up', async (req: express.Request, res: express.Response) => {
+router.post('/sign-up', authLimiter, async (req: express.Request, res: express.Response) => {
   try {
     const { nom, prenom, login, password, role, classe, annee, email: professeurEmail } = req.body
 
@@ -146,7 +147,6 @@ router.post('/sign-up', async (req: express.Request, res: express.Response) => {
       token,
       user,
     })
-    
   } catch (error) {
     console.error(error)
     return res.status(500).json({ error: 'L enregistrement a echouer' })
@@ -155,7 +155,7 @@ router.post('/sign-up', async (req: express.Request, res: express.Response) => {
 
 // Route de connexion utilisateur.
 // Vérifie les identifiants et retourne un token JWT.
-router.post('/sign-in', async (req: express.Request, res: express.Response) => {
+router.post('/sign-in', signInLimiter, async (req: express.Request, res: express.Response) => {
   try {
     const { login, password } = req.body
 
@@ -219,53 +219,61 @@ router.post('/sign-in', async (req: express.Request, res: express.Response) => {
 
 // Route permettant de demander une réinitialisation de mot de passe.
 // Génère un token temporaire envoyé par email.
-router.post('/forgot-password', async (req: express.Request, res: express.Response) => {
-  try {
-    const { email } = req.body
+router.post(
+  '/forgot-password',
+  forgotPasswordLimiter,
+  async (req: express.Request, res: express.Response) => {
+    try {
+      const { email } = req.body
 
-    if (!email) {
-      return res.status(400).json({ error: 'Un mail est requis' })
+      if (!email) {
+        return res.status(400).json({ error: 'Un mail est requis' })
+      }
+
+      const user = await prisma.utilisateur.findUnique({
+        where: { email },
+        select: {
+          id_user: true,
+          email: true,
+        },
+      })
+
+      if (!user) {
+        // Pour des questions de securité il n'est pas précisé si l'email existe
+        return res.json({
+          message: 'Si cet email existe, un lien de reinitialisation sera envoyer',
+        })
+      }
+
+      // Generete un token de reset de mot de passe
+      const resetToken = crypto.randomBytes(32).toString('hex')
+      const resetTokenExpiry = new Date(Date.now() + 3600000)
+
+      // Enregistre le token de reset de mot de passe
+      await prisma.utilisateur.update({
+        where: { id_user: user.id_user },
+        data: {
+          reset_token: resetToken,
+          reset_token_expiry: resetTokenExpiry,
+        },
+      })
+
+      // Envoie le mail de reinitialisation de mot de passe
+      await sendResetPasswordEmail(email, resetToken)
+
+      res.json({ message: 'Si cet email existe, un lien de reinitialisation sera envoyer' })
+    } catch (error) {
+      console.error('Erreur dans forgot-password:', error)
+      res
+        .status(500)
+        .json({ error: 'Echec lors de la requete de reinitialisation de mot de passe' })
     }
-
-    const user = await prisma.utilisateur.findUnique({
-      where: { email },
-      select: {
-        id_user: true,
-        email: true,
-      },
-    })
-
-    if (!user) {
-      // Pour des questions de securité il n'est pas précisé si l'email existe
-      return res.json({ message: 'Si cet email existe, un lien de reinitialisation sera envoyer' })
-    }
-
-    // Generete un token de reset de mot de passe
-    const resetToken = crypto.randomBytes(32).toString('hex')
-    const resetTokenExpiry = new Date(Date.now() + 3600000)
-
-    // Enregistre le token de reset de mot de passe
-    await prisma.utilisateur.update({
-      where: { id_user: user.id_user },
-      data: {
-        reset_token: resetToken,
-        reset_token_expiry: resetTokenExpiry,
-      },
-    })
-
-    // Envoie le mail de reinitialisation de mot de passe
-    await sendResetPasswordEmail(email, resetToken)
-
-    res.json({ message: 'Si cet email existe, un lien de reinitialisation sera envoyer' })
-  } catch (error) {
-    console.error('Erreur dans forgot-password:', error)
-    res.status(500).json({ error: 'Echec lors de la requete de reinitialisation de mot de passe' })
-  }
-})
+  },
+)
 
 // Route de réinitialisation de mot de passe.
 // Vérifie le token reçu puis met à jour le mot de passe utilisateur.
-router.post('/reset-password', async (req: express.Request, res: express.Response) => {
+router.post('/reset-password', authLimiter, async (req: express.Request, res: express.Response) => {
   try {
     const { token, newPassword } = req.body
 
