@@ -7,8 +7,17 @@
 
     <div class="travaux-list">
       <div v-for="travail in travaux" :key="travail.id" class="travail-item">
-        <div class="travail-icon" :class="`icon-${travail.couleur}`">
-          <img :src="travail.icon" :alt="travail.matiere" class="icon-img" />
+        <div
+          class="travail-icon"
+          :style="{
+            backgroundColor: `rgba(${hexToRgb(getTravailStyles(travail.matiere).backgroundColor)}, 0.2)`,
+          }"
+        >
+          <img
+            :src="getTravailStyles(travail.matiere).icon"
+            :alt="travail.matiere"
+            class="icon-img"
+          />
         </div>
 
         <div class="travail-info">
@@ -24,56 +33,67 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
+import { getMatiereByName } from '@/utils/matieres'
+
 const travaux = [
   {
     id: 1,
     titre: 'Exercices sur les équations',
     matiere: 'Mathématiques',
     dateLimit: '11/05/2026 23:00:00',
-    icon: '/maths-devoir-icon.svg',
-    couleur: 'green',
   },
   {
     id: 2,
     titre: 'Analyse de texte: Victor Hugo',
     matiere: 'Français',
     dateLimit: '11/05/2026 23:55:00',
-    icon: '/francais-devoir-icon.svg',
-    couleur: 'blue',
   },
   {
     id: 3,
     titre: 'Vocabulary: Unit 5',
-    matiere: 'Anglais',
+    matiere: 'Langues',
     dateLimit: '12/05/2026 16:00:00',
-    icon: '/anglais-devoir-icon.svg',
-    couleur: 'red',
   },
   {
     id: 4,
     titre: 'Etude de document: La révolution',
-    matiere: 'Histoire',
+    matiere: 'Histoire-Géo',
     dateLimit: '11/05/2026 23:55:00',
-    icon: '/histoire-geo-devoir-icon.svg',
-    couleur: 'orange',
   },
   {
     id: 5,
     titre: 'Le vivant et son évolution',
-    matiere: 'SVT',
+    matiere: 'Sciences',
     dateLimit: '12/05/2026 09:00:00',
-    icon: '/sciences-devoir-icon.svg',
-    couleur: 'purple',
   },
   {
     id: 6,
     titre: 'Temps course',
-    matiere: 'EPS',
+    matiere: 'Autres',
     dateLimit: '11/05/2026 14:55:00',
-    icon: '/other-devoir-icon.svg',
-    couleur: 'orange-light',
   },
 ]
+
+const getTravailStyles = (matiere: string) => {
+  const matiereInfo = getMatiereByName(matiere)
+  return {
+    icon: matiereInfo?.devoirIcon || '/other-devoir-icon.svg',
+    backgroundColor: matiereInfo?.color || '#CCCCCC',
+  }
+}
+
+const hexToRgb = (hex?: string): string => {
+  if (!hex) return '0, 0, 0'
+
+  const match = hex.match(/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i)
+
+  if (!match) return '0, 0, 0'
+
+  const [, r, g, b] = match
+
+  return `${parseInt(r!, 16)}, ${parseInt(g!, 16)}, ${parseInt(b!, 16)}`
+}
 </script>
 
 <style scoped>
@@ -143,30 +163,6 @@ const travaux = [
   width: 32px;
   height: 32px;
   object-fit: contain;
-}
-
-.icon-green {
-  background: #d4edda;
-}
-
-.icon-blue {
-  background: #cfe2ff;
-}
-
-.icon-red {
-  background: #f8d7da;
-}
-
-.icon-orange {
-  background: #fff3cd;
-}
-
-.icon-orange-light {
-  background: #ffe5b4;
-}
-
-.icon-purple {
-  background: #e2d5f3;
 }
 
 .travail-info {

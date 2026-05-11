@@ -47,7 +47,10 @@
 
     <!-- Logout -->
     <div class="sidebar-logout">
-      <button class="logout-btn" @click="handleLogout">🔒 deconnexion</button>
+      <button class="logout-item" @click="handleLogout">
+        <img src="/deconnexion-icon.svg" alt="Déconnexion" class="menu-icon" />
+        <span class="menu-text">Déconnexion</span>
+      </button>
     </div>
   </nav>
 </template>
@@ -173,5 +176,27 @@ const handleLogout = () => {
 .logout-btn:hover {
   background: rgba(217, 83, 79, 0.3);
   color: #ff6b6b;
+}
+
+.logout-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 14px;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.75);
+  text-decoration: none;
+  transition: all 0.3s ease;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.logout-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
 }
 </style>

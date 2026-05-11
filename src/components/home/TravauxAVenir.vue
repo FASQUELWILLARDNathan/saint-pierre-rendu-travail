@@ -7,8 +7,13 @@
 
     <div class="travaux-coming">
       <div v-for="event in events" :key="event.id" class="event-card">
-        <div class="event-icon" :class="`icon-${event.couleur}`">
-          <img :src="event.icon" :alt="event.titre" class="icon-img" />
+        <div
+          class="event-icon"
+          :style="{
+            backgroundColor: `rgba(${hexToRgb(getEventStyles(event.matiere).backgroundColor)}, 0.2)`,
+          }"
+        >
+          <img :src="getEventStyles(event.matiere).icon" :alt="event.titre" class="icon-img" />
         </div>
         <div class="event-info">
           <h4 class="event-titre">{{ event.titre }}</h4>
@@ -20,29 +25,48 @@
 </template>
 
 <script setup lang="ts">
+import { getMatiereByName } from '@/utils/matieres'
+
 const events = [
   {
     id: 1,
     titre: 'Interrogation conjugaison',
     date: '19/05/2026 11h00',
-    icon: '/francais-devoir-icon.svg',
-    couleur: 'blue',
+    matiere: 'Français',
   },
   {
     id: 2,
     titre: 'Interrogation fonctions',
     date: '19/05/2026 13h00',
-    icon: '/maths-devoir-icon.svg',
-    couleur: 'green',
+    matiere: 'Mathématiques',
   },
   {
     id: 3,
     titre: 'Interrogation irregular verbs',
     date: '19/05/2026 13h00',
-    icon: '/anglais-devoir-icon.svg',
-    couleur: 'red',
+    matiere: 'Langues',
   },
 ]
+
+const getEventStyles = (matiere: string) => {
+  const matiereInfo = getMatiereByName(matiere)
+  return {
+    icon: matiereInfo?.devoirIcon || '/other-devoir-icon.svg',
+    backgroundColor: matiereInfo?.color || '#CCCCCC',
+  }
+}
+
+const hexToRgb = (hex?: string): string => {
+  if (!hex) return '0, 0, 0'
+
+  const match = hex.match(/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i)
+
+  if (!match) return '0, 0, 0'
+
+  const [, r, g, b] = match
+
+  return `${parseInt(r!, 16)}, ${parseInt(g!, 16)}, ${parseInt(b!, 16)}`
+}
 </script>
 
 <style scoped>
@@ -113,18 +137,6 @@ const events = [
   width: 28px;
   height: 28px;
   object-fit: contain;
-}
-
-.icon-blue {
-  background: #cfe2ff;
-}
-
-.icon-green {
-  background: #d4edda;
-}
-
-.icon-red {
-  background: #f8d7da;
 }
 
 .event-info {
