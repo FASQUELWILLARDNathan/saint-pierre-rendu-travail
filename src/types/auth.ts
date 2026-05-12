@@ -8,15 +8,25 @@ export interface User {
   username?: string
   email?: string
   role?: string
+
   eleve?: {
     id_user?: string | number
-    classe?: string
+    classe?: Classe
     annee?: string
   }
+
   professeur?: {
     id_user?: string | number
     matiere?: string
   }
+}
+
+// Structure d'une classe d'un eleve
+export interface Classe {
+  id_classe: string | number
+  niveau: string
+  lettre: string
+  nom_classe: string
 }
 
 // Structure de la réponse renvoyée après authentification.

@@ -90,10 +90,43 @@ export function useApi() {
   /** Récupère les événements à venir */
   const getEvenementsAVenir = () => request('/api/evenements/a-venir')
 
+  /** Récupère la liste de toutes les classes */
+  const getClasses = () => request('/api/profile/classes')
+
+  /** Récupère la liste de toutes les matières */
+  const getMatieres = () => request('/api/profile/matieres')
+
+  /** Récupère la liste de toutes les spécialités */
+  const getSpecialites = () => request('/api/profile/specialites')
+
+  /** Récupère la liste de toutes les options */
+  const getOptions = () => request('/api/profile/options')
+
+  /** Récupère le profil de l'utilisateur connecté */
+  const getProfil = () => request('/api/profile')
+
+  /** Met à jour le profil de l'utilisateur connecté */
+  const updateProfil = (data: any) =>
+    request('/api/profile', {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    })
+
+  /** Récupère tous les élèves */
+  const getAllEleves = () => request('/api/users/eleves/list')
+
+  /** Met à jour un utilisateur (élève) */
+  const updateUser = (id: string | number, data: any) =>
+    request(`/api/users/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    })
+
   return {
     signIn,
     signUp,
     logout,
+    request,
     getCours,
     getDevoirs,
     getRendus,
@@ -102,5 +135,13 @@ export function useApi() {
     getUsers,
     getTravauxARendreRecents,
     getEvenementsAVenir,
+    getClasses,
+    getMatieres,
+    getSpecialites,
+    getOptions,
+    getProfil,
+    updateProfil,
+    getAllEleves,
+    updateUser,
   }
 }

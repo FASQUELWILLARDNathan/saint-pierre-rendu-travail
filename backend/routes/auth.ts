@@ -112,8 +112,8 @@ router.post('/sign-up', authLimiter, async (req: express.Request, res: express.R
         eleve = await tx.eleve.create({
           data: {
             id_user: createdUser.id_user,
-            classe: String(req.body.classe),
             annee: String(req.body.annee),
+            id_classe: req.body.classe ? BigInt(req.body.classe) : null,
           },
         })
       }

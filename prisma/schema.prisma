@@ -41,9 +41,12 @@ model utilisateur {
 // Extension de utilisateur pour eleve
 model eleve {
   id_user                 BigInt            @id
-  classe                  String?           @db.VarChar(50)
+  id_classe               BigInt?
   annee                   String?           @db.VarChar(50)
   user                    utilisateur       @relation(fields: [id_user], references: [id_user], onDelete: Cascade)
+  classe                  classe?           @relation(fields: [id_classe], references: [id_classe], onDelete: SetNull)
+  specialites             EleveSpecialite[]
+  options                 EleveOption[]
   rendus                  rendu[]
 }
 
@@ -53,7 +56,95 @@ model professeur {
   matiere                 String?           @db.VarChar(50)
   asso_professeur_devoirs assprofdevoir[]
   cours                   cours[]
+  classes_enseignees      ClasseProfesseur[]
+  specialites_enseignees  ProfesseurSpecialite[]
+  options_enseignees      ProfesseurOption[]
   user                    utilisateur       @relation(fields: [id_user], references: [id_user], onDelete: Cascade)
+}
+
+// Représente une classe (Terminale A, 1ère B, etc.)
+model classe {
+  id_classe               BigInt            @id @default(autoincrement())
+  niveau                  String            @db.VarChar(20)
+  lettre                  String            @db.VarChar(1)
+  nom_classe              String            @unique @db.VarChar(50)
+  eleves                  eleve[]
+  professeurs             ClasseProfesseur[]
+  created_at              DateTime          @default(now())
+  @@unique([niveau, lettre])
+}
+
+// Représente une spécialité (NSI, SVT, Maths, etc.)
+model specialite {
+  id_specialite           BigInt            @id @default(autoincrement())
+  nom_specialite          String            @unique @db.VarChar(50)
+  eleves                  EleveSpecialite[]
+  professeurs             ProfesseurSpecialite[]
+  created_at              DateTime          @default(now())
+}
+
+// Représente une option (Sport, Latin, etc.)
+model option {
+  id_option               BigInt            @id @default(autoincrement())
+  nom_option              String            @unique @db.VarChar(50)
+  eleves                  EleveOption[]
+  professeurs             ProfesseurOption[]
+  created_at              DateTime          @default(now())
+}
+
+// Table de liaison explicite: Eleve - Specialite
+model EleveSpecialite {
+  id_eleve                BigInt  @map("A")
+  id_specialite           BigInt  @map("B")
+  eleve                   eleve   @relation(fields: [id_eleve], references: [id_user], onDelete: Cascade)
+  specialite              specialite @relation(fields: [id_specialite], references: [id_specialite], onDelete: Cascade)
+  
+  @@id([id_eleve, id_specialite])
+  @@map("_eleveTospecialite")
+}
+
+// Table de liaison explicite: Eleve - Option
+model EleveOption {
+  id_eleve                BigInt  @map("A")
+  id_option               BigInt  @map("B")
+  eleve                   eleve   @relation(fields: [id_eleve], references: [id_user], onDelete: Cascade)
+  option                  option  @relation(fields: [id_option], references: [id_option], onDelete: Cascade)
+  
+  @@id([id_eleve, id_option])
+  @@map("_eleveTooption")
+}
+
+// Table de liaison explicite: Professeur - Specialite
+model ProfesseurSpecialite {
+  id_professeur           BigInt  @map("A")
+  id_specialite           BigInt  @map("B")
+  professeur              professeur @relation(fields: [id_professeur], references: [id_user], onDelete: Cascade)
+  specialite              specialite @relation(fields: [id_specialite], references: [id_specialite], onDelete: Cascade)
+  
+  @@id([id_professeur, id_specialite])
+  @@map("_professeurTospecialite")
+}
+
+// Table de liaison explicite: Professeur - Option
+model ProfesseurOption {
+  id_professeur           BigInt  @map("A")
+  id_option               BigInt  @map("B")
+  professeur              professeur @relation(fields: [id_professeur], references: [id_user], onDelete: Cascade)
+  option                  option  @relation(fields: [id_option], references: [id_option], onDelete: Cascade)
+  
+  @@id([id_professeur, id_option])
+  @@map("_optionToprofesseur")
+}
+
+// Table de liaison explicite: Classe - Professeur
+model ClasseProfesseur {
+  id_classe               BigInt  @map("A")
+  id_professeur           BigInt  @map("B")
+  classe                  classe  @relation(fields: [id_classe], references: [id_classe], onDelete: Cascade)
+  professeur              professeur @relation(fields: [id_professeur], references: [id_user], onDelete: Cascade)
+  
+  @@id([id_classe, id_professeur])
+  @@map("_classeToprofesseur")
 }
 
 

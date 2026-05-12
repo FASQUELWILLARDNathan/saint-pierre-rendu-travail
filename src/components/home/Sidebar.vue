@@ -23,39 +23,97 @@
 
     <!-- Navigation Menu -->
     <div class="sidebar-menu">
-      <router-link to="/" class="menu-item active" @click="isSidebarOpen = false">
+      <router-link
+        to="/"
+        class="menu-item"
+        :class="{ active: $route.path === '/' }"
+        @click="isSidebarOpen = false"
+      >
         <img src="/accueil-icon.svg" alt="Accueil" class="menu-icon" />
         <span class="menu-text">Accueil</span>
       </router-link>
 
-      <router-link to="/notes" class="menu-item" @click="isSidebarOpen = false">
+      <router-link
+        v-if="authStore.user?.role === 'eleve'"
+        to="/notes"
+        class="menu-item"
+        :class="{ active: $route.path === '/notes' }"
+        @click="isSidebarOpen = false"
+      >
         <img src="/notes-icon.svg" alt="Notes" class="menu-icon" />
         <span class="menu-text">Notes</span>
       </router-link>
 
-      <router-link to="/travaux" class="menu-item" @click="isSidebarOpen = false">
+      <router-link
+        v-if="authStore.user?.role === 'professeur'"
+        to="/classes"
+        class="menu-item"
+        :class="{ active: $route.path === '/classes' }"
+        @click="isSidebarOpen = false"
+      >
+        <img src="/classe-icon.svg" alt="Classes" class="menu-icon" />
+        <span class="menu-text">Classes</span>
+      </router-link>
+
+      <router-link
+        to="/travaux"
+        class="menu-item"
+        :class="{ active: $route.path === '/travaux' }"
+        @click="isSidebarOpen = false"
+      >
         <img src="/travaux-icon.svg" alt="Travaux" class="menu-icon" />
         <span class="menu-text">Travaux</span>
       </router-link>
 
-      <router-link to="/devoirs" class="menu-item" @click="isSidebarOpen = false">
+      <router-link
+        to="/devoirs"
+        class="menu-item"
+        :class="{ active: $route.path === '/devoirs' }"
+        @click="isSidebarOpen = false"
+      >
         <img src="/devoirs-icon.svg" alt="Devoirs" class="menu-icon" />
         <span class="menu-text">Devoirs</span>
       </router-link>
 
-      <router-link to="/cours" class="menu-item" @click="isSidebarOpen = false">
+      <router-link
+        to="/cours"
+        class="menu-item"
+        :class="{ active: $route.path === '/cours' }"
+        @click="isSidebarOpen = false"
+      >
         <img src="/cours-icon.svg" alt="Cours" class="menu-icon" />
         <span class="menu-text">Cours</span>
       </router-link>
 
-      <router-link to="/messagerie" class="menu-item" @click="isSidebarOpen = false">
+      <router-link
+        to="/messagerie"
+        class="menu-item"
+        :class="{ active: $route.path === '/messagerie' }"
+        @click="isSidebarOpen = false"
+      >
         <img src="/messagerie-icon.svg" alt="Messagerie" class="menu-icon" />
         <span class="menu-text">Messagerie</span>
       </router-link>
 
-      <router-link to="/profil" class="menu-item" @click="isSidebarOpen = false">
+      <router-link
+        to="/profil"
+        class="menu-item"
+        :class="{ active: $route.path === '/profil' }"
+        @click="isSidebarOpen = false"
+      >
         <img src="/profil-icon.svg" alt="Profil" class="menu-icon" />
         <span class="menu-text">Profil</span>
+      </router-link>
+
+      <router-link
+        v-if="authStore.user?.role === 'professeur'"
+        to="/gestion-eleves"
+        class="menu-item"
+        :class="{ active: $route.path === '/gestion-eleves' }"
+        @click="isSidebarOpen = false"
+      >
+        <img src="/settings-icon.svg" alt="Gestion des élèves" class="menu-icon" />
+        <span class="menu-text">Gestion élèves</span>
       </router-link>
     </div>
 
@@ -127,6 +185,8 @@ const handleLogout = () => {
   z-index: 1000;
   box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
   overflow-y: auto;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 }
 
 .sidebar-close-btn {
@@ -189,6 +249,8 @@ const handleLogout = () => {
   cursor: pointer;
   font-size: 14px;
   font-weight: 500;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 }
 
 .menu-item:hover {
@@ -255,6 +317,8 @@ const handleLogout = () => {
   cursor: pointer;
   font-size: 14px;
   font-weight: 500;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 }
 
 .logout-item:hover {

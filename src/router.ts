@@ -5,6 +5,9 @@ import RegisterPage from './pages/RegisterPage.vue'
 import HomePage from './pages/HomePage.vue'
 import ForgotPasswordPage from './pages/ForgotPasswordPage.vue'
 import ResetPasswordPage from './pages/ResetPasswordPage.vue'
+import ProfilePage from './pages/ProfilPage.vue'
+import EleveGestionPage from './pages/EleveGestionPage.vue'
+import ClassesPage from './pages/ClassesPage.vue'
 import { useAuthStore } from './stores/auth.store'
 
 export const ROUTES = {
@@ -14,6 +17,9 @@ export const ROUTES = {
   LOGOUT: '/logout',
   FORGOT_PASSWORD: '/forgot-password',
   RESET_PASSWORD: '/reset-password',
+  PROFILE: '/profil',
+  ELEVE_GESTION: '/gestion-eleves',
+  CLASSES: '/classes',
 } as const
 
 const routes = [
@@ -41,6 +47,21 @@ const routes = [
     path: ROUTES.RESET_PASSWORD,
     component: ResetPasswordPage,
     meta: { requiresAuth: false },
+  },
+  {
+    path: '/profil',
+    component: ProfilePage,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: ROUTES.ELEVE_GESTION,
+    component: EleveGestionPage,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: ROUTES.CLASSES,
+    component: ClassesPage,
+    meta: { requiresAuth: true },
   },
   {
     path: ROUTES.LOGOUT,

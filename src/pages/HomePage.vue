@@ -64,16 +64,29 @@ import TravauxAVenir from '../components/home/TravauxAVenir.vue'
 const authStore = useAuthStore()
 const router = useRouter()
 
-const userMenuOptions = [
-  {
-    label: 'Profil',
-    key: 'profile',
-  },
-  {
+const userMenuOptions = computed(() => {
+  const options: any[] = [
+    {
+      label: 'Profil',
+      key: 'profil',
+    },
+  ]
+
+  // Add gestion des élèves option for teachers
+  if (authStore.user?.role === 'professeur') {
+    options.push({
+      label: 'Gestion des élèves',
+      key: 'gestion-eleves',
+    })
+  }
+
+  options.push({
     label: 'Déconnexion',
     key: 'logout',
-  },
-]
+  })
+
+  return options
+})
 
 const userName = computed(() => {
   if (authStore.user?.prenom && authStore.user?.nom) {
@@ -83,7 +96,7 @@ const userName = computed(() => {
 })
 
 const userClass = computed(() => {
-  return authStore.user?.eleve?.classe || 'Classe non définie'
+  return authStore.user?.eleve?.classe?.nom_classe || 'Classe non définie'
 })
 
 const userInitials = computed(() => {
@@ -97,8 +110,10 @@ const userInitials = computed(() => {
 const handleUserMenuSelect = (key: string) => {
   if (key === 'logout') {
     handleLogout()
-  } else if (key === 'profile') {
+  } else if (key === 'profil') {
     router.push('/profil')
+  } else if (key === 'gestion-eleves') {
+    router.push('/gestion-eleves')
   }
 }
 

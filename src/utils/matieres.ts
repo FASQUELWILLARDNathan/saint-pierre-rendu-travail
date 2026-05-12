@@ -31,7 +31,7 @@ export const MATIERES: Matiere[] = [
     nom: 'Langues',
     icon: '/langues-icon.svg',
     color: '#FF0000',
-    devoirIcon: '/anglais-devoir-icon.svg',
+    devoirIcon: '/langues-devoir-icon.svg',
   },
   {
     id: 4,
