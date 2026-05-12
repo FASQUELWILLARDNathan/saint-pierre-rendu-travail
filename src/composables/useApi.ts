@@ -84,6 +84,12 @@ export function useApi() {
   /** Récupère la liste de tous les utilisateurs */
   const getUsers = () => request('/api/users')
 
+  /** Récupère les travaux à rendre (devoirs non rendus) */
+  const getTravauxARendreRecents = () => request('/api/devoirs/travaux-a-rendre')
+
+  /** Récupère les événements à venir */
+  const getEvenementsAVenir = () => request('/api/evenements/a-venir')
+
   return {
     signIn,
     signUp,
@@ -94,5 +100,7 @@ export function useApi() {
     getEleves,
     getProfesseurs,
     getUsers,
+    getTravauxARendreRecents,
+    getEvenementsAVenir,
   }
 }

@@ -1,23 +1,35 @@
 <template>
   <div class="travaux-recents-section">
     <div class="section-header">
-      <h2>Travaux récents à rendre</h2>
+      <h2>Travaux à rendre</h2>
       <router-link to="/travaux" class="voir-tout">Voir Tout</router-link>
     </div>
 
-    <div class="travaux-list">
-      <div v-for="travail in travaux" :key="travail.id" class="travail-item">
+    <!-- Loading state -->
+    <div v-if="isLoading" class="loading">
+      <p>Chargement des travaux...</p>
+    </div>
+
+    <!-- Error state -->
+    <div v-else-if="error" class="error">
+      <p>⚠️ {{ error }}</p>
+    </div>
+
+    <!-- Empty state -->
+    <div v-else-if="travaux.length === 0" class="empty">
+      <p>✓ Aucun travail à rendre!</p>
+    </div>
+
+    <!-- Travaux list -->
+    <div v-else class="travaux-list">
+      <div v-for="travail in travaux" :key="String(travail.id)" class="travail-item">
         <div
           class="travail-icon"
           :style="{
-            backgroundColor: `rgba(${hexToRgb(getTravailStyles(travail.matiere).backgroundColor)}, 0.2)`,
+            backgroundColor: hexToRgba(travail.matiereColor, 0.5),
           }"
         >
-          <img
-            :src="getTravailStyles(travail.matiere).icon"
-            :alt="travail.matiere"
-            class="icon-img"
-          />
+          <img :src="travail.matiereIcon" :alt="travail.matiere" class="icon-img" />
         </div>
 
         <div class="travail-info">
@@ -33,67 +45,37 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import { getMatiereByName } from '@/utils/matieres'
+import { ref, onMounted } from 'vue'
+import { useApi } from '@/composables/useApi'
+import { hexToRgba } from '@/utils/colors'
 
-const travaux = [
-  {
-    id: 1,
-    titre: 'Exercices sur les équations',
-    matiere: 'Mathématiques',
-    dateLimit: '11/05/2026 23:00:00',
-  },
-  {
-    id: 2,
-    titre: 'Analyse de texte: Victor Hugo',
-    matiere: 'Français',
-    dateLimit: '11/05/2026 23:55:00',
-  },
-  {
-    id: 3,
-    titre: 'Vocabulary: Unit 5',
-    matiere: 'Langues',
-    dateLimit: '12/05/2026 16:00:00',
-  },
-  {
-    id: 4,
-    titre: 'Etude de document: La révolution',
-    matiere: 'Histoire-Géo',
-    dateLimit: '11/05/2026 23:55:00',
-  },
-  {
-    id: 5,
-    titre: 'Le vivant et son évolution',
-    matiere: 'Sciences',
-    dateLimit: '12/05/2026 09:00:00',
-  },
-  {
-    id: 6,
-    titre: 'Temps course',
-    matiere: 'Autres',
-    dateLimit: '11/05/2026 14:55:00',
-  },
-]
+interface Travail {
+  id: string
+  titre: string
+  matiere: string
+  dateLimit: string
+  description?: string
+  matiereColor: string
+  matiereIcon?: string
+}
 
-const getTravailStyles = (matiere: string) => {
-  const matiereInfo = getMatiereByName(matiere)
-  return {
-    icon: matiereInfo?.devoirIcon || '/other-devoir-icon.svg',
-    backgroundColor: matiereInfo?.color || '#CCCCCC',
+const api = useApi()
+const travaux = ref<Travail[]>([])
+const isLoading = ref(true)
+const error = ref<string | null>(null)
+
+onMounted(async () => {
+  try {
+    isLoading.value = true
+    error.value = null
+    travaux.value = (await api.getTravauxARendreRecents()) as Travail[]
+  } catch (err) {
+    error.value = 'Impossible de charger les travaux. Veuillez réessayer.'
+    console.error('Erreur lors du chargement des travaux:', err)
+  } finally {
+    isLoading.value = false
   }
-}
-
-const hexToRgb = (hex?: string): string => {
-  if (!hex) return '0, 0, 0'
-
-  const match = hex.match(/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i)
-
-  if (!match) return '0, 0, 0'
-
-  const [, r, g, b] = match
-
-  return `${parseInt(r!, 16)}, ${parseInt(g!, 16)}, ${parseInt(b!, 16)}`
-}
+})
 </script>
 
 <style scoped>
@@ -129,6 +111,32 @@ const hexToRgb = (hex?: string): string => {
 
 .voir-tout:hover {
   text-decoration: underline;
+}
+
+.loading,
+.error,
+.empty {
+  padding: 20px;
+  text-align: center;
+  color: #666;
+}
+
+.loading {
+  font-style: italic;
+}
+
+.error {
+  color: #d9534f;
+  background: #fadbd8;
+  border-radius: 8px;
+  border: 1px solid #f5b7b1;
+}
+
+.empty {
+  color: #27ae60;
+  background: #d5f4e6;
+  border-radius: 8px;
+  border: 1px solid #abebc6;
 }
 
 .travaux-list {

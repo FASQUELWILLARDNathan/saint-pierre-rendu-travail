@@ -6,6 +6,20 @@ datasource db {
   provider = "postgresql"
 }
 
+// Represente une matière (Mathématiques, Français, etc.)
+model matiere {
+  id_matiere              BigInt            @id @default(autoincrement())
+  nom_matiere             String            @unique @db.VarChar(50)
+  description             String?
+  couleur                 String?           @db.VarChar(7)
+  icon_url                String?
+  devoir_icon_url         String?
+  cours                   cours[]
+  devoirs                 devoir[]
+  evenements              evenement[]
+  created_at              DateTime          @default(now())
+}
+
 // Represente un utilisateur du systeme
 // Il peut etre eleve ou professeur ou administrateur mais a inserer dans la base de donnees pour une question de securité
 model utilisateur {
@@ -43,26 +57,32 @@ model professeur {
 }
 
 
-// Un cours est créé par un professeur unique
+// Un cours est créé par un professeur unique et appartient à une matière
 model cours {
   id_cours              BigInt              @id @default(autoincrement())
   id_user               BigInt
-  nom_cours             String              @unique @db.VarChar(50)
+  id_matiere            BigInt
+  nom_cours             String              @db.VarChar(50)
   description_cours     String?
   professeur            professeur          @relation(fields: [id_user], references: [id_user])
+  matiere               matiere             @relation(fields: [id_matiere], references: [id_matiere])
   devoirs               devoir[]
+  @@unique([id_matiere, nom_cours])
 }
 
 
-// Un devoirs appartient a un seul cours
+// Un devoirs appartient a un seul cours et une matière
 model devoir {
   id_devoir             BigInt              @id @default(autoincrement())
   id_cours              BigInt
+  id_matiere            BigInt
   nom_devoir            String              @db.VarChar(255)
   description_devoir    String?
+  date_limite           DateTime?
   coefficient           Decimal?            @db.Decimal(5, 2)
   professeurs           assprofdevoir[]
   cours                 cours               @relation(fields: [id_cours], references: [id_cours])
+  matiere               matiere             @relation(fields: [id_matiere], references: [id_matiere])
   rendus                rendu[]
   @@unique([id_cours, nom_devoir])
 }
@@ -93,6 +113,20 @@ model rendu {
   eleve                 eleve               @relation(fields: [id_user], references: [id_user])
 
   @@unique([id_devoir, id_user])
+}
+
+// Représente un événement (interrogation, examen, etc.)
+model evenement {
+  id_evenement          BigInt              @id @default(autoincrement())
+  id_matiere            BigInt
+  nom_evenement         String              @db.VarChar(255)
+  description           String?
+  type_evenement        String              @db.VarChar(50)
+  date_evenement        DateTime
+  duree_minutes         Int?
+  icon_url              String?
+  matiere               matiere             @relation(fields: [id_matiere], references: [id_matiere])
+  created_at            DateTime            @default(now())
 }
 
 // Represente les roles qui peuvent etre donner à un utilisateur

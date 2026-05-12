@@ -5,15 +5,31 @@
       <router-link to="/calendrier" class="voir-tout">Voir Tout</router-link>
     </div>
 
-    <div class="travaux-coming">
-      <div v-for="event in events" :key="event.id" class="event-card">
+    <!-- Loading state -->
+    <div v-if="isLoading" class="loading">
+      <p>Chargement des événements...</p>
+    </div>
+
+    <!-- Error state -->
+    <div v-else-if="error" class="error">
+      <p>⚠️ {{ error }}</p>
+    </div>
+
+    <!-- Empty state -->
+    <div v-else-if="events.length === 0" class="empty">
+      <p>✓ Aucun événement prévu!</p>
+    </div>
+
+    <!-- Events list -->
+    <div v-else class="travaux-coming">
+      <div v-for="event in events" :key="String(event.id)" class="event-card">
         <div
           class="event-icon"
           :style="{
-            backgroundColor: `rgba(${hexToRgb(getEventStyles(event.matiere).backgroundColor)}, 0.2)`,
+            backgroundColor: hexToRgba(event.matiereColor, 0.5),
           }"
         >
-          <img :src="getEventStyles(event.matiere).icon" :alt="event.titre" class="icon-img" />
+          <img :src="event.matiereIcon" :alt="event.matiere" class="icon-img" />
         </div>
         <div class="event-info">
           <h4 class="event-titre">{{ event.titre }}</h4>
@@ -25,48 +41,39 @@
 </template>
 
 <script setup lang="ts">
-import { getMatiereByName } from '@/utils/matieres'
+import { ref, onMounted } from 'vue'
+import { useApi } from '@/composables/useApi'
+import { hexToRgba } from '@/utils/colors'
 
-const events = [
-  {
-    id: 1,
-    titre: 'Interrogation conjugaison',
-    date: '19/05/2026 11h00',
-    matiere: 'Français',
-  },
-  {
-    id: 2,
-    titre: 'Interrogation fonctions',
-    date: '19/05/2026 13h00',
-    matiere: 'Mathématiques',
-  },
-  {
-    id: 3,
-    titre: 'Interrogation irregular verbs',
-    date: '19/05/2026 13h00',
-    matiere: 'Langues',
-  },
-]
+interface Evenement {
+  id: string
+  titre: string
+  matiere: string
+  date: string
+  description?: string
+  type: string
+  duree?: number
+  matiereColor: string
+  matiereIcon?: string
+}
 
-const getEventStyles = (matiere: string) => {
-  const matiereInfo = getMatiereByName(matiere)
-  return {
-    icon: matiereInfo?.devoirIcon || '/other-devoir-icon.svg',
-    backgroundColor: matiereInfo?.color || '#CCCCCC',
+const api = useApi()
+const events = ref<Evenement[]>([])
+const isLoading = ref(true)
+const error = ref<string | null>(null)
+
+onMounted(async () => {
+  try {
+    isLoading.value = true
+    error.value = null
+    events.value = (await api.getEvenementsAVenir()) as Evenement[]
+  } catch (err) {
+    error.value = 'Impossible de charger les événements. Veuillez réessayer.'
+    console.error('Erreur lors du chargement des événements:', err)
+  } finally {
+    isLoading.value = false
   }
-}
-
-const hexToRgb = (hex?: string): string => {
-  if (!hex) return '0, 0, 0'
-
-  const match = hex.match(/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i)
-
-  if (!match) return '0, 0, 0'
-
-  const [, r, g, b] = match
-
-  return `${parseInt(r!, 16)}, ${parseInt(g!, 16)}, ${parseInt(b!, 16)}`
-}
+})
 </script>
 
 <style scoped>
@@ -103,6 +110,32 @@ const hexToRgb = (hex?: string): string => {
 
 .voir-tout:hover {
   text-decoration: underline;
+}
+
+.loading,
+.error,
+.empty {
+  padding: 20px;
+  text-align: center;
+  color: #666;
+}
+
+.loading {
+  font-style: italic;
+}
+
+.error {
+  color: #d9534f;
+  background: #fadbd8;
+  border-radius: 8px;
+  border: 1px solid #f5b7b1;
+}
+
+.empty {
+  color: #27ae60;
+  background: #d5f4e6;
+  border-radius: 8px;
+  border: 1px solid #abebc6;
 }
 
 .travaux-coming {

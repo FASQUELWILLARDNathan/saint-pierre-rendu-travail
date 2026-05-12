@@ -5,6 +5,8 @@ import { corsMiddleware } from './middleware/cors.ts'
 import { bigintMiddleware } from './middleware/bigint.ts'
 import authRoutes from './routes/auth.ts'
 import usersRoutes from './routes/users.ts'
+import devoirsRoutes from './routes/devoirs.ts'
+import evenementsRoutes from './routes/evenements.ts'
 
 const app = express()
 
@@ -24,6 +26,8 @@ app.get('/api/health', (req, res) => {
 // Routes
 app.use('/auth', authRoutes)
 app.use('/api/users', usersRoutes)
+app.use('/api/devoirs', devoirsRoutes)
+app.use('/api/evenements', evenementsRoutes)
 
 // Error de gestion
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
