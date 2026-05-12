@@ -101,7 +101,6 @@ const hexToRgb = (hex?: string): string => {
   background: white;
   border-radius: 12px;
   padding: 24px;
-  margin-top: 32px;
 }
 
 .section-header {
@@ -109,6 +108,8 @@ const hexToRgb = (hex?: string): string => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
 .section-header h2 {
@@ -167,6 +168,7 @@ const hexToRgb = (hex?: string): string => {
 
 .travail-info {
   flex: 1;
+  min-width: 0;
 }
 
 .travail-titre {
@@ -174,6 +176,7 @@ const hexToRgb = (hex?: string): string => {
   font-weight: 600;
   color: #1a1a1a;
   margin: 0 0 4px 0;
+  word-break: break-word;
 }
 
 .travail-matiere {
@@ -198,11 +201,129 @@ const hexToRgb = (hex?: string): string => {
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
+  flex-shrink: 0;
   transition: all 0.3s ease;
 }
 
 .btn-rendre:hover {
   background: #3d7a84;
   transform: translateY(-2px);
+}
+
+/* Tablette 768px-1024px */
+@media (max-width: 1024px) {
+  .travaux-recents-section {
+    padding: 16px;
+  }
+
+  .section-header {
+    margin-bottom: 16px;
+  }
+
+  .section-header h2 {
+    font-size: 16px;
+  }
+
+  .voir-tout {
+    font-size: 14px;
+  }
+
+  .travail-item {
+    gap: 12px;
+    padding: 12px;
+  }
+
+  .travail-icon {
+    width: 44px;
+    height: 44px;
+  }
+
+  .icon-img {
+    width: 28px;
+    height: 28px;
+  }
+
+  .btn-rendre {
+    padding: 6px 16px;
+    font-size: 12px;
+  }
+}
+
+/* Téléphone < 768px */
+@media (max-width: 767px) {
+  .travaux-recents-section {
+    padding: 16px;
+  }
+
+  .section-header {
+    margin-bottom: 16px;
+  }
+
+  .section-header h2 {
+    font-size: 16px;
+    flex: 1;
+  }
+
+  .voir-tout {
+    font-size: 12px;
+  }
+
+  .travail-item {
+    gap: 12px;
+    padding: 12px;
+    flex-wrap: wrap;
+  }
+
+  .travail-icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .icon-img {
+    width: 24px;
+    height: 24px;
+  }
+
+  .travail-info {
+    flex: 1 1 100%;
+    min-width: 200px;
+  }
+
+  .btn-rendre {
+    padding: 6px 16px;
+    font-size: 12px;
+    flex: 1 1 auto;
+  }
+}
+
+/* Petit téléphone < 480px */
+@media (max-width: 479px) {
+  .travaux-recents-section {
+    padding: 12px;
+  }
+
+  .travail-item {
+    gap: 8px;
+    padding: 8px;
+  }
+
+  .travail-titre {
+    font-size: 13px;
+  }
+
+  .travail-icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .icon-img {
+    width: 20px;
+    height: 20px;
+  }
+
+  .btn-rendre {
+    padding: 4px 12px;
+    font-size: 11px;
+  }
 }
 </style>

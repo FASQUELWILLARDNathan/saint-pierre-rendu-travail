@@ -130,6 +130,7 @@ const handleLogout = () => {
   align-items: center;
   gap: 32px;
   box-shadow: none;
+  flex-wrap: wrap;
 }
 
 .header-content {
@@ -137,6 +138,7 @@ const handleLogout = () => {
   align-items: center;
   gap: 24px;
   flex: 1;
+  min-width: 200px;
 }
 
 .header-title h1 {
@@ -183,10 +185,11 @@ const handleLogout = () => {
   color: white;
   font-weight: 700;
   font-size: 14px;
+  flex-shrink: 0;
 }
 
 .user-details {
-  display: flex;
+  display: none;
   flex-direction: column;
   gap: 2px;
 }
@@ -208,16 +211,6 @@ const handleLogout = () => {
   color: #205781;
   font-size: 12px;
   margin-left: 8px;
-}
-
-@media (min-width: 768px) {
-  .user-details {
-    display: block;
-  }
-
-  .home-header {
-    padding: 24px 48px;
-  }
 }
 
 .home-content {
@@ -247,31 +240,115 @@ const handleLogout = () => {
   grid-column: 1 / -1;
 }
 
-@media (max-width: 1024px) {
-  .content-grid {
-    grid-template-columns: 1fr;
+/* Tablette (768px - 1024px) */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .main-wrapper {
+    margin-left: 80px;
   }
 
-  .full-width {
-    grid-column: 1;
+  .home-header {
+    padding: 24px 16px;
+    gap: 16px;
+  }
+
+  .header-title h1 {
+    font-size: 32px;
+  }
+
+  .header-title p {
+    font-size: 14px;
+  }
+
+  .user-details {
+    display: none;
+  }
+
+  .home-content {
+    padding: 24px 16px;
+  }
+
+  .content-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
   }
 }
 
-@media (max-width: 640px) {
+/* Grand écran (> 1024px) */
+@media (min-width: 1025px) {
+  .user-details {
+    display: flex;
+  }
+}
+
+/* Téléphone (< 768px) */
+@media (max-width: 767px) {
   .main-wrapper {
     margin-left: 0;
+  }
+
+  .home-header {
+    padding: 16px 12px;
+    padding-left: 60px;
+    gap: 12px;
+    justify-content: flex-end;
+  }
+
+  .header-content {
+    display: none;
   }
 
   .header-title h1 {
     font-size: 20px;
   }
 
-  .home-header {
-    padding: 16px 12px;
+  .header-title p {
+    font-size: 12px;
+  }
+
+  .user-details {
+    display: none;
+  }
+
+  .user-dropdown {
+    padding: 6px 8px;
+  }
+
+  .user-avatar {
+    width: 36px;
+    height: 36px;
+    font-size: 12px;
+  }
+
+  .dropdown-arrow {
+    font-size: 10px;
+    margin-left: 4px;
   }
 
   .home-content {
     padding: 16px 12px;
+  }
+
+  .content-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+}
+
+/* Petit téléphone (< 480px) */
+@media (max-width: 479px) {
+  .home-header {
+    padding: 12px 8px;
+  }
+
+  .home-content {
+    padding: 12px 8px;
+  }
+
+  .user-avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 11px;
   }
 }
 </style>

@@ -45,4 +45,46 @@ const matieres = MATIERES
     grid-template-columns: repeat(3, 1fr);
   }
 }
+
+/* Tablette 768px-1024px */
+@media (max-width: 1024px) {
+  .matieres-section {
+    padding: 16px;
+  }
+
+  .matieres-section h2 {
+    font-size: 16px;
+    margin: 0 0 16px 0;
+  }
+
+  .matieres-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+}
+
+/* Téléphone < 768px */
+@media (max-width: 767px) {
+  .matieres-section {
+    padding: 16px;
+  }
+
+  .matieres-section h2 {
+    font-size: 16px;
+    margin: 0 0 16px 0;
+  }
+
+  .matieres-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+}
+
+/* Petit téléphone < 480px */
+@media (max-width: 479px) {
+  .matieres-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+}
 </style>

@@ -81,5 +81,84 @@ const iconBackgroundColor = computed(() => {
   font-weight: 600;
   color: #1a1a1a;
   text-align: center;
+  word-break: break-word;
+}
+
+/* Tablette 768px-1024px */
+@media (max-width: 1024px) {
+  .matiere-card {
+    padding: 16px 12px;
+    gap: 10px;
+  }
+
+  .matiere-icon {
+    width: 52px;
+    height: 52px;
+  }
+
+  .matiere-icon img {
+    width: 32px;
+    height: 32px;
+  }
+
+  .icon-placeholder {
+    font-size: 28px;
+  }
+
+  .matiere-nom {
+    font-size: 12px;
+  }
+}
+
+/* Téléphone < 768px */
+@media (max-width: 767px) {
+  .matiere-card {
+    padding: 16px 12px;
+    gap: 10px;
+  }
+
+  .matiere-icon {
+    width: 48px;
+    height: 48px;
+  }
+
+  .matiere-icon img {
+    width: 28px;
+    height: 28px;
+  }
+
+  .icon-placeholder {
+    font-size: 24px;
+  }
+
+  .matiere-nom {
+    font-size: 12px;
+  }
+}
+
+/* Petit téléphone < 480px */
+@media (max-width: 479px) {
+  .matiere-card {
+    padding: 12px 8px;
+    gap: 8px;
+  }
+
+  .matiere-icon {
+    width: 44px;
+    height: 44px;
+  }
+
+  .matiere-icon img {
+    width: 24px;
+    height: 24px;
+  }
+
+  .icon-placeholder {
+    font-size: 20px;
+  }
+
+  .matiere-nom {
+    font-size: 11px;
+  }
 }
 </style>
