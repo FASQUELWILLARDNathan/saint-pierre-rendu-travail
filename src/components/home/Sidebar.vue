@@ -106,7 +106,7 @@
       </router-link>
 
       <router-link
-        v-if="authStore.user?.role === 'professeur'"
+        v-if="authStore.user?.role === 'administrateur'"
         to="/gestion-eleves"
         class="menu-item"
         :class="{ active: $route.path === '/gestion-eleves' }"

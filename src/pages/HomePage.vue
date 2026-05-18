@@ -73,7 +73,7 @@ const userMenuOptions = computed(() => {
   ]
 
   // Add gestion des élèves option for teachers
-  if (authStore.user?.role === 'professeur') {
+  if (authStore.user?.role === 'administrateur') {
     options.push({
       label: 'Gestion des élèves',
       key: 'gestion-eleves',

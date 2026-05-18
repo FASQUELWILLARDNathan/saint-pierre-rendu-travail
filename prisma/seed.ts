@@ -2,6 +2,7 @@ import 'dotenv/config'
 import { PrismaClient } from '@prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'
 import * as bcrypt from 'bcrypt'
+import { create } from 'domain'
 
 const connectionString = process.env.DATABASE_URL
 
@@ -66,6 +67,19 @@ async function main() {
       hashed_password: passwordProf,
       role: 'professeur',
     },
+  })
+
+  const admin = await prisma.utilisateur.upsert({
+    where: { email: process.env.DEFAULT_ADMIN_EMAIL! },
+    update: {},
+    create: {
+      nom: 'Admin',
+      prenom: 'Serveur',
+      login: 'admin.serveur',
+      email: process.env.DEFAULT_ADMIN_EMAIL!,
+      hashed_password: await bcrypt.hash(process.env.DEFAULT_ADMIN_PASSWORD!, 10),
+      role: 'administrateur'
+    }
   })
 
   const eleve1 = await prisma.utilisateur.upsert({
