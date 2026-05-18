@@ -4,18 +4,13 @@ WORKDIR /app
 
 # dependances
 COPY package*.json ./
-RUN npm ci
+RUN npm ci --legacy-peer-deps
 
 # source
 COPY . .
 
 # build de l'application
 RUN npm run build
-
-
-# -------------------------
-# serveur nginx
-# -------------------------
 FROM nginx:alpine
 
 # copie le build vite

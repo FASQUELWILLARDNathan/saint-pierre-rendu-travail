@@ -44,3 +44,44 @@ __screenshots__/
 *.timestamp-*-*.mjs
 
 /src/generated/prisma
+
+# Coverage reports
+/coverage
+/.nyc_output
+
+# Vitest cache
+.vitest/
+
+# Test results
+test-results/
+junit.xml
+
+# Playwright
+/playwright-report/
+/test-results/
+/blob-report/
+/playwright/.cache/
+
+# E2E test screenshots and videos
+tests/e2e/**/*.png
+tests/e2e/**/*.jpg
+tests/e2e/**/*.mp4
+tests/e2e/**/*.webm
+
+# Temporary test files
+*.test.tmp
+*.spec.tmp
+
+# IDE
+.vscode/settings.json
+.vscode/launch.json
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env.test
+.env.test.local
