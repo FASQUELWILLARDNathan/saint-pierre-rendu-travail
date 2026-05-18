@@ -235,6 +235,11 @@ const handleLogout = () => {
   gap: 8px;
   padding: 20px 12px;
   overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.sidebar-menu::-webkit-scrollbar {
+  display: none;
 }
 
 .menu-item {

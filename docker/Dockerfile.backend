@@ -6,7 +6,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # 2. install unique propre
-RUN npm ci
+RUN npm ci --legacy-peer-deps
 
 # 3. Prisma schema seulement
 COPY prisma ./prisma/
