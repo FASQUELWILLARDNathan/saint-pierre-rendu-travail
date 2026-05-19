@@ -109,11 +109,21 @@ router.post('/sign-up', authLimiter, async (req: express.Request, res: express.R
       let professeur = null
 
       if (role === 'eleve') {
+        // Find classe by niveau name
+        const classeRecord = await tx.classe.findFirst({
+          where: {
+            niveau: {
+              mode: 'insensitive',
+              equals: req.body.classe,
+            },
+          },
+        })
+
         eleve = await tx.eleve.create({
           data: {
             id_user: createdUser.id_user,
             annee: String(req.body.annee),
-            id_classe: req.body.classe ? BigInt(req.body.classe) : null,
+            id_classe: classeRecord?.id_classe ?? null,
           },
         })
       }
