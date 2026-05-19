@@ -122,6 +122,19 @@ export function useApi() {
       body: JSON.stringify(data),
     })
 
+  /** Crée un nouvel utilisateur (élève) */
+  const createUser = (data: any) =>
+    request('/api/users', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+
+  /** Supprime un utilisateur (élève) */
+  const deleteUser = (id: string | number) =>
+    request(`/api/users/${id}`, {
+      method: 'DELETE',
+    })
+
   return {
     signIn,
     signUp,
@@ -143,5 +156,7 @@ export function useApi() {
     updateProfil,
     getAllEleves,
     updateUser,
+    createUser,
+    deleteUser,
   }
 }

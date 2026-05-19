@@ -22,8 +22,11 @@
         <div v-else class="gestion-container">
           <!-- Sélecteur de classe -->
           <n-card class="classe-selector-card">
-            <div class="classe-selector">
+            <div class="classe-selector-header">
               <label>Sélectionnez une classe :</label>
+              <n-button type="primary" @click="createNewEleve" size="small"> + Ajouter </n-button>
+            </div>
+            <div class="classe-selector">
               <n-select
                 v-model:value="selectedClasseId"
                 :options="
@@ -60,14 +63,17 @@
             </n-card>
 
             <!-- Formulaire de modification -->
-            <n-card v-if="currentEleve" class="eleve-form-card">
+            <n-card v-if="currentEleve || isCreatingNew" class="eleve-form-card">
               <div class="form-header">
                 <div>
-                  <h3>{{ currentEleve.prenom }} {{ currentEleve.nom }}</h3>
-                  <p>{{ currentEleveIndex + 1 }} / {{ selectedClasseEleves.length }}</p>
+                  <h3 v-if="isCreatingNew">Nouvel élève</h3>
+                  <h3 v-else>{{ currentEleve?.prenom }} {{ currentEleve?.nom }}</h3>
+                  <p v-if="!isCreatingNew">
+                    {{ currentEleveIndex + 1 }} / {{ selectedClasseEleves.length }}
+                  </p>
                 </div>
 
-                <div class="nav-buttons">
+                <div v-if="!isCreatingNew" class="nav-buttons">
                   <n-button
                     v-if="currentEleveIndex > 0"
                     @click="selectEleve(currentEleveIndex - 1)"
@@ -115,6 +121,10 @@
                   />
                 </n-form-item>
 
+                <n-form-item label="Année scolaire">
+                  <n-input v-model:value="currentEleveForm.annee" placeholder="ex: 2025-2026" />
+                </n-form-item>
+
                 <div v-if="shouldShowSpecialites()">
                   <n-form-item label="Spécialités">
                     <div class="specialites-container">
@@ -160,9 +170,17 @@
 
               <div class="form-actions">
                 <n-button type="primary" @click="saveEleve" :loading="isSaving">
-                  Enregistrer
+                  {{ isCreatingNew ? "Créer l'élève" : 'Enregistrer' }}
                 </n-button>
                 <n-button quaternary @click="cancelEdit">Annuler</n-button>
+                <n-button
+                  v-if="!isCreatingNew"
+                  type="error"
+                  @click="deleteEleve"
+                  :loading="isSaving"
+                >
+                  Supprimer
+                </n-button>
               </div>
             </n-card>
           </div>
@@ -191,6 +209,7 @@ import {
   NAlert,
   NDivider,
   NEmpty,
+  useMessage,
 } from 'naive-ui'
 import { useApi } from '@/composables/useApi'
 import { useAuthStore } from '@/stores/auth.store'
@@ -213,6 +232,7 @@ interface Eleve {
   prenom: string
   email: string
   id_classe: string | number | null
+  annee?: string
   specialites: Specialite[]
   options: Option[]
 }
@@ -229,6 +249,7 @@ interface Option {
 
 const api = useApi()
 const authStore = useAuthStore()
+const message = useMessage()
 
 const isLoading = ref(true)
 const isSaving = ref(false)
@@ -242,11 +263,13 @@ const eleves = ref<Eleve[]>([])
 
 const selectedClasseId = ref<string | null>(null)
 const currentEleveIndex = ref(0)
+const isCreatingNew = ref(false)
 const currentEleveForm = ref({
   nom: '',
   prenom: '',
   email: '',
   id_classe: null as string | null,
+  annee: '',
   specialites: [] as string[],
   options: [] as string[],
 })
@@ -312,8 +335,29 @@ function loadEleveForm(eleve: Eleve) {
     prenom: eleve.prenom,
     email: eleve.email,
     id_classe: eleve.id_classe ? String(eleve.id_classe) : null,
+    annee: eleve.annee || '',
     specialites: (eleve.specialites || []).map((s: any) => String(s.id_specialite || s)),
     options: (eleve.options || []).map((o: any) => String(o.id_option || o)),
+  }
+  specialitesError.value = null
+}
+
+function createNewEleve() {
+  isCreatingNew.value = true
+  // Get current school year
+  const now = new Date()
+  const year = now.getFullYear()
+  const nextYear = year + 1
+  const anneeDefault = `${year}-${nextYear}`
+
+  currentEleveForm.value = {
+    nom: '',
+    prenom: '',
+    email: '',
+    id_classe: selectedClasseId.value,
+    annee: anneeDefault,
+    specialites: [],
+    options: [],
   }
   specialitesError.value = null
 }
@@ -363,7 +407,7 @@ async function saveEleve() {
     error.value = null
     specialitesError.value = null
 
-    // Valider les spécialités
+    // Valider les spécialités si nécessaire
     if (shouldShowSpecialites()) {
       const level = getSchoolLevel()
       const requiredCount = level === 'premiere' ? 3 : 2
@@ -376,47 +420,70 @@ async function saveEleve() {
       }
     }
 
-    // Save via backend
-    await api.updateUser(currentEleve.value!.id_user, {
-      nom: currentEleveForm.value.nom,
-      prenom: currentEleveForm.value.prenom,
-      email: currentEleveForm.value.email,
-      id_classe: currentEleveForm.value.id_classe,
-      specialites: currentEleveForm.value.specialites,
-      options: currentEleveForm.value.options,
-    })
+    if (isCreatingNew.value) {
+      // Créer un nouvel élève
+      await api.createUser({
+        nom: currentEleveForm.value.nom,
+        prenom: currentEleveForm.value.prenom,
+        email: currentEleveForm.value.email,
+        id_classe: currentEleveForm.value.id_classe,
+        annee: currentEleveForm.value.annee,
+        specialites: currentEleveForm.value.specialites,
+        options: currentEleveForm.value.options,
+        role: 'eleve',
+      })
 
-    // Reload eleves
-    const savedEleveId = currentEleve.value!.id_user
-    eleves.value = (await api.getAllEleves()) as any
+      // Reload eleves
+      eleves.value = (await api.getAllEleves()) as any
+      isCreatingNew.value = false
 
-    // Reload current eleve
-    // Vérifier si l'élève est toujours dans la classe sélectionnée
-    const newIndex = selectedClasseEleves.value.findIndex(
-    (e) => String(e.id_user) === String(savedEleveId),
-    )
+      // Sélectionner la classe et l'élève créé
+      if (selectedClasseId.value) {
+        selectClasse(selectedClasseId.value)
+      }
+    } else {
+      // Mettre à jour l'élève existant
+      await api.updateUser(currentEleve.value!.id_user, {
+        nom: currentEleveForm.value.nom,
+        prenom: currentEleveForm.value.prenom,
+        email: currentEleveForm.value.email,
+        id_classe: currentEleveForm.value.id_classe,
+        annee: currentEleveForm.value.annee,
+        specialites: currentEleveForm.value.specialites,
+        options: currentEleveForm.value.options,
+      })
 
-    if (newIndex !== -1) {
+      // Reload eleves
+      const savedEleveId = currentEleve.value!.id_user
+      eleves.value = (await api.getAllEleves()) as any
+
+      // Reload current eleve
+      const newIndex = selectedClasseEleves.value.findIndex(
+        (e) => String(e.id_user) === String(savedEleveId),
+      )
+
+      if (newIndex !== -1) {
         // L'élève est toujours dans la même classe
         currentEleveIndex.value = newIndex
 
         const eleve = selectedClasseEleves.value[newIndex]
         if (eleve) {
-            loadEleveForm(eleve)
+          loadEleveForm(eleve)
         }
-        } else {
+      } else {
         // L'élève a changé de classe -> passer au suivant
         if (selectedClasseEleves.value.length > 0) {
-            currentEleveIndex.value = Math.min(
+          currentEleveIndex.value = Math.min(
             currentEleveIndex.value,
             selectedClasseEleves.value.length - 1,
-            )
+          )
 
-            const eleve = selectedClasseEleves.value[currentEleveIndex.value]
-            if (eleve) {
+          const eleve = selectedClasseEleves.value[currentEleveIndex.value]
+          if (eleve) {
             loadEleveForm(eleve)
-            }
+          }
         }
+      }
     }
   } catch (err) {
     error.value = 'Erreur lors de la sauvegarde'
@@ -427,8 +494,47 @@ async function saveEleve() {
 }
 
 function cancelEdit() {
-  if (currentEleve.value) {
+  if (isCreatingNew.value) {
+    isCreatingNew.value = false
+  } else if (currentEleve.value) {
     loadEleveForm(currentEleve.value)
+  }
+}
+
+async function deleteEleve() {
+  if (!currentEleve.value) return
+
+  const confirmed = window.confirm(
+    `Êtes-vous sûr de vouloir supprimer ${currentEleve.value.prenom} ${currentEleve.value.nom}? Cette action est irréversible.`,
+  )
+
+  if (!confirmed) return
+
+  try {
+    isSaving.value = true
+    error.value = null
+
+    await api.deleteUser(currentEleve.value.id_user)
+
+    // Reload eleves
+    eleves.value = (await api.getAllEleves()) as any
+
+    // Reset form
+    selectedClasseId.value = null
+    isCreatingNew.value = false
+
+    message.success('Élève supprimé avec succès', {
+      duration: 3000,
+    })
+  } catch (err) {
+    error.value = 'Erreur lors de la suppression'
+    console.error('Erreur:', err)
+
+    message.error("Erreur lors de la suppression de l'élève", {
+      duration: 3000,
+    })
+  } finally {
+    isSaving.value = false
   }
 }
 </script>
@@ -489,6 +595,13 @@ function cancelEdit() {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
+.classe-selector-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
 .classe-selector {
   display: flex;
   flex-direction: column;
@@ -518,6 +631,9 @@ function cancelEdit() {
 
 .eleves-list-header {
   margin-bottom: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .eleves-list-header h3 {
