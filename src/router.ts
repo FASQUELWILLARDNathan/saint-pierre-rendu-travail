@@ -8,6 +8,7 @@ import ResetPasswordPage from './pages/ResetPasswordPage.vue'
 import ProfilePage from './pages/ProfilPage.vue'
 import EleveGestionPage from './pages/EleveGestionPage.vue'
 import ClassesPage from './pages/ClassesPage.vue'
+import MessageriePage from './pages/MessageriePage.vue'
 import { useAuthStore } from './stores/auth.store'
 
 export const ROUTES = {
@@ -20,6 +21,7 @@ export const ROUTES = {
   PROFILE: '/profil',
   ELEVE_GESTION: '/gestion-eleves',
   CLASSES: '/classes',
+  MESSAGERIE: '/messagerie',
 } as const
 
 const routes = [
@@ -61,6 +63,11 @@ const routes = [
   {
     path: ROUTES.CLASSES,
     component: ClassesPage,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: ROUTES.MESSAGERIE,
+    component: MessageriePage,
     meta: { requiresAuth: true },
   },
   {

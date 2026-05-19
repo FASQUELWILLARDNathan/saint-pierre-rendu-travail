@@ -3,11 +3,13 @@ import express from 'express'
 import { prisma, PORT } from './config.ts'
 import { corsMiddleware } from './middleware/cors.ts'
 import { bigintMiddleware } from './middleware/bigint.ts'
+import { startCronJobs } from './services/cron-manager.ts'
 import authRoutes from './routes/auth.ts'
 import usersRoutes from './routes/users.ts'
 import devoirsRoutes from './routes/devoirs.ts'
 import evenementsRoutes from './routes/evenements.ts'
 import profilRoutes from './routes/profil.ts'
+import messagesRoutes from './routes/messages.ts'
 
 const app = express()
 
@@ -15,7 +17,14 @@ const app = express()
 app.set('trust proxy', 1)
 
 // Middleware
-app.use(express.json())
+// Skip JSON parsing for multipart/form-data (used for file uploads with multer)
+app.use((req, res, next) => {
+  const contentType = req.headers['content-type']
+  if (contentType && contentType.includes('multipart/form-data')) {
+    return next()
+  }
+  return express.json()(req, res, next)
+})
 app.use(corsMiddleware)
 app.use(bigintMiddleware)
 
@@ -30,6 +39,7 @@ app.use('/api/users', usersRoutes)
 app.use('/api/devoirs', devoirsRoutes)
 app.use('/api/evenements', evenementsRoutes)
 app.use('/api/profile', profilRoutes)
+app.use('/api/messages', messagesRoutes)
 
 // Error de gestion
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
@@ -46,6 +56,9 @@ app.use((req, res) => {
 const server = app.listen(PORT, () => {
   console.log(`Api serveur tournant sur  http://localhost:${PORT}`)
   console.log(`Health check: http://localhost:${PORT}/api/health`)
+
+  // Démarrer les tâches cron
+  startCronJobs()
 })
 
 // Shutdown

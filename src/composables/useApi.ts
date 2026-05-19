@@ -7,10 +7,15 @@ const storage = useStorage()
 const request = async <T>(path: string, options: RequestInit = {}) => {
   const token = storage.get<string>('token')
 
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    ...(options.headers as Record<string, string>),
+  const headers: Record<string, string> = {}
+
+  // Only set Content-Type if not FormData and not already set
+  if (!(options.body instanceof FormData)) {
+    headers['Content-Type'] = 'application/json'
   }
+
+  // Merge with provided headers
+  Object.assign(headers, options.headers as Record<string, string>)
 
   if (token) {
     headers['Authorization'] = `Bearer ${token}`
@@ -135,6 +140,55 @@ export function useApi() {
       method: 'DELETE',
     })
 
+  /** Récupère les messages reçus */
+  const getReceivedMessages = () =>
+    request('/api/messages/received', {
+      method: 'GET',
+    })
+
+  /** Récupère les messages envoyés */
+  const getSentMessages = () =>
+    request('/api/messages/sent', {
+      method: 'GET',
+    })
+
+  /** Récupère la conversation avec un utilisateur */
+  const getConversation = (userId: string | number) =>
+    request(`/api/messages/conversation/${userId}`, {
+      method: 'GET',
+    })
+
+  /** Envoie un message avec pièces jointes */
+  const sendMessage = (data: FormData) =>
+    request('/api/messages', {
+      method: 'POST',
+      body: data,
+    })
+
+  /** Marque un message comme lu */
+  const markMessageAsRead = (messageId: string | number) =>
+    request(`/api/messages/${messageId}/read`, {
+      method: 'PUT',
+    })
+
+  /** Supprime un message */
+  const deleteMessage = (messageId: string | number) =>
+    request(`/api/messages/${messageId}`, {
+      method: 'DELETE',
+    })
+
+  /** Récupère l'info de stockage de l'utilisateur */
+  const getStorageInfo = () =>
+    request('/api/messages/storage/info', {
+      method: 'GET',
+    })
+
+  /** Supprime tous les messages de l'utilisateur */
+  const deleteAllUserMessages = () =>
+    request('/api/messages/cleanup/user', {
+      method: 'DELETE',
+    })
+
   return {
     signIn,
     signUp,
@@ -158,5 +212,13 @@ export function useApi() {
     updateUser,
     createUser,
     deleteUser,
+    getReceivedMessages,
+    getSentMessages,
+    getConversation,
+    sendMessage,
+    markMessageAsRead,
+    deleteMessage,
+    getStorageInfo,
+    deleteAllUserMessages,
   }
 }

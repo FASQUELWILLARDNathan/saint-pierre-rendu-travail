@@ -35,6 +35,8 @@ model utilisateur {
   reset_token_expiry      DateTime?
   eleve                   eleve?
   professeur              professeur?
+  messages_envoyes        message[]         @relation("MessageEnvoye")
+  messages_recus          message[]         @relation("MessageRecu")
 }
 
 
@@ -218,6 +220,32 @@ model evenement {
   icon_url              String?
   matiere               matiere             @relation(fields: [id_matiere], references: [id_matiere])
   created_at            DateTime            @default(now())
+}
+
+// Représente un message entre utilisateurs
+model message {
+  id_message            BigInt              @id @default(autoincrement())
+  id_expediteur         BigInt
+  id_destinataire       BigInt
+  sujet                 String              @db.VarChar(255)
+  contenu               String              @db.Text
+  date_envoi            DateTime            @default(now())
+  lu                    Boolean             @default(false)
+  expediteur            utilisateur         @relation("MessageEnvoye", fields: [id_expediteur], references: [id_user], onDelete: Cascade)
+  destinataire          utilisateur         @relation("MessageRecu", fields: [id_destinataire], references: [id_user], onDelete: Cascade)
+  pieces_jointes        piece_jointe[]
+}
+
+// Représente une pièce jointe d'un message
+model piece_jointe {
+  id_piece_jointe       BigInt              @id @default(autoincrement())
+  id_message            BigInt
+  nom_fichier           String              @db.VarChar(255)
+  chemin_fichier        String              @db.VarChar(500)
+  type_fichier          String              @db.VarChar(50)
+  taille_octets         BigInt
+  date_ajout            DateTime            @default(now())
+  message               message             @relation(fields: [id_message], references: [id_message], onDelete: Cascade)
 }
 
 // Represente les roles qui peuvent etre donner à un utilisateur

@@ -85,3 +85,6 @@ Thumbs.db
 # Environment
 .env.test
 .env.test.local
+
+# FILES
+public/uploads/messages/*
