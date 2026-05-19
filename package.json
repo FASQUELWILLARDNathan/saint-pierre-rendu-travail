@@ -15,7 +15,7 @@
     "test:integration": "vitest run tests/integration --reporter=verbose",
     "test:backend": "vitest run tests/unit/backend --reporter=verbose",
     "test:frontend": "vitest run tests/unit/frontend --reporter=verbose",
-    "test:all": "vitest run tests --reporter=verbose --passWithNoTests",
+    "test:all": "vitest run tests --reporter=verbose",
     "test:coverage": "vitest run --coverage --reporter=verbose",
     "test:coverage:html": "vitest run --coverage && open coverage/index.html",
     "test:debug": "vitest --inspect-brk --inspect --single-thread",

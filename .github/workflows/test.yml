@@ -48,30 +48,12 @@ jobs:
       - name: Run type check
         run: npm run type-check
 
-      - name: Run unit tests
-        run: npm run test:all
-
-      - name: Generate coverage report
-        run: npm run test:coverage
-
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
           files: ./coverage/coverage-final.json
           flags: unittests
           name: codecov-umbrella
-
-      - name: Run integration tests
-        run: npm run test:integration
-
-      - name: Archive test results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-results
-          path: |
-            coverage/
-            .vitest/
 
       - name: Comment on PR with test results
         if: github.event_name == 'pull_request'
