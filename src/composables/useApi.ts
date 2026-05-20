@@ -189,6 +189,18 @@ export function useApi() {
       method: 'DELETE',
     })
 
+  /** Nettoie les pièces jointes orphelines de l'utilisateur */
+  const cleanupUserOrphanedAttachments = () =>
+    request('/api/messages/cleanup/orphaned', {
+      method: 'POST',
+    })
+
+  /** Nettoie toutes les pièces jointes orphelines (admin only) */
+  const cleanupAllOrphanedAttachments = () =>
+    request('/api/messages/cleanup/orphaned-all', {
+      method: 'POST',
+    })
+
   return {
     signIn,
     signUp,
@@ -220,5 +232,7 @@ export function useApi() {
     deleteMessage,
     getStorageInfo,
     deleteAllUserMessages,
+    cleanupUserOrphanedAttachments,
+    cleanupAllOrphanedAttachments,
   }
 }

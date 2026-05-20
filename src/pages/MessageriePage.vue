@@ -38,6 +38,14 @@
               <span>Utilisé: {{ storageInfo.used }}</span>
               <span>Disponible: {{ storageInfo.remaining }}</span>
               <span>Max: {{ storageInfo.max }}</span>
+              <n-button
+                type="info"
+                size="small"
+                :loading="isRepairingStorage"
+                @click="repairOrphanedFiles"
+              >
+                🔧 Réparer
+              </n-button>
             </div>
           </div>
 
@@ -240,7 +248,7 @@
                         ref="fileInputRef"
                         type="file"
                         multiple
-                        accept="*"
+                        accept=".pdf,.doc,.docx,.xls,.xlsx,.py,.java,.c,.js,.html,.css,.sql,.zip,.rar,.kml,.svg,.mov,.mp4,.mp3,.wav,.png,.jpeg,.jpg,.gif,.webp"
                         @change="handleFileSelect"
                         class="file-input"
                       />
@@ -331,6 +339,7 @@ const fileInputRef = ref<HTMLInputElement>()
 const isLoading = ref(true)
 const isSending = ref(false)
 const isDeleting = ref(false)
+const isRepairingStorage = ref(false)
 const error = ref<string | null>(null)
 const activeTab = ref('received')
 const isMessageSent = ref(false)
@@ -479,6 +488,26 @@ async function deleteSelectedMessage() {
   }
 }
 
+async function repairOrphanedFiles() {
+  try {
+    isRepairingStorage.value = true
+    const result = (await api.cleanupUserOrphanedAttachments()) as {
+      cleaned: number
+      message: string
+    }
+
+    // Reload storage info
+    storageInfo.value = (await api.getStorageInfo()) as any
+
+    message.success(`${result.cleaned} pièces jointes orphelines supprimées`)
+  } catch (err) {
+    console.error('Erreur lors de la réparation:', err)
+    message.error('Erreur lors de la réparation')
+  } finally {
+    isRepairingStorage.value = false
+  }
+}
+
 function formatDate(date: any) {
   const d = new Date(date)
   return d.toLocaleDateString('fr-FR', {
@@ -614,6 +643,9 @@ function getStorageColor(): string {
 .storage-details {
   display: flex;
   justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
   font-size: 12px;
   color: #666;
 }

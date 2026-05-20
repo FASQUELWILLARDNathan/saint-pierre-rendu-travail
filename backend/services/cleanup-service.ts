@@ -72,24 +72,21 @@ export async function cleanupAllMessages() {
 }
 
 /**
- * Calcule l'espace utilisé par un utilisateur
+ * Calcule l'espace utilisé par un utilisateur et nettoie les pièces jointes orphelines
  */
 export async function getUserStorageUsage(userId: bigint): Promise<number> {
-  const messages = await prisma.message.findMany({
+  const result = await prisma.piece_jointe.aggregate({
     where: {
-      OR: [{ id_expediteur: userId }, { id_destinataire: userId }],
+      message: {
+        OR: [{ id_expediteur: userId }, { id_destinataire: userId }],
+      },
     },
-    include: { pieces_jointes: true },
+    _sum: {
+      taille_octets: true,
+    },
   })
 
-  let totalSize = 0
-  for (const msg of messages) {
-    for (const pj of msg.pieces_jointes) {
-      totalSize += Number(pj.taille_octets)
-    }
-  }
-
-  return totalSize
+  return Number(result._sum.taille_octets || 0)
 }
 
 /**
@@ -116,6 +113,91 @@ export function formatStorageSize(bytes: number): string {
 export async function getUserRemainingStorage(userId: bigint): Promise<number> {
   const currentUsage = await getUserStorageUsage(userId)
   return MAX_STORAGE_PER_USER - currentUsage
+}
+
+/**
+ * Nettoie tous les fichiers orphelines (en BDD mais supprimés du disque)
+ */
+export async function cleanupAllOrphanedAttachments(): Promise<number> {
+  try {
+    const allAttachments = await prisma.piece_jointe.findMany()
+
+    let cleanedCount = 0
+    const orphanIds: bigint[] = []
+
+    for (const pj of allAttachments) {
+      const filePath = path.join(process.cwd(), 'public', pj.chemin_fichier)
+
+      // Si le fichier n'existe pas
+      if (!fs.existsSync(filePath)) {
+        orphanIds.push(pj.id_piece_jointe)
+        cleanedCount++
+      }
+    }
+
+    // Supprimer les orphelines en batch
+    if (orphanIds.length > 0) {
+      await prisma.piece_jointe.deleteMany({
+        where: {
+          id_piece_jointe: {
+            in: orphanIds,
+          },
+        },
+      })
+      console.log(`✓ Nettoyage: ${cleanedCount} pièces jointes orphelines supprimées`)
+    }
+
+    return cleanedCount
+  } catch (error) {
+    console.error('Erreur lors du nettoyage des orphelines:', error)
+    return 0
+  }
+}
+
+/**
+ * Nettoie les orphelines pour un utilisateur spécifique
+ */
+export async function cleanupUserOrphanedAttachments(userId: bigint): Promise<number> {
+  try {
+    const messages = await prisma.message.findMany({
+      where: {
+        OR: [{ id_expediteur: userId }, { id_destinataire: userId }],
+      },
+      include: { pieces_jointes: true },
+    })
+
+    let cleanedCount = 0
+    const orphanIds: bigint[] = []
+
+    for (const msg of messages) {
+      for (const pj of msg.pieces_jointes) {
+        const filePath = path.join(process.cwd(), 'public', pj.chemin_fichier)
+
+        if (!fs.existsSync(filePath)) {
+          orphanIds.push(pj.id_piece_jointe)
+          cleanedCount++
+        }
+      }
+    }
+
+    if (orphanIds.length > 0) {
+      await prisma.piece_jointe.deleteMany({
+        where: {
+          id_piece_jointe: {
+            in: orphanIds,
+          },
+        },
+      })
+      console.log(
+        `✓ Nettoyage utilisateur ${userId}: ${cleanedCount} pièces jointes orphelines supprimées`,
+      )
+    }
+
+    return cleanedCount
+  } catch (error) {
+    console.error(`Erreur lors du nettoyage des orphelines pour ${userId}:`, error)
+    return 0
+  }
 }
 
 export const CLEANUP_MAX_STORAGE = MAX_STORAGE_PER_USER
