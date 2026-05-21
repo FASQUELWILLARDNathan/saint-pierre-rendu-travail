@@ -1,5 +1,6 @@
 import express from 'express'
 import { prisma } from '../config.ts'
+import bcrypt from 'bcrypt'
 
 const router = express.Router()
 
@@ -156,16 +157,18 @@ router.get('/:id', async (req: express.Request, res: express.Response) => {
 router.put('/:id', async (req: express.Request, res: express.Response) => {
   try {
     const { id } = req.params
-    const { nom, prenom, email, id_classe, annee, specialites, options } = req.body
+    const { nom, prenom, email, password, id_classe, annee, specialites, options } = req.body
 
-    // Update user basic info
+    // Update user basic info (include password hashing if provided)
+    const updateData: any = {
+      nom: nom || undefined,
+      prenom: prenom || undefined,
+      email: email || undefined,
+    }
+
     await prisma.utilisateur.update({
       where: { id_user: BigInt(id) },
-      data: {
-        nom: nom || undefined,
-        prenom: prenom || undefined,
-        email: email || undefined,
-      },
+      data: updateData,
     })
 
     // Update eleve data
@@ -220,6 +223,7 @@ router.post('/', async (req: express.Request, res: express.Response) => {
       nom,
       prenom,
       email,
+      password,
       id_classe,
       annee,
       specialites = [],
@@ -228,8 +232,8 @@ router.post('/', async (req: express.Request, res: express.Response) => {
     } = req.body
 
     // Validate required fields
-    if (!nom || !prenom || !email) {
-      return res.status(400).json({ error: 'Nom, prénom et email sont requis' })
+    if (!nom || !prenom || !password) {
+      return res.status(400).json({ error: 'Nom, prénom et mot de passe requis sont requis' })
     }
 
     // Check if email already exists
@@ -260,9 +264,13 @@ router.post('/', async (req: express.Request, res: express.Response) => {
       return res.status(409).json({ error: 'Ce login existe déjà' })
     }
 
-    // Create a temporary password (user should reset it)
-    const tempPassword =
-      Math.random().toString(36).slice(2, 10) + Math.random().toString(36).slice(2, 10)
+    if (!password) {
+      return res.status(400).json({ error: 'Password requis' })
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10)
+    // Debug: log the hashed password that will be stored
+    console.log('[DEBUG] generated hashedPassword for new user:', hashedPassword)
 
     // Create user with eleve data if role is 'eleve'
     const result = await prisma.$transaction(async (tx) => {
@@ -272,7 +280,7 @@ router.post('/', async (req: express.Request, res: express.Response) => {
           prenom,
           login,
           email,
-          hashed_password: tempPassword, // This should be hashed in production, but admin creates it
+          hashed_password: hashedPassword,
           role: role,
         },
       })
@@ -327,6 +335,22 @@ router.post('/', async (req: express.Request, res: express.Response) => {
 
       return { user }
     })
+
+    // Debug: re-read created user from DB to confirm stored value
+    try {
+      const created = await prisma.utilisateur.findUnique({
+        where: { id_user: result.user?.id_user as any },
+        select: { id_user: true, hashed_password: true },
+      })
+      console.log(
+        '[DEBUG] stored hashed_password in DB for user',
+        created?.id_user,
+        ':',
+        created?.hashed_password,
+      )
+    } catch (dbgErr) {
+      console.error('[DEBUG] erreur en vérifiant le hash stocké:', dbgErr)
+    }
 
     res.json({
       message: 'Utilisateur créé avec succès',

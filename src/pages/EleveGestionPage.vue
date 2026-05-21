@@ -104,8 +104,18 @@
                   <n-input v-model:value="currentEleveForm.prenom" />
                 </n-form-item>
 
-                <n-form-item label="Email">
-                  <n-input v-model:value="currentEleveForm.email" />
+                <n-form-item v-if="isCreatingNew" label="Mot de passe">
+                  <div class="password-container">
+                    <n-input
+                      v-model:value="currentEleveForm.password"
+                      type="text"
+                      readonly
+                    />
+
+                    <n-button @click="generatePassword" secondary>
+                      Générer
+                    </n-button>
+                  </div>
                 </n-form-item>
 
                 <n-form-item label="Classe">
@@ -131,12 +141,7 @@
                       <n-select
                         v-model:value="currentEleveForm.specialites"
                         multiple
-                        :options="
-                          specialites.map((s) => ({
-                            label: s.nom_specialite,
-                            value: String(s.id_specialite),
-                          }))
-                        "
+                        :options="specialitesOptions"
                       />
                       <p class="specialites-info">
                         {{
@@ -231,6 +236,7 @@ interface Eleve {
   nom: string
   prenom: string
   email: string
+  password: string
   id_classe: string | number | null
   annee?: string
   specialites: Specialite[]
@@ -268,6 +274,7 @@ const currentEleveForm = ref({
   nom: '',
   prenom: '',
   email: '',
+  password: '',
   id_classe: null as string | null,
   annee: '',
   specialites: [] as string[],
@@ -291,6 +298,35 @@ const selectedClasseEleves = computed(() => {
 
 const currentEleve = computed(() => {
   return selectedClasseEleves.value[currentEleveIndex.value] || null
+})
+
+const maxSpecialites = computed(() => {
+  const level = getSchoolLevel()
+  if (level === 'premiere') return 3
+  if (level === 'terminale') return 2
+  return 0
+})
+
+const selectedSpecialitesCount = computed(() => {
+  return currentEleveForm.value.specialites.length
+})
+
+const specialitesOptions = computed(() => {
+  const max = maxSpecialites.value
+  const selected = currentEleveForm.value.specialites
+
+  const limitReached = selected.length >= max
+
+  return specialites.value.map((s) => {
+    const id = String(s.id_specialite)
+    const isSelected = selected.includes(id)
+
+    return {
+      label: s.nom_specialite,
+      value: id,
+      disabled: limitReached && !isSelected,
+    }
+  })
 })
 
 onMounted(async () => {
@@ -334,6 +370,7 @@ function loadEleveForm(eleve: Eleve) {
     nom: eleve.nom,
     prenom: eleve.prenom,
     email: eleve.email,
+    password: eleve.password,
     id_classe: eleve.id_classe ? String(eleve.id_classe) : null,
     annee: eleve.annee || '',
     specialites: (eleve.specialites || []).map((s: any) => String(s.id_specialite || s)),
@@ -342,8 +379,9 @@ function loadEleveForm(eleve: Eleve) {
   specialitesError.value = null
 }
 
-function createNewEleve() {
+async function createNewEleve() {
   isCreatingNew.value = true
+  await generatePassword()
   // Get current school year
   const now = new Date()
   const year = now.getFullYear()
@@ -354,6 +392,7 @@ function createNewEleve() {
     nom: '',
     prenom: '',
     email: '',
+    password: '',
     id_classe: selectedClasseId.value,
     annee: anneeDefault,
     specialites: [],
@@ -420,12 +459,21 @@ async function saveEleve() {
       }
     }
 
+    const generateEmail = (nom: string, prenom: string) => {
+      return `${nom}.${prenom}`
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '') // enlève accents
+        .replace(/[^a-z.]/g, '') // enlève caractères bizarres
+        + '@cs-saintpierrecalais.fr'
+    }
     if (isCreatingNew.value) {
       // Créer un nouvel élève
       await api.createUser({
         nom: currentEleveForm.value.nom,
         prenom: currentEleveForm.value.prenom,
-        email: currentEleveForm.value.email,
+        email: generateEmail(currentEleveForm.value.nom, currentEleveForm.value.prenom),
+        password: currentEleveForm.value.password,
         id_classe: currentEleveForm.value.id_classe,
         annee: currentEleveForm.value.annee,
         specialites: currentEleveForm.value.specialites,
@@ -446,7 +494,8 @@ async function saveEleve() {
       await api.updateUser(currentEleve.value!.id_user, {
         nom: currentEleveForm.value.nom,
         prenom: currentEleveForm.value.prenom,
-        email: currentEleveForm.value.email,
+        email: generateEmail(currentEleveForm.value.nom, currentEleveForm.value.prenom),
+        password: currentEleveForm.value.password,
         id_classe: currentEleveForm.value.id_classe,
         annee: currentEleveForm.value.annee,
         specialites: currentEleveForm.value.specialites,
@@ -490,6 +539,26 @@ async function saveEleve() {
     console.error('Erreur:', err)
   } finally {
     isSaving.value = false
+  }
+}
+
+async function generatePassword() {
+  try {
+    const response = await fetch(
+      'https://api.api-ninjas.com/v1/passwordgenerator?length=10',
+      {
+        headers: {
+          'X-Api-Key': import.meta.env.VITE_API_NINJAS_KEY,
+        },
+      },
+    )
+
+    const data = await response.json()
+
+    currentEleveForm.value.password = data.random_password
+  } catch (err) {
+    console.error(err)
+    message.error('Erreur génération mot de passe')
   }
 }
 

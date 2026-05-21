@@ -25,7 +25,10 @@ const request = async <T>(path: string, options: RequestInit = {}) => {
 
   if (!res.ok) {
     const data = await res.json().catch(() => ({}))
-    throw new Error((data as { message?: string }).message || `Erreur ${res.status}`)
+
+    console.log('API ERROR RESPONSE:', data)
+
+    throw new Error((data as any).error || (data as any).message || `Erreur ${res.status}`)
   }
 
   return res.json() as Promise<T>
