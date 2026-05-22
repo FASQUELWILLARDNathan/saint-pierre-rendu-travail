@@ -1,5 +1,5 @@
 <template>
-  <div class="matiere-card">
+  <div class="matiere-card" @click="goToMatiere">
     <div class="matiere-icon" :style="{ backgroundColor: iconBackgroundColor }">
       <img v-if="icon" :src="icon" :alt="nom" />
       <div v-else class="icon-placeholder">📚</div>
@@ -10,6 +10,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useRouter } from 'vue-router'
 
 const props = defineProps({
   nom: {
@@ -24,7 +25,14 @@ const props = defineProps({
     type: String,
     default: '#70BEFA',
   },
+  matiereId: { 
+    type: [String, Number], 
+    required: true 
+  },
 })
+
+const router = useRouter()
+const goToMatiere = () => router.push(`/matiere/${props.matiereId}`)
 
 const iconBackgroundColor = computed(() => {
   // Convertir hex en rgb avec opacité 50%

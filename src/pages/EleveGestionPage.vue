@@ -104,14 +104,13 @@
                   <n-input v-model:value="currentEleveForm.prenom" />
                 </n-form-item>
 
-                <n-form-item v-if="isCreatingNew" label="Mot de passe">
+                <n-form-item label="Mot de passe">
                   <div class="password-container">
                     <n-input
                       v-model:value="currentEleveForm.password"
-                      type="text"
-                      readonly
+                      :type="isCreatingNew ? 'text' : 'password'"
+                      :placeholder="isCreatingNew ? '' : 'Laisser vide pour ne pas changer'"
                     />
-
                     <n-button @click="generatePassword" secondary>
                       Générer
                     </n-button>
@@ -370,7 +369,7 @@ function loadEleveForm(eleve: Eleve) {
     nom: eleve.nom,
     prenom: eleve.prenom,
     email: eleve.email,
-    password: eleve.password,
+    password: '',
     id_classe: eleve.id_classe ? String(eleve.id_classe) : null,
     annee: eleve.annee || '',
     specialites: (eleve.specialites || []).map((s: any) => String(s.id_specialite || s)),
@@ -478,6 +477,7 @@ async function saveEleve() {
         annee: currentEleveForm.value.annee,
         specialites: currentEleveForm.value.specialites,
         options: currentEleveForm.value.options,
+        ...(currentEleveForm.value.password ? { password: currentEleveForm.value.password } : {}),
         role: 'eleve',
       })
 

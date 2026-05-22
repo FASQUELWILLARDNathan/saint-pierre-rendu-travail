@@ -78,8 +78,8 @@ async function main() {
       login: 'admin.serveur',
       email: process.env.DEFAULT_ADMIN_EMAIL!,
       hashed_password: await bcrypt.hash(process.env.DEFAULT_ADMIN_PASSWORD!, 10),
-      role: 'administrateur'
-    }
+      role: 'administrateur',
+    },
   })
 
   const eleve1 = await prisma.utilisateur.upsert({
@@ -362,7 +362,7 @@ async function main() {
       nom_matiere: 'Sport',
       description: 'Education physique et sportive.',
       couleur: '#703603',
-      icon_url: '/others-icon.svg',
+      icon_url: '/sport-icon.svg',
       devoir_icon_url: '/other-devoir-icon.svg',
     },
 
@@ -394,8 +394,8 @@ async function main() {
       nom_matiere: 'SNT',
       description: 'Sciences numériques et technologie.',
       couleur: '#00FF73',
-      icon_url: '/nsi-icon.svg',
-      devoir_icon_url: '/nsi-devoir-icon.svg',
+      icon_url: '/snt-icon.svg',
+      devoir_icon_url: '/other-devoir-icon.svg',
     },
 
     {
@@ -410,7 +410,7 @@ async function main() {
       nom_matiere: 'Enseignement Scientifique',
       description: 'Enseignement scientifique du lycée général.',
       couleur: '#FF5CF4',
-      icon_url: '/Sciences-icon.svg',
+      icon_url: '/sciences-icon.svg',
       devoir_icon_url: '/sciences-devoir-icon.svg',
     },
   ]
@@ -612,6 +612,101 @@ async function main() {
     data: evenementsData,
     skipDuplicates: true,
   })
+
+  // Matières par niveau
+  const matieresByNiveau = {
+    college: [
+      'Mathématiques',
+      'Français',
+      'Anglais',
+      'Espagnol',
+      'Allemand',
+      'Histoire-Géo',
+      'EMC',
+      'SVT',
+      'Physique',
+      'Technologie',
+      'Arts Plastiques',
+      'Musique',
+      'Sport',
+      'CDI',
+    ],
+    seconde: [
+      'Mathématiques',
+      'Français',
+      'Anglais',
+      'Espagnol',
+      'Allemand',
+      'Histoire-Géo',
+      'EMC',
+      'SVT',
+      'Physique',
+      'SES',
+      'SNT',
+      'Sport',
+    ],
+    premiere: [
+      'Mathématiques',
+      'Français',
+      'Anglais',
+      'Espagnol',
+      'Allemand',
+      'Histoire-Géo',
+      'Enseignement Scientifique',
+      'Sport',
+      'EMC',
+    ],
+    terminale: [
+      'Philosophie',
+      'Mathématiques',
+      'Anglais',
+      'Espagnol',
+      'Allemand',
+      'Histoire-Géo',
+      'EMC',
+      'Enseignement Scientifique',
+      'Sport',
+    ],
+  }
+
+  const niveauMap: Record<string, keyof typeof matieresByNiveau> = {
+    '6ème': 'college',
+    '5ème': 'college',
+    '4ème': 'college',
+    '3ème': 'college',
+    '2nde': 'seconde',
+    '1ère': 'premiere',
+    Terminale: 'terminale',
+  }
+
+  const toutesLesClasses = await prisma.classe.findMany()
+  const toutesLesMatieres = await prisma.matiere.findMany()
+  const matiereByNom = Object.fromEntries(toutesLesMatieres.map((m) => [m.nom_matiere, m]))
+
+  for (const classe of toutesLesClasses) {
+    const niveauKey = niveauMap[classe.niveau]
+    if (!niveauKey) continue
+
+    const nomsMatieres = matieresByNiveau[niveauKey]
+    for (const nom of nomsMatieres) {
+      const matiere = matiereByNom[nom]
+      if (!matiere) continue
+
+      await prisma.classeMatiere.upsert({
+        where: {
+          id_classe_id_matiere: {
+            id_classe: classe.id_classe,
+            id_matiere: matiere.id_matiere,
+          },
+        },
+        update: {},
+        create: {
+          id_classe: classe.id_classe,
+          id_matiere: matiere.id_matiere,
+        },
+      })
+    }
+  }
 
   console.log('✅ Seed OK (idempotent propre)')
 }

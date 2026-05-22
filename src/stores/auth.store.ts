@@ -1,6 +1,6 @@
 // src/store/auth.ts
 import { defineStore } from 'pinia'
-import { computed, ref } from 'vue'
+import { computed, ref, nextTick } from 'vue'
 
 import { useApi } from '@/composables/useApi'
 import { useStorage } from '../composables/useStorage'
@@ -47,6 +47,18 @@ export const useAuthStore = defineStore('auth', () => {
     user.value = response.user
   }
 
+  const fetchMe = async () => {
+    try {
+      const useAPI = useApi()
+      const data = await useAPI.request<{ user: User }>('/auth/me')
+      console.log('fetchMe response:', data)
+      user.value = data.user
+      set('user', data.user)
+    } catch (error) {
+      console.error('fetchMe error:', error)
+    }
+  }
+
   const logout = () => {
     set('token', null)
     set('user', null)
@@ -54,5 +66,5 @@ export const useAuthStore = defineStore('auth', () => {
     user.value = null
   }
 
-  return { token, user, isAuth, signIn, signUp, logout }
+  return { token, user, isAuth, signIn, signUp, logout, fetchMe }
 })

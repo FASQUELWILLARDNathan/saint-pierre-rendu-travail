@@ -204,6 +204,23 @@ export function useApi() {
       method: 'POST',
     })
 
+  const getCoursByMatiere = (matiereId: string | number) =>
+    request(`/api/cours/matiere/${matiereId}`)
+
+  const getDevoirsByMatiere = (matiereId: string | number) =>
+    request(`/api/devoirs/matiere/${matiereId}`)
+
+  const getEvenementsByMatiere = (matiereId: string | number) =>
+    request(`/api/evenements/matiere/${matiereId}`)
+
+  const getAllMatieres = () => request('/api/matieres')
+
+  const createCours = (data: FormData) =>
+    request('/api/cours', {
+      method: 'POST',
+      body: data,
+    })
+
   return {
     signIn,
     signUp,
@@ -237,5 +254,10 @@ export function useApi() {
     deleteAllUserMessages,
     cleanupUserOrphanedAttachments,
     cleanupAllOrphanedAttachments,
+    getCoursByMatiere,
+    getEvenementsByMatiere,
+    getDevoirsByMatiere,
+    getAllMatieres,
+    createCours,
   }
 }

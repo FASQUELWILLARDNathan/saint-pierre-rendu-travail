@@ -75,20 +75,38 @@ export const MATIERES: Matiere[] = [
     color: '#703603',
     devoirIcon: '/other-devoir-icon.svg',
   },
+  {
+    id: 10,
+    nom: 'SES',
+    icon: '/others-icon.svg',
+    color: '#00FF73',
+    devoirIcon: '/other-devoir-icon.svg',
+  },
+  {
+    id: 11,
+    nom: 'SNT',
+    icon: '/others-icon.svg',
+    color: '#5900FF',
+    devoirIcon: '/other-devoir-icon.svg',
+  },
+  {
+    id: 12,
+    nom: 'Philosophie',
+    icon: '/others-icon.svg',
+    color: '#70BEFA',
+    devoirIcon: '/other-devoir-icon.svg',
+  },
 ]
-
 
 //Récupère une matière par son ID
 export const getMatiereById = (id: number): Matiere | undefined => {
   return MATIERES.find((matiere) => matiere.id === id)
 }
 
-
 //Récupère une matière par son nom
 export const getMatiereByName = (nom: string): Matiere | undefined => {
   return MATIERES.find((matiere) => matiere.nom.toLowerCase() === nom.toLowerCase())
 }
-
 
 // Récupère la couleur d'une matière par son ID
 // Utile pour lier automatiquement les devoirs
@@ -96,7 +114,6 @@ export const getMatiereCouleur = (matiereId: number): string => {
   const matiere = getMatiereById(matiereId)
   return matiere?.color || '#CCCCCC'
 }
-
 
 //Récupère l'icône de devoir pour une matière
 export const getMatiereDevoirIcon = (matiereId: number): string => {

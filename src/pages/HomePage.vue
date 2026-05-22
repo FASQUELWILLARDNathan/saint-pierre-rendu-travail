@@ -63,6 +63,11 @@ import TravauxAVenir from '../components/home/TravauxAVenir.vue'
 
 const authStore = useAuthStore()
 const router = useRouter()
+onMounted(async () => {
+  console.log('onMounted fetchMe start')
+  await authStore.fetchMe()
+  console.log('onMounted fetchMe done')
+})
 
 const userMenuOptions = computed(() => {
   const options: any[] = [
@@ -96,7 +101,30 @@ const userName = computed(() => {
 })
 
 const userClass = computed(() => {
-  return authStore.user?.eleve?.classe?.nom_classe || 'Classe non définie'
+  const user = authStore.user
+
+  if (!user) return 'Classe non définie'
+
+  if (user.role === 'eleve') {
+    return user.eleve?.classe?.nom_classe ?? 'Classe non définie'
+  }
+
+  if (user.role === 'professeur') {
+    console.log('specialites_enseignees:', user.professeur?.specialites_enseignees)
+    const classes = user.professeur?.classes_enseignees
+    if (classes && classes.length > 0) {
+      return classes.map(c => c.classe.nom_classe).join(', ')
+    }
+
+    const specialites = user.professeur?.specialites_enseignees
+    if (specialites && specialites.length > 0) {
+      return specialites.map(s => s.specialite.nom_specialite).join(', ')
+    }
+
+    return user.professeur?.matiere ?? 'Aucune matière'
+  }
+
+  return 'Classe non définie'
 })
 
 const userInitials = computed(() => {

@@ -11,8 +11,8 @@ const getClientIp = (req: any): string => {
 
 // Rate limiter pour les routes d'authentification
 export const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 15, // 15 tentatives par IP
+  windowMs: 150 * 60 * 1000, // 15 minutes
+  max: 150, // 15 tentatives par IP
   message: { error: 'Trop de tentatives, veuillez réessayer plus tard' },
   standardHeaders: true, // Retourne l'info de rate limit dans les headers `RateLimit-*`
   legacyHeaders: false, // Désactive les headers `X-RateLimit-*`
@@ -21,8 +21,8 @@ export const authLimiter = rateLimit({
 
 // Rate limiter plus strict pour les tentatives de connexion
 export const signInLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 15,
+  windowMs: 150 * 60 * 1000,
+  max: 150,
   message: { error: 'Trop de tentatives de connexion, veuillez réessayer dans 15 minutes' },
   standardHeaders: true,
   legacyHeaders: false,

@@ -18,6 +18,7 @@ model matiere {
   devoirs                 devoir[]
   evenements              evenement[]
   created_at              DateTime          @default(now())
+  classes      ClasseMatiere[]
 }
 
 // Represente un utilisateur du systeme
@@ -73,6 +74,8 @@ model classe {
   eleves                  eleve[]
   professeurs             ClasseProfesseur[]
   created_at              DateTime          @default(now())
+  matieres                ClasseMatiere[]
+  cours                   cours[]           @relation("ClasseCours")
   @@unique([niveau, lettre])
 }
 
@@ -155,14 +158,27 @@ model cours {
   id_cours              BigInt              @id @default(autoincrement())
   id_user               BigInt
   id_matiere            BigInt
+  id_classe             BigInt?
   nom_cours             String              @db.VarChar(50)
   description_cours     String?
   professeur            professeur          @relation(fields: [id_user], references: [id_user])
   matiere               matiere             @relation(fields: [id_matiere], references: [id_matiere])
+  classe                classe?             @relation("ClasseCours", fields: [id_classe], references: [id_classe])
   devoirs               devoir[]
+  ressources            ressource_cours[]
   @@unique([id_matiere, nom_cours])
 }
 
+model ressource_cours {
+  id_ressource          BigInt              @id @default(autoincrement())
+  id_cours              BigInt
+  nom_fichier           String              @db.VarChar(255)
+  chemin_fichier        String              @db.VarChar(500)
+  type_fichier          String              @db.VarChar(50)
+  taille_octets         BigInt
+  cours                 cours               @relation(fields: [id_cours], references: [id_cours], onDelete: Cascade)
+  date_ajout            DateTime            @default(now())
+}
 
 // Un devoirs appartient a un seul cours et une matière
 model devoir {
@@ -189,6 +205,17 @@ model assprofdevoir {
   professeur            professeur          @relation(fields: [id_user], references: [id_user])
 
   @@id([id_user, id_devoir])
+}
+
+model ClasseMatiere {
+  id_classe   BigInt
+  id_matiere  BigInt
+
+  classe      classe  @relation(fields: [id_classe], references: [id_classe], onDelete: Cascade)
+  matiere     matiere @relation(fields: [id_matiere], references: [id_matiere], onDelete: Cascade)
+
+  @@id([id_classe, id_matiere])
+  @@map("_classeTomatiere")
 }
 
 

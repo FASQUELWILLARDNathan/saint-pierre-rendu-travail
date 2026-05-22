@@ -166,6 +166,10 @@ router.put('/:id', async (req: express.Request, res: express.Response) => {
       email: email || undefined,
     }
 
+    if (password) {
+      updateData.hashed_password = await bcrypt.hash(password, 10)
+    }
+
     await prisma.utilisateur.update({
       where: { id_user: BigInt(id) },
       data: updateData,

@@ -13,11 +13,22 @@ export interface User {
     id_user?: string | number
     classe?: Classe
     annee?: string
+
+    specialites?: {
+      nom_specialite: string
+    }[]
   }
 
   professeur?: {
     id_user?: string | number
     matiere?: string
+    classes_enseignees?: { classe: Classe }[]
+    specialites_enseignees?: {
+      specialite: { nom_specialite: string }
+    }[]
+    options_enseignees?: {
+      option: { nom_option: string }
+    }[]
   }
 }
 
@@ -49,6 +60,9 @@ export interface SignUpPayload {
   password: string
   role: string
   classe: string
+  id_classe?: string
   annee: string
   email: string
+  specialites?: Array<string | number>
+  options?: Array<string | number>
 }

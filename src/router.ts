@@ -10,6 +10,8 @@ import EleveGestionPage from './pages/EleveGestionPage.vue'
 import ClassesPage from './pages/ClassesPage.vue'
 import MessageriePage from './pages/MessageriePage.vue'
 import { useAuthStore } from './stores/auth.store'
+import MatierePage from './pages/MatierePage.vue'
+import CoursPage from './pages/CoursPage.vue'
 
 export const ROUTES = {
   HOME: '/',
@@ -22,6 +24,8 @@ export const ROUTES = {
   ELEVE_GESTION: '/gestion-eleves',
   CLASSES: '/classes',
   MESSAGERIE: '/messagerie',
+  MATIERE: '/matiere/:id',
+  COURS: '/cours',
 } as const
 
 const routes = [
@@ -68,6 +72,16 @@ const routes = [
   {
     path: ROUTES.MESSAGERIE,
     component: MessageriePage,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/matiere/:id',
+    component: MatierePage,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/cours',
+    component: CoursPage,
     meta: { requiresAuth: true },
   },
   {

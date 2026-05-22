@@ -6,7 +6,7 @@ import { prisma } from '../config.ts'
 import { signToken } from '../jwt-manager.ts'
 import { sendResetPasswordEmail, sendWelcomeEmail } from '../mail-service.ts'
 import { authLimiter, signInLimiter, forgotPasswordLimiter } from '../middleware/rate-limit.ts'
-
+import { authenticateToken } from '../middleware/auth.ts'
 const router = Router()
 
 // safe select pour la route users
@@ -20,14 +20,67 @@ export const safeUserSelect = {
 
   eleve: {
     select: {
-      classe: true,
       annee: true,
+      classe: {
+        select: {
+          id_classe: true,
+          nom_classe: true,
+          niveau: true,
+          lettre: true,
+          matieres: {
+            select: {
+              matiere: {
+                select: {
+                  id_matiere: true,
+                  nom_matiere: true,
+                  couleur: true,
+                  icon_url: true,
+                  devoir_icon_url: true,
+                },
+              },
+            },
+          },
+        },
+      },
+      specialites: {
+        select: {
+          specialite: {
+            select: { nom_specialite: true },
+          },
+        },
+      },
+      options: {
+        select: {
+          option: {
+            select: { nom_option: true },
+          },
+        },
+      },
     },
   },
 
   professeur: {
     select: {
       matiere: true,
+      classes_enseignees: {
+        select: {
+          classe: {
+            select: {
+              id_classe: true,
+              nom_classe: true,
+            },
+          },
+        },
+      },
+      specialites_enseignees: {
+        select: {
+          specialite: {
+            select: {
+              nom_specialite: true,
+            },
+          },
+        },
+      },
     },
   },
 }
@@ -176,26 +229,8 @@ router.post('/sign-in', signInLimiter, async (req: express.Request, res: express
     const user = await prisma.utilisateur.findUnique({
       where: { login },
       select: {
-        id_user: true,
-        nom: true,
-        prenom: true,
-        login: true,
-        email: true,
-        role: true,
+        ...safeUserSelect,
         hashed_password: true,
-
-        eleve: {
-          select: {
-            classe: true,
-            annee: true,
-          },
-        },
-
-        professeur: {
-          select: {
-            matiere: true,
-          },
-        },
       },
     })
 
@@ -225,6 +260,15 @@ router.post('/sign-in', signInLimiter, async (req: express.Request, res: express
     console.error('Erreur durant l enregistrement:', error)
     res.status(500).json({ error: 'Erreur lors de l enregistrement' })
   }
+})
+
+router.get('/me', authenticateToken, async (req, res) => {
+  const user = await prisma.utilisateur.findUnique({
+    where: { id_user: BigInt(req.user.id_user) },
+    select: safeUserSelect,
+  })
+  console.log('professeur complet:', user?.professeur)
+  res.json({ user })
 })
 
 // Route permettant de demander une réinitialisation de mot de passe.
