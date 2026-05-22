@@ -12,6 +12,7 @@ import profilRoutes from './routes/profil.ts'
 import messagesRoutes from './routes/messages.ts'
 import matieresRoutes from './routes/matieres.ts'
 import coursRoutes from './routes/cours.ts'
+import path from 'path'
 
 const app = express()
 
@@ -44,6 +45,7 @@ app.use('/api/profile', profilRoutes)
 app.use('/api/messages', messagesRoutes)
 app.use('/api/matieres', matieresRoutes)
 app.use('/api/cours', coursRoutes)
+app.use('/cours', express.static('/app/public/cours'))
 
 // Error de gestion
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {

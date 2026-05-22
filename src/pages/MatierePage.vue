@@ -27,24 +27,42 @@
         <n-alert v-else-if="error" type="error">{{ error }}</n-alert>
 
         <div v-else class="content-grid">
-          <!-- Cours -->
-          <div class="section-card">
+            <!-- Cours -->
+            <div class="section-card">
             <h2>Cours</h2>
+
             <n-empty v-if="cours.length === 0" description="Aucun cours" />
+
             <div v-else class="items-list">
-              <div v-for="c in cours" :key="c.id_cours" class="item-card cours-item">
+                <div
+                v-for="c in cours.slice(0, 3)"
+                :key="c.id_cours"
+                class="item-card cours-item"
+                >
                 <div class="item-icon" :style="{ backgroundColor: iconBg }">
-                  <img v-if="matiere?.icon_url" :src="matiere.icon_url" alt="" />
-                  <span v-else>📖</span>
+                    <img v-if="matiere?.icon_url" :src="matiere.icon_url" alt="" />
+                    <span v-else>📖</span>
                 </div>
+
                 <div class="item-content">
-                  <p class="item-title">{{ c.nom_cours }}</p>
-                  <p class="item-sub">{{ c.description_cours ?? 'Pas de description' }}</p>
-                  <p class="item-meta">Professeur : {{ c.professeur?.user?.prenom }} {{ c.professeur?.user?.nom }}</p>
+                    <p class="item-title">{{ c.nom_cours }}</p>
+                    <p class="item-sub">{{ c.description_cours ?? 'Pas de description' }}</p>
+                    <p class="item-meta">
+                    Professeur : {{ c.professeur?.user?.prenom }} {{ c.professeur?.user?.nom }}
+                    </p>
                 </div>
-              </div>
+                </div>
+
+                <!-- Bouton voir plus -->
+                <button
+                v-if="cours.length > 3"
+                class="see-more-btn"
+                @click="goToCours('matiere', matiere?.nom_matiere)"
+                >
+                Voir plus →
+                </button>
             </div>
-          </div>
+            </div>
 
           <!-- Devoirs -->
           <div class="section-card">
@@ -156,6 +174,13 @@ onMounted(async () => {
         isLoading.value = false
     }
 })
+
+function goToCours(type: string, value: string) {
+  router.push({
+    path: '/cours',
+    query: { type, value }
+  })
+}
 </script>
 
 <style scoped>
@@ -346,6 +371,23 @@ onMounted(async () => {
   border-radius: 6px;
   white-space: nowrap;
   align-self: center;
+}
+
+.see-more-btn {
+  margin-top: 12px;
+  width: 100%;
+  padding: 10px;
+  border: none;
+  border-radius: 8px;
+  background: rgba(32, 87, 129, 0.1);
+  color: #205781;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.see-more-btn:hover {
+  background: rgba(32, 87, 129, 0.2);
 }
 
 .evenements-grid {

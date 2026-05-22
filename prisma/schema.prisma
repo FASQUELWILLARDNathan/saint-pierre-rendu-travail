@@ -86,6 +86,8 @@ model specialite {
   eleves                  EleveSpecialite[]
   professeurs             ProfesseurSpecialite[]
   created_at              DateTime          @default(now())
+
+  cours cours[]
 }
 
 // Représente une option (Sport, Latin, etc.)
@@ -95,6 +97,8 @@ model option {
   eleves                  EleveOption[]
   professeurs             ProfesseurOption[]
   created_at              DateTime          @default(now())
+
+  cours cours[]
 }
 
 // Table de liaison explicite: Eleve - Specialite
@@ -157,13 +161,17 @@ model ClasseProfesseur {
 model cours {
   id_cours              BigInt              @id @default(autoincrement())
   id_user               BigInt
-  id_matiere            BigInt
+  id_matiere            BigInt?
   id_classe             BigInt?
+  id_specialite         BigInt?
+  id_option             BigInt?
   nom_cours             String              @db.VarChar(50)
   description_cours     String?
   professeur            professeur          @relation(fields: [id_user], references: [id_user])
-  matiere               matiere             @relation(fields: [id_matiere], references: [id_matiere])
+  matiere               matiere?             @relation(fields: [id_matiere], references: [id_matiere])
   classe                classe?             @relation("ClasseCours", fields: [id_classe], references: [id_classe])
+  specialite            specialite?         @relation(fields: [id_specialite], references: [id_specialite])
+  option                option?             @relation(fields: [id_option], references: [id_option])
   devoirs               devoir[]
   ressources            ressource_cours[]
   @@unique([id_matiere, nom_cours])

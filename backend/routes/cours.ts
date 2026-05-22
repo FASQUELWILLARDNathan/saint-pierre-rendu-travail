@@ -27,39 +27,97 @@ router.get('/', authenticateToken, async (req, res) => {
       where: { id_user: BigInt(userId) },
       include: {
         eleve: true,
-        professeur: { include: { classes_enseignees: true } },
+        professeur: true,
       },
     })
 
     let where: any = {}
 
-    if (user?.role === 'eleve' && user.eleve?.id_classe) {
-      const profsDeClasse = await prisma.classeProfesseur.findMany({
-        where: { id_classe: user.eleve.id_classe },
-        select: { id_professeur: true },
-      })
-      const profIds = profsDeClasse.map((p) => p.id_professeur)
-      if (profIds.length === 0) return res.json([])
-      where = { id_user: { in: profIds }, id_classe: user.eleve.id_classe }
-    } else if (user?.role === 'professeur') {
-      where = { id_user: BigInt(userId) }
-    }
+    const id_matiere = req.query.id_matiere as string
+    const id_specialite = req.query.id_specialite as string
+    const id_option = req.query.id_option as string
 
-    const cours = await prisma.cours.findMany({
+    if (id_matiere) where.id_matiere = BigInt(id_matiere)
+    if (id_specialite) where.id_specialite = BigInt(id_specialite)
+    if (id_option) where.id_option = BigInt(id_option)
+
+    const coursList = await prisma.cours.findMany({
       where,
       include: {
         matiere: true,
         classe: true,
+        specialite: true,
+        option: true,
         ressources: true,
         professeur: {
-          include: { user: { select: { nom: true, prenom: true } } },
+          include: {
+            user: { select: { nom: true, prenom: true } },
+          },
         },
       },
     })
 
-    res.json(cours)
+    res.json(coursList)
   } catch (error) {
-    console.error('Erreur récupération cours:', error)
+    console.error(error)
+    res.status(500).json({ error: 'Erreur serveur' })
+  }
+})
+
+router.post('/', authenticateToken, upload.array('fichiers', 10), async (req, res) => {
+  try {
+    const userId = req.user?.id_user
+
+    const { nom_cours, description_cours, id_matiere, id_classe, id_specialite, id_option } =
+      req.body
+
+    if (!nom_cours || (!id_matiere && !id_specialite && !id_option)) {
+      return res.status(400).json({
+        error: 'Nom + classification obligatoire',
+      })
+    }
+
+    const newCours = await prisma.cours.create({
+      data: {
+        nom_cours,
+        description_cours: description_cours || undefined,
+
+        id_user: BigInt(userId),
+
+        id_matiere: id_matiere ? BigInt(id_matiere) : null,
+        id_specialite: id_specialite ? BigInt(id_specialite) : null,
+        id_option: id_option ? BigInt(id_option) : null,
+        id_classe: id_classe ? BigInt(id_classe) : null,
+      },
+    })
+
+    const files = req.files as Express.Multer.File[]
+
+    if (files?.length) {
+      await prisma.ressource_cours.createMany({
+        data: files.map((f) => ({
+          id_cours: newCours.id_cours,
+          nom_fichier: f.originalname,
+          chemin_fichier: `/cours/${f.filename}`,
+          type_fichier: f.mimetype,
+          taille_octets: BigInt(f.size),
+        })),
+      })
+    }
+
+    const full = await prisma.cours.findUnique({
+      where: { id_cours: newCours.id_cours },
+      include: {
+        matiere: true,
+        specialite: true,
+        option: true,
+        ressources: true,
+      },
+    })
+
+    res.json(full)
+  } catch (error) {
+    console.error('Erreur création cours:', error)
     res.status(500).json({ error: 'Erreur serveur' })
   }
 })
@@ -135,51 +193,6 @@ router.get('/:id', authenticateToken, async (req, res) => {
     where: { id_matiere: BigInt(req.params.id) },
   })
   res.json(matiere)
-})
-
-router.post('/', authenticateToken, upload.array('fichiers', 10), async (req, res) => {
-  try {
-    const userId = req.user?.id_user
-    const { nom_cours, description_cours, id_matiere, id_classe } = req.body
-
-    if (!nom_cours || !id_matiere) {
-      return res.status(400).json({ error: 'Nom et matière obligatoires' })
-    }
-
-    const cours = await prisma.cours.create({
-      data: {
-        id_user: BigInt(userId),
-        id_matiere: BigInt(id_matiere),
-        id_classe: id_classe ? BigInt(id_classe) : null,
-        nom_cours,
-        description_cours: description_cours || null,
-      },
-    })
-
-    // Sauvegarde les fichiers
-    const files = req.files as Express.Multer.File[]
-    if (files && files.length > 0) {
-      await prisma.ressource_cours.createMany({
-        data: files.map((f) => ({
-          id_cours: cours.id_cours,
-          nom_fichier: f.originalname,
-          chemin_fichier: `/cours/${f.filename}`,
-          type_fichier: f.mimetype,
-          taille_octets: BigInt(f.size),
-        })),
-      })
-    }
-
-    const coursComplet = await prisma.cours.findUnique({
-      where: { id_cours: cours.id_cours },
-      include: { ressources: true, matiere: true, classe: true },
-    })
-
-    res.json(coursComplet)
-  } catch (error) {
-    console.error('Erreur création cours:', error)
-    res.status(500).json({ error: 'Erreur serveur' })
-  }
 })
 
 export default router

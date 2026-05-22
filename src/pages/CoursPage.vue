@@ -25,12 +25,12 @@
 
             <div v-else class="cours-sections">
                 <div
-                    v-for="group in coursParMatiere"
-                    :key="group.matiere"
+                    v-for="group in coursParCategorie"
+                    :key="group.categorie "
                     class="matiere-section"
                 >
                     <div class="matiere-header">
-                    <h2>{{ group.matiere }}</h2>
+                    <h2>{{ group.categorie }}</h2>
                     <span class="matiere-count">
                         {{ group.cours.length }} cours
                     </span>
@@ -119,6 +119,24 @@
           />
         </n-form-item>
 
+        <n-form-item label="Spécialité">
+            <n-select
+                v-model:value="form.id_specialite"
+                :options="specialitesOptions"
+                placeholder="Sélectionnez une spécialité"
+                clearable
+            />
+            </n-form-item>
+
+            <n-form-item label="Option">
+            <n-select
+                v-model:value="form.id_option"
+                :options="optionsOptions"
+                placeholder="Sélectionnez une option"
+                clearable
+            />
+            </n-form-item>
+
         <n-form-item label="Classe">
           <n-select
             v-model:value="form.id_classe"
@@ -204,6 +222,7 @@ import { NButton, NModal, NForm, NFormItem, NInput, NSelect, NSpin, NAlert, NEmp
 import { useApi } from '@/composables/useApi'
 import { useAuthStore } from '@/stores/auth.store'
 import Sidebar from '@/components/home/Sidebar.vue'
+import { useRoute, useRouter } from 'vue-router'
 
 const api = useApi()
 const authStore = useAuthStore()
@@ -219,12 +238,17 @@ const fileInput = ref<HTMLInputElement | null>(null)
 
 const cours = ref<any[]>([])
 const matieres = ref<any[]>([])
+const specialites = ref<any[]>([])
+const options = ref<any[]>([])
 const classes = ref<any[]>([])
+const route = useRoute()
 
 const form = ref({
   nom_cours: '',
   description_cours: '',
   id_matiere: null as string | null,
+  id_specialite: null as string | null,
+  id_option: null as string | null,
   id_classe: null as string | null,
   fichiers: [] as File[],
 })
@@ -232,6 +256,9 @@ const form = ref({
 const matieresOptions = computed(() =>
   matieres.value.map((m) => ({ label: m.nom_matiere, value: String(m.id_matiere) }))
 )
+
+const filterType = computed(() => route.query.type as string | undefined)
+const filterValue = computed(() => route.query.value as string | undefined)
 
 const classesOptions = computed(() => {
   const user = authStore.user
@@ -244,21 +271,43 @@ const classesOptions = computed(() => {
   return classes.value.map((c) => ({ label: c.nom_classe, value: String(c.id_classe) }))
 })
 
-const coursParMatiere = computed(() => {
+const specialitesOptions = computed(() =>
+  specialites.value.map((s) => ({
+    label: s.nom_specialite,
+    value: String(s.id_specialite),
+  }))
+)
+
+const optionsOptions = computed(() =>
+  options.value.map((o) => ({
+    label: o.nom_option,
+    value: String(o.id_option),
+  }))
+)
+
+const coursParCategorie = computed(() => {
   const grouped = new Map<string, any[]>()
 
   cours.value.forEach((c) => {
-    const nomMatiere = c.matiere?.nom_matiere || 'Sans matière'
 
-    if (!grouped.has(nomMatiere)) {
-      grouped.set(nomMatiere, [])
+    if (filterType.value && filterValue.value) {
+      if (filterType.value === 'matiere' && c.matiere?.nom_matiere !== filterValue.value) return
+      if (filterType.value === 'specialite' && c.specialite?.nom_specialite !== filterValue.value) return
+      if (filterType.value === 'option' && c.option?.nom_option !== filterValue.value) return
     }
 
-    grouped.get(nomMatiere)!.push(c)
+    let key = 'Autre'
+
+    if (c.matiere) key = `Matière - ${c.matiere.nom_matiere}`
+    else if (c.specialite) key = `Spécialité - ${c.specialite.nom_specialite}`
+    else if (c.option) key = `Option - ${c.option.nom_option}`
+
+    if (!grouped.has(key)) grouped.set(key, [])
+    grouped.get(key)!.push(c)
   })
 
-  return Array.from(grouped.entries()).map(([matiere, cours]) => ({
-    matiere,
+  return Array.from(grouped.entries()).map(([categorie, cours]) => ({
+    categorie,
     cours,
   }))
 })
@@ -266,13 +315,17 @@ const coursParMatiere = computed(() => {
 onMounted(async () => {
   try {
     isLoading.value = true
-    const [coursData, matieresData, classesData] = await Promise.all([
+    const [coursData, matieresData, classesData, specData, optData] = await Promise.all([
       api.getCours() as any,
       api.getAllMatieres() as any,
       api.getClasses() as any,
+      api.getSpecialites() as any,
+    api.getOptions() as any,
     ])
     cours.value = coursData
     matieres.value = matieresData
+    specialites.value = specData
+    options.value = optData
     classes.value = classesData
   } catch (err) {
     error.value = 'Erreur lors du chargement'
@@ -329,31 +382,51 @@ function removeFile(index: number) {
 }
 
 async function createCours() {
-  if (!form.value.nom_cours || !form.value.id_matiere) return
+  if (!form.value.nom_cours) return
 
   try {
     isSaving.value = true
-    const formData = new FormData()
-    formData.append('nom_cours', form.value.nom_cours)
-    formData.append('description_cours', form.value.description_cours)
-    formData.append('id_matiere', form.value.id_matiere)
-    if (form.value.id_classe) formData.append('id_classe', form.value.id_classe)
-    form.value.fichiers.forEach((f) => formData.append('fichiers', f))
 
-    const nouveau = await api.createCours(formData) as any
+    const formData = new FormData()
+
+    formData.append('nom_cours', form.value.nom_cours)
+    formData.append('description_cours', form.value.description_cours || '')
+
+    if (form.value.id_matiere)
+      formData.append('id_matiere', form.value.id_matiere)
+
+    if (form.value.id_classe)
+      formData.append('id_classe', form.value.id_classe)
+
+    if (form.value.id_specialite)
+      formData.append('id_specialite', form.value.id_specialite)
+
+    if (form.value.id_option)
+      formData.append('id_option', form.value.id_option)
+
+    form.value.fichiers.forEach((f) =>
+      formData.append('fichiers', f)
+    )
+
+    const nouveau = await api.createCours(formData)
+
     cours.value.unshift(nouveau)
 
     showCreateModal.value = false
+
     form.value = {
       nom_cours: '',
       description_cours: '',
       id_matiere: null,
       id_classe: null,
+      id_specialite: null,
+      id_option: null,
       fichiers: [],
     }
+
   } catch (err) {
-    error.value = 'Erreur lors de la création'
     console.error(err)
+    error.value = 'Erreur lors de la création'
   } finally {
     isSaving.value = false
   }
