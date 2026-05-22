@@ -33,13 +33,98 @@ router.get('/', authenticateToken, async (req, res) => {
 
     let where: any = {}
 
+    const kind = String(req.query.kind ?? '')
+    const id = String(req.query.id ?? '')
     const id_matiere = req.query.id_matiere as string
     const id_specialite = req.query.id_specialite as string
     const id_option = req.query.id_option as string
 
-    if (id_matiere) where.id_matiere = BigInt(id_matiere)
-    if (id_specialite) where.id_specialite = BigInt(id_specialite)
-    if (id_option) where.id_option = BigInt(id_option)
+    const resolveBigInt = async (value: string, model: 'specialite' | 'option') => {
+      if (/^\d+$/.test(value)) return BigInt(value)
+
+      if (model === 'specialite') {
+        const specialite = await prisma.specialite.findFirst({
+          where: {
+            nom_specialite: {
+              mode: 'insensitive',
+              equals: value,
+            },
+          },
+          select: { id_specialite: true },
+        })
+
+        return specialite?.id_specialite ?? null
+      }
+
+      const option = await prisma.option.findFirst({
+        where: {
+          nom_option: {
+            mode: 'insensitive',
+            equals: value,
+          },
+        },
+        select: { id_option: true },
+      })
+
+      return option?.id_option ?? null
+    }
+
+    if (kind === 'specialite' && id) {
+      const specialiteId = await resolveBigInt(id, 'specialite')
+      if (!specialiteId) return res.json([])
+      where.id_specialite = specialiteId
+    } else if (kind === 'option' && id) {
+      const optionId = await resolveBigInt(id, 'option')
+      if (!optionId) return res.json([])
+      where.id_option = optionId
+    } else {
+      if (id_matiere) where.id_matiere = BigInt(id_matiere)
+      if (id_specialite) {
+        if (/^\d+$/.test(id_specialite)) {
+          where.id_specialite = BigInt(id_specialite)
+        } else {
+          const specialite = await prisma.specialite.findFirst({
+            where: {
+              nom_specialite: {
+                mode: 'insensitive',
+                equals: id_specialite,
+              },
+            },
+            select: { id_specialite: true },
+          })
+
+          if (!specialite) {
+            return res.json([])
+          }
+
+          where.id_specialite = specialite.id_specialite
+        }
+      }
+      if (id_option) where.id_option = BigInt(id_option)
+    }
+
+    // Restriction selon le rôle
+    if (user?.role === 'eleve' && user.eleve?.id_classe) {
+      const profsDeClasse = await prisma.classeProfesseur.findMany({
+        where: { id_classe: user.eleve.id_classe },
+        select: { id_professeur: true },
+      })
+
+      const profIds = profsDeClasse.map((p) => p.id_professeur)
+
+      if (profIds.length === 0) {
+        return res.json([])
+      }
+
+      where.id_user = {
+        in: profIds,
+      }
+    }
+
+    // Un prof ne voit que SES cours
+    else if (user?.role === 'professeur') {
+      where.id_user = BigInt(userId)
+    }
 
     const coursList = await prisma.cours.findMany({
       where,

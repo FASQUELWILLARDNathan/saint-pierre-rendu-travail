@@ -8,12 +8,12 @@
           <button class="back-btn" @click="router.back()">← Retour</button>
           <div class="header-title">
             <div class="matiere-icon-header" :style="{ backgroundColor: iconBg }">
-              <img v-if="matiere?.icon_url" :src="matiere.icon_url" :alt="matiere.nom_matiere" />
+              <img v-if="categoryIcon" :src="categoryIcon" :alt="categoryTitle" />
               <span v-else>📚</span>
             </div>
             <div>
-              <h1>{{ matiere?.nom_matiere ?? 'Matière' }}</h1>
-              <p>{{ matiere?.description ?? '' }}</p>
+              <h1>{{ categoryTitle }}</h1>
+              <p>{{ categoryDescription }}</p>
             </div>
           </div>
         </div>
@@ -27,42 +27,38 @@
         <n-alert v-else-if="error" type="error">{{ error }}</n-alert>
 
         <div v-else class="content-grid">
-            <!-- Cours -->
-            <div class="section-card">
+          <!-- Cours -->
+          <div class="section-card">
             <h2>Cours</h2>
 
             <n-empty v-if="cours.length === 0" description="Aucun cours" />
 
             <div v-else class="items-list">
-                <div
-                v-for="c in cours.slice(0, 3)"
-                :key="c.id_cours"
-                class="item-card cours-item"
-                >
+              <div v-for="c in cours.slice(0, 3)" :key="c.id_cours" class="item-card cours-item">
                 <div class="item-icon" :style="{ backgroundColor: iconBg }">
-                    <img v-if="matiere?.icon_url" :src="matiere.icon_url" alt="" />
-                    <span v-else>📖</span>
+                  <img v-if="categoryIcon" :src="categoryIcon" alt="" />
+                  <span v-else>📖</span>
                 </div>
 
                 <div class="item-content">
-                    <p class="item-title">{{ c.nom_cours }}</p>
-                    <p class="item-sub">{{ c.description_cours ?? 'Pas de description' }}</p>
-                    <p class="item-meta">
+                  <p class="item-title">{{ c.nom_cours }}</p>
+                  <p class="item-sub">{{ c.description_cours ?? 'Pas de description' }}</p>
+                  <p class="item-meta">
                     Professeur : {{ c.professeur?.user?.prenom }} {{ c.professeur?.user?.nom }}
-                    </p>
+                  </p>
                 </div>
-                </div>
+              </div>
 
-                <!-- Bouton voir plus -->
-                <button
+              <!-- Bouton voir plus -->
+              <button
                 v-if="cours.length > 3"
                 class="see-more-btn"
-                @click="goToCours('matiere', matiere?.nom_matiere)"
-                >
+                @click="goToCours(categoryKind, categoryTitle)"
+              >
                 Voir plus →
-                </button>
+              </button>
             </div>
-            </div>
+          </div>
 
           <!-- Devoirs -->
           <div class="section-card">
@@ -81,9 +77,7 @@
                     📅 {{ new Date(d.date_limite).toLocaleDateString('fr-FR') }}
                   </p>
                 </div>
-                <div class="item-badge" v-if="d.coefficient">
-                  Coef. {{ d.coefficient }}
-                </div>
+                <div class="item-badge" v-if="d.coefficient">Coef. {{ d.coefficient }}</div>
               </div>
             </div>
           </div>
@@ -99,7 +93,14 @@
                 </div>
                 <p class="evenement-title">{{ e.nom_evenement }}</p>
                 <p class="evenement-date">
-                  📅 {{ new Date(e.date_evenement).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }) }}
+                  📅
+                  {{
+                    new Date(e.date_evenement).toLocaleDateString('fr-FR', {
+                      day: '2-digit',
+                      month: 'long',
+                      year: 'numeric',
+                    })
+                  }}
                 </p>
                 <p class="evenement-duree" v-if="e.duree_minutes">⏱ {{ e.duree_minutes }} min</p>
                 <p class="evenement-desc" v-if="e.description">{{ e.description }}</p>
@@ -118,12 +119,15 @@ import { useRoute, useRouter } from 'vue-router'
 import { NSpin, NAlert, NEmpty } from 'naive-ui'
 import { useApi } from '@/composables/useApi'
 import Sidebar from '@/components/home/Sidebar.vue'
+import { getMatiereByName } from '@/utils/matieres.ts'
 
 const route = useRoute()
 const router = useRouter()
 const api = useApi()
 
 const matiereId = route.params.id as string
+const categoryKind = computed(() => String(route.query.kind ?? 'matiere'))
+const categoryLabel = computed(() => String(route.query.name ?? ''))
 
 const isLoading = ref(true)
 const error = ref<string | null>(null)
@@ -141,44 +145,100 @@ const iconBg = computed(() => {
   return `rgba(${r}, ${g}, ${b}, 0.2)`
 })
 
+const categoryTitle = computed(() => {
+  if (categoryLabel.value) return categoryLabel.value
+  return matiere.value?.nom_matiere ?? 'Catégorie'
+})
+
+const categoryDescription = computed(() => {
+  if (categoryKind.value === 'matiere') return matiere.value?.description ?? ''
+  if (categoryKind.value === 'specialite') return 'Catégorie de spécialité'
+  if (categoryKind.value === 'option') return 'Catégorie d’option'
+  return matiere.value?.description ?? ''
+})
+
+const categoryIcon = computed(() => {
+  if (categoryLabel.value) {
+    return getMatiereByName(categoryLabel.value)?.icon ?? '/others-icon.svg'
+  }
+  return matiere.value?.icon_url ?? '/others-icon.svg'
+})
+
 onMounted(async () => {
-    if (!matiereId || matiereId === 'null') {
-        error.value = 'Matière introuvable'
-        isLoading.value = false
-        return
-    }
-    try {
-        isLoading.value = true
-        const [coursData, devoirsData, evenementsData] = await Promise.all([
+  if (!matiereId || matiereId === 'null') {
+    error.value = 'Catégorie introuvable'
+    isLoading.value = false
+    return
+  }
+
+  try {
+    isLoading.value = true
+
+    if (categoryKind.value === 'matiere') {
+      const [coursData, devoirsData, evenementsData] = await Promise.all([
         api.getCoursByMatiere(matiereId) as any,
         api.getDevoirsByMatiere(matiereId) as any,
         api.getEvenementsByMatiere(matiereId) as any,
-        ])
+      ])
 
-        cours.value = coursData
-        devoirs.value = devoirsData
-        evenements.value = evenementsData
+      cours.value = coursData
+      devoirs.value = devoirsData
+      evenements.value = evenementsData
 
-        // Récupère les infos de la matière depuis le premier cours ou devoir
-        if (coursData.length > 0) {
+      if (coursData.length > 0) {
         matiere.value = coursData[0].matiere
-        } else if (devoirsData.length > 0) {
+      } else if (devoirsData.length > 0) {
         matiere.value = devoirsData[0].matiere
-        } else if (evenementsData.length > 0) {
+      } else if (evenementsData.length > 0) {
         matiere.value = evenementsData[0].matiere
-        }
-    } catch (err) {
-        error.value = 'Erreur lors du chargement'
-        console.error(err)
-    } finally {
-        isLoading.value = false
+      }
+    } else {
+      const coursData = (await api.getCoursByCategory(categoryKind.value as any, matiereId)) as any
+      cours.value = coursData
+
+      const matiereIds = Array.from(
+        new Set(
+          coursData
+            .map((c: any) => String(c.id_matiere ?? c.matiere?.id_matiere ?? ''))
+            .filter((value: string) => value && value !== 'null'),
+        ),
+      ) as string[]
+
+      const [devoirsArrays, evenementsArrays] = await Promise.all([
+        Promise.all(matiereIds.map((id: string) => api.getDevoirsByMatiere(id) as any)),
+        Promise.all(matiereIds.map((id: string) => api.getEvenementsByMatiere(id) as any)),
+      ])
+
+      devoirs.value = Array.from(
+        new Map(devoirsArrays.flat().map((d: any) => [String(d.id_devoir), d])).values(),
+      )
+      evenements.value = Array.from(
+        new Map(evenementsArrays.flat().map((e: any) => [String(e.id_evenement), e])).values(),
+      )
+
+      const label = categoryLabel.value || String(matiereId)
+      const foundIcon = getMatiereByName(label)
+      matiere.value = {
+        nom_matiere: label,
+        description:
+          categoryKind.value === 'specialite' ? 'Catégorie de spécialité' : 'Catégorie d’option',
+        couleur: foundIcon?.color ?? '#70BEFA',
+        icon_url: foundIcon?.icon ?? '/others-icon.svg',
+        devoir_icon_url: foundIcon?.devoirIcon ?? '/other-devoir-icon.svg',
+      }
     }
+  } catch (err) {
+    error.value = 'Erreur lors du chargement'
+    console.error(err)
+  } finally {
+    isLoading.value = false
+  }
 })
 
 function goToCours(type: string, value: string) {
   router.push({
     path: '/cours',
-    query: { type, value }
+    query: { type, value },
   })
 }
 </script>
@@ -446,15 +506,30 @@ function goToCours(type: string, value: string) {
 }
 
 @media (max-width: 1024px) {
-  .main-wrapper { margin-left: 80px; }
-  .header-title h1 { font-size: 32px; }
+  .main-wrapper {
+    margin-left: 80px;
+  }
+  .header-title h1 {
+    font-size: 32px;
+  }
 }
 
 @media (max-width: 767px) {
-  .main-wrapper { margin-left: 0; }
-  .matiere-header { padding: 16px 12px; padding-left: 60px; }
-  .header-title h1 { font-size: 24px; }
-  .matiere-content { padding: 0 12px 24px; }
-  .content-grid { grid-template-columns: 1fr; }
+  .main-wrapper {
+    margin-left: 0;
+  }
+  .matiere-header {
+    padding: 16px 12px;
+    padding-left: 60px;
+  }
+  .header-title h1 {
+    font-size: 24px;
+  }
+  .matiere-content {
+    padding: 0 12px 24px;
+  }
+  .content-grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

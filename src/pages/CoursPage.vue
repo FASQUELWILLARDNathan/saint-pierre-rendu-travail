@@ -257,8 +257,9 @@ const matieresOptions = computed(() =>
   matieres.value.map((m) => ({ label: m.nom_matiere, value: String(m.id_matiere) }))
 )
 
-const filterType = computed(() => route.query.type as string | undefined)
-const filterValue = computed(() => route.query.value as string | undefined)
+const categoryId = computed(() => String(route.params.id ?? route.query.id ?? ''))
+const filterType = computed(() => String(route.query.kind ?? route.query.type ?? ''))
+const filterValue = computed(() => String(route.query.name ?? route.query.value ?? ''))
 
 const classesOptions = computed(() => {
   const user = authStore.user
@@ -290,12 +291,6 @@ const coursParCategorie = computed(() => {
 
   cours.value.forEach((c) => {
 
-    if (filterType.value && filterValue.value) {
-      if (filterType.value === 'matiere' && c.matiere?.nom_matiere !== filterValue.value) return
-      if (filterType.value === 'specialite' && c.specialite?.nom_specialite !== filterValue.value) return
-      if (filterType.value === 'option' && c.option?.nom_option !== filterValue.value) return
-    }
-
     let key = 'Autre'
 
     if (c.matiere) key = `Matière - ${c.matiere.nom_matiere}`
@@ -315,13 +310,24 @@ const coursParCategorie = computed(() => {
 onMounted(async () => {
   try {
     isLoading.value = true
-    const [coursData, matieresData, classesData, specData, optData] = await Promise.all([
-      api.getCours() as any,
+    const [matieresData, classesData, specData, optData] = await Promise.all([
       api.getAllMatieres() as any,
       api.getClasses() as any,
       api.getSpecialites() as any,
-    api.getOptions() as any,
+      api.getOptions() as any,
     ])
+
+    let coursData: any[] = []
+    if (filterType.value === 'specialite' && categoryId.value) {
+      coursData = (await api.getCoursByCategory('specialite', categoryId.value)) as any
+    } else if (filterType.value === 'option' && categoryId.value) {
+      coursData = (await api.getCoursByCategory('option', categoryId.value)) as any
+    } else if (filterType.value === 'matiere' && categoryId.value) {
+      coursData = (await api.getCoursByMatiere(categoryId.value)) as any
+    } else {
+      coursData = (await api.getCours()) as any
+    }
+
     cours.value = coursData
     matieres.value = matieresData
     specialites.value = specData

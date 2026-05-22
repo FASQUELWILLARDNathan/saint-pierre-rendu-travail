@@ -1,14 +1,17 @@
 <template>
   <div class="matieres-section">
-    <h2>Mes matières</h2>
+    <h2>Mes catégories</h2>
     <div class="matieres-grid">
       <MatiereCard
-        v-for="matiere in matieres"
-        :key="matiere.id"
-        :nom="matiere.nom"
-        :icon="matiere.icon"
-        :color="matiere.color"
-        :matiere-id="matiere.id"
+        v-for="categorie in categories"
+        :key="categorie.id"
+        :nom="categorie.nom"
+        :icon="categorie.icon"
+        :color="categorie.color"
+        :card-type="categorie.cardType"
+        :category-id="categorie.id"
+        :category-type="categorie.categoryType"
+        :category-name="categorie.categoryName"
       />
     </div>
   </div>
@@ -28,7 +31,7 @@ onMounted(async () => {
   allMatieresBDD.value = (await api.getAllMatieres()) as any
 })
 
-const matieres = computed(() => {
+const categories = computed(() => {
   const user = authStore.user
   if (!user) return []
   if (allMatieresBDD.value.length === 0) return []
@@ -36,48 +39,75 @@ const matieres = computed(() => {
   if (user.role === 'professeur') {
     const noms = new Set<string>()
     if (user.professeur?.matiere) noms.add(user.professeur.matiere)
-    user.professeur?.specialites_enseignees?.forEach(s => noms.add(s.specialite.nom_specialite))
-    user.professeur?.options_enseignees?.forEach(o => noms.add(o.option.nom_option))
+    user.professeur?.specialites_enseignees?.forEach((s) => noms.add(s.specialite.nom_specialite))
+    user.professeur?.options_enseignees?.forEach((o) => noms.add(o.option.nom_option))
 
     return [...noms].map((nom) => {
       const found = allMatieresBDD.value.find(
-        (m: any) => m.nom_matiere.toLowerCase() === nom.toLowerCase()
+        (m: any) => m.nom_matiere.toLowerCase() === nom.toLowerCase(),
       )
       return {
-        id: found?.id_matiere ?? null,
+        id: found?.id_matiere ?? nom,
         nom,
         icon: found?.icon_url ?? '/others-icon.svg',
         color: found?.couleur ?? '#888',
         devoirIcon: found?.devoir_icon_url ?? '/other-devoir-icon.svg',
+        cardType: found ? 'matiere' : 'specialite',
+        categoryType: found ? 'matiere' : 'specialite',
+        categoryName: nom,
       }
     })
   }
 
   if (user.role === 'eleve') {
-    const classe = (user.eleve?.classe as any)
-    const baseMatieres = classe?.matieres?.map((m: any) => ({
-      id: m.matiere.id_matiere,
-      nom: m.matiere.nom_matiere,
-      icon: m.matiere.icon_url ?? '/others-icon.svg',
-      color: m.matiere.couleur ?? '#888',
-      devoirIcon: m.matiere.devoir_icon_url ?? '/other-devoir-icon.svg',
-    })) ?? []
+    const classe = user.eleve?.classe as any
+    const baseMatieres =
+      classe?.matieres?.map((m: any) => ({
+        id: m.matiere.id_matiere,
+        nom: m.matiere.nom_matiere,
+        icon: m.matiere.icon_url ?? '/others-icon.svg',
+        color: m.matiere.couleur ?? '#888',
+        devoirIcon: m.matiere.devoir_icon_url ?? '/other-devoir-icon.svg',
+        cardType: 'matiere',
+        categoryType: 'matiere',
+        categoryName: m.matiere.nom_matiere,
+      })) ?? []
 
     const spes = (user.eleve?.specialites ?? []).map((s: any) => {
       const nom = s.specialite.nom_specialite
       const found = allMatieresBDD.value.find(
-        (m: any) => m.nom_matiere.toLowerCase() === nom.toLowerCase()
+        (m: any) => m.nom_matiere.toLowerCase() === nom.toLowerCase(),
       )
       return {
-        id: found?.id_matiere ?? null,
+        id: s.specialite.id_specialite ?? nom,
         nom,
         icon: found?.icon_url ?? '/others-icon.svg',
         color: found?.couleur ?? '#888',
         devoirIcon: found?.devoir_icon_url ?? '/other-devoir-icon.svg',
+        cardType: 'specialite',
+        categoryType: 'specialite',
+        categoryName: nom,
       }
     })
 
-    return [...baseMatieres, ...spes]
+    const opts = (user.eleve?.options ?? []).map((o: any) => {
+      const nom = o.option.nom_option
+      const found = allMatieresBDD.value.find(
+        (m: any) => m.nom_matiere.toLowerCase() === nom.toLowerCase(),
+      )
+      return {
+        id: o.option.id_option ?? nom,
+        nom,
+        icon: found?.icon_url ?? '/others-icon.svg',
+        color: found?.couleur ?? '#888',
+        devoirIcon: found?.devoir_icon_url ?? '/other-devoir-icon.svg',
+        cardType: 'option',
+        categoryType: 'option',
+        categoryName: nom,
+      }
+    })
+
+    return [...baseMatieres, ...spes, ...opts]
   }
 
   return []

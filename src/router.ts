@@ -24,7 +24,8 @@ export const ROUTES = {
   ELEVE_GESTION: '/gestion-eleves',
   CLASSES: '/classes',
   MESSAGERIE: '/messagerie',
-  MATIERE: '/matiere/:id',
+  CATEGORIE: '/categorie/:id',
+  MATIERE: '/categorie/:id',
   COURS: '/cours',
 } as const
 
@@ -75,7 +76,8 @@ const routes = [
     meta: { requiresAuth: true },
   },
   {
-    path: '/matiere/:id',
+    path: '/categorie/:id',
+    alias: '/matiere/:id',
     component: MatierePage,
     meta: { requiresAuth: true },
   },

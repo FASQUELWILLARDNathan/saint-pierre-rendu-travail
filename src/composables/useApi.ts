@@ -204,11 +204,27 @@ export function useApi() {
       method: 'POST',
     })
 
+  const getCoursByCategory = (kind: 'matiere' | 'specialite' | 'option', id: string | number) =>
+    request(`/api/cours?kind=${encodeURIComponent(kind)}&id=${encodeURIComponent(String(id))}`)
+
   const getCoursByMatiere = (matiereId: string | number) =>
     request(`/api/cours/matiere/${matiereId}`)
 
+  const getDevoirsByCategory = (kind: 'matiere' | 'specialite' | 'option', id: string | number) =>
+    request(
+      `/api/devoirs/categorie?kind=${encodeURIComponent(kind)}&id=${encodeURIComponent(String(id))}`,
+    )
+
   const getDevoirsByMatiere = (matiereId: string | number) =>
     request(`/api/devoirs/matiere/${matiereId}`)
+
+  const getEvenementsByCategory = (
+    kind: 'matiere' | 'specialite' | 'option',
+    id: string | number,
+  ) =>
+    request(
+      `/api/evenements/categorie?kind=${encodeURIComponent(kind)}&id=${encodeURIComponent(String(id))}`,
+    )
 
   const getEvenementsByMatiere = (matiereId: string | number) =>
     request(`/api/evenements/matiere/${matiereId}`)
@@ -254,8 +270,11 @@ export function useApi() {
     deleteAllUserMessages,
     cleanupUserOrphanedAttachments,
     cleanupAllOrphanedAttachments,
+    getCoursByCategory,
     getCoursByMatiere,
+    getEvenementsByCategory,
     getEvenementsByMatiere,
+    getDevoirsByCategory,
     getDevoirsByMatiere,
     getAllMatieres,
     createCours,

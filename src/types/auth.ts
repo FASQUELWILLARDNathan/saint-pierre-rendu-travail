@@ -17,6 +17,9 @@ export interface User {
     specialites?: {
       nom_specialite: string
     }[]
+    options?: {
+      nom_option: string
+    }[]
   }
 
   professeur?: {

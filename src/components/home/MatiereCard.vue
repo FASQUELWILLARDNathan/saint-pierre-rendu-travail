@@ -12,6 +12,8 @@
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 
+type CardType = 'matiere' | 'specialite' | 'option'
+
 const props = defineProps({
   nom: {
     type: String,
@@ -25,14 +27,38 @@ const props = defineProps({
     type: String,
     default: '#70BEFA',
   },
-  matiereId: { 
-    type: [String, Number], 
-    required: true 
+  cardType: {
+    type: String,
+    default: 'matiere',
+  },
+  categoryId: {
+    type: [String, Number],
+    default: null,
+  },
+  categoryType: {
+    type: String,
+    default: 'matiere',
+  },
+  categoryName: {
+    type: String,
+    default: null,
   },
 })
 
 const router = useRouter()
-const goToMatiere = () => router.push(`/matiere/${props.matiereId}`)
+
+const goToMatiere = () => {
+  if (props.categoryId !== null && props.categoryId !== undefined) {
+    router.push({
+      path: `/categorie/${props.categoryId}`,
+      query: {
+        kind: props.categoryType,
+        name: props.categoryName ?? props.nom,
+      },
+    })
+    return
+  }
+}
 
 const iconBackgroundColor = computed(() => {
   // Convertir hex en rgb avec opacité 50%

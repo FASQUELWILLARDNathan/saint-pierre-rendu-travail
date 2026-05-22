@@ -87,4 +87,74 @@ router.get('/matiere/:matiereId', authenticateToken, async (req, res) => {
   }
 })
 
+router.get('/categorie', authenticateToken, async (req, res) => {
+  try {
+    const kind = String(req.query.kind ?? '')
+    const id = String(req.query.id ?? '')
+
+    if (!kind || !id) {
+      return res.json([])
+    }
+
+    const resolveBigInt = async (value: string, model: 'specialite' | 'option') => {
+      if (/^\d+$/.test(value)) return BigInt(value)
+
+      if (model === 'specialite') {
+        const specialite = await prisma.specialite.findFirst({
+          where: {
+            nom_specialite: {
+              mode: 'insensitive',
+              equals: value,
+            },
+          },
+          select: { id_specialite: true },
+        })
+        return specialite?.id_specialite ?? null
+      }
+
+      const option = await prisma.option.findFirst({
+        where: {
+          nom_option: {
+            mode: 'insensitive',
+            equals: value,
+          },
+        },
+        select: { id_option: true },
+      })
+      return option?.id_option ?? null
+    }
+
+    const where: any = {}
+    if (kind === 'matiere') {
+      where.id_matiere = BigInt(id)
+    } else if (kind === 'specialite') {
+      const specialiteId = await resolveBigInt(id, 'specialite')
+      if (!specialiteId) return res.json([])
+      where.id_specialite = specialiteId
+    } else if (kind === 'option') {
+      const optionId = await resolveBigInt(id, 'option')
+      if (!optionId) return res.json([])
+      where.id_option = optionId
+    } else {
+      return res.json([])
+    }
+
+    const devoirs = await prisma.devoir.findMany({
+      where,
+      include: {
+        matiere: true,
+        cours: true,
+      },
+      orderBy: {
+        date_limite: 'asc',
+      },
+    })
+
+    res.json(devoirs)
+  } catch (error) {
+    console.error('Erreur lors de la récupération des devoirs par catégorie:', error)
+    res.status(500).json({ error: 'Erreur serveur' })
+  }
+})
+
 export default router
