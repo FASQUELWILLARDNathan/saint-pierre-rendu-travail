@@ -46,6 +46,7 @@ app.use('/api/messages', messagesRoutes)
 app.use('/api/matieres', matieresRoutes)
 app.use('/api/cours', coursRoutes)
 app.use('/cours', express.static('/app/public/cours'))
+app.use('/public', express.static('/app/public'))
 
 // Error de gestion
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {

@@ -40,7 +40,7 @@
             <n-empty v-if="cours.length === 0" description="Aucun cours" />
 
             <div v-else class="items-list">
-              <div v-for="c in cours.slice(0, 3)" :key="c.id_cours" class="item-card cours-item">
+              <div v-for="c in cours.slice(0, 3)" :key="c.id_cours" class="item-card cours-item" @click="openCours(c)" style="cursor: pointer;">
                 <div class="item-icon" :style="{ backgroundColor: iconBg }">
                   <img v-if="categoryIcon" :src="categoryIcon" alt="" />
                   <span v-else>📖</span>
@@ -220,6 +220,46 @@
           <n-button type="primary" @click="createEvenementHandler">Créer</n-button>
         </template>
       </n-modal>
+      <!-- Modal détail cours -->
+      <n-modal
+        v-model:show="showDetailModal"
+        preset="card"
+        :title="selectedCours?.nom_cours"
+        style="max-width: 700px"
+      >
+        <div v-if="selectedCours" class="cours-detail">
+          <div class="detail-meta">
+            <span class="meta-badge" v-if="selectedCours.matiere">{{ selectedCours.matiere.nom_matiere }}</span>
+            <span class="meta-badge" v-if="selectedCours.classe">{{ selectedCours.classe.nom_classe }}</span>
+            <span class="meta-badge">
+              👤 {{ selectedCours.professeur?.user?.prenom }} {{ selectedCours.professeur?.user?.nom }}
+            </span>
+          </div>
+
+          <p class="detail-desc">{{ selectedCours.description_cours ?? 'Pas de description' }}</p>
+
+          <div v-if="selectedCours.ressources?.length > 0" class="detail-ressources">
+            <h4>Fichiers du cours</h4>
+            <div class="ressources-list">
+              <a
+                v-for="ressource in selectedCours.ressources"
+                :key="ressource.id_ressource"
+                :href="`${apiBase}/public${ressource.chemin_fichier}`"
+                target="_blank"
+                class="ressource-item"
+              >
+                <span>{{ getFileIcon(ressource.type_fichier) }}</span>
+                <div class="ressource-info">
+                  <span class="ressource-nom">{{ ressource.nom_fichier }}</span>
+                  <span class="ressource-size">{{ formatSize(Number(ressource.taille_octets)) }}</span>
+                </div>
+                <span class="ressource-dl">⬇</span>
+              </a>
+            </div>
+          </div>
+          <n-empty v-else description="Aucun fichier joint" />
+        </div>
+      </n-modal>
     </div>
   </div>
 </template>
@@ -265,6 +305,29 @@ const evenementFormRef = ref<FormInst | null>(null)
 
 const matieres = ref<any[]>([])
 
+const showDetailModal = ref(false)
+const selectedCours = ref<any>(null)
+const apiBase = import.meta.env.VITE_API_URL
+
+function openCours(c: any) {
+  selectedCours.value = c
+  showDetailModal.value = true
+}
+
+function getFileIcon(type: string) {
+  if (type?.includes('pdf')) return '📄'
+  if (type?.includes('image')) return '🖼️'
+  if (type?.includes('video')) return '🎬'
+  if (type?.includes('audio')) return '🎵'
+  if (type?.includes('zip') || type?.includes('rar')) return '🗜️'
+  return '📎'
+}
+
+function formatSize(bytes: number) {
+  if (bytes < 1024) return `${bytes} o`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} Ko`
+  return `${(bytes / (1024 * 1024)).toFixed(1)} Mo`
+}
 
 const matieresOptions = computed(() =>
   matieres.value.map(m => ({ label: m.nom_matiere, value: String(m.id_matiere) }))
@@ -740,6 +803,19 @@ function goToCours(type: string, value: string) {
   font-weight: 600;
   flex-shrink: 0;
 }
+
+.cours-detail { padding: 8px 0; }
+.detail-meta { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+.meta-badge { background: rgba(32,87,129,0.1); color: #205781; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+.detail-desc { color: #6b7280; font-size: 14px; margin-bottom: 24px; }
+.detail-ressources h4 { font-size: 16px; font-weight: 700; color: #205781; margin: 0 0 12px 0; }
+.ressources-list { display: flex; flex-direction: column; gap: 8px; }
+.ressource-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: #f8f9fa; border-radius: 8px; text-decoration: none; transition: background 0.2s; }
+.ressource-item:hover { background: #eef3f8; }
+.ressource-info { flex: 1; display: flex; flex-direction: column; }
+.ressource-nom { font-size: 14px; font-weight: 600; color: #1a1a1a; }
+.ressource-size { font-size: 11px; color: #817f7f; }
+.ressource-dl { color: #205781; font-size: 16px; }
 
 .see-more-btn {
   background: none;

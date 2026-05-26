@@ -256,6 +256,7 @@ router.get('/matiere/:matiereId', authenticateToken, async (req, res) => {
         devoirs: {
           select: { id_devoir: true, nom_devoir: true, date_limite: true },
         },
+        ressources: true
       },
     })
 
@@ -291,6 +292,7 @@ router.get('/specialite/:specialiteId', authenticateToken, async (req, res) => {
         },
         specialite: true,
         classe: true,
+        ressources: true,
         devoirs: { select: { id_devoir: true, nom_devoir: true, date_limite: true } },
       },
     })
@@ -327,6 +329,7 @@ router.get('/option/:optionId', authenticateToken, async (req, res) => {
         },
         option: true,
         classe: true,
+        ressources: true,
         devoirs: { select: { id_devoir: true, nom_devoir: true, date_limite: true } },
       },
     })
