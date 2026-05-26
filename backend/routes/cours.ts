@@ -283,6 +283,8 @@ router.get('/specialite/:specialiteId', authenticateToken, async (req, res) => {
       where = { id_specialite: BigInt(specialiteId), id_user: BigInt(userId) }
     }
 
+    const { nom_devoir, description_devoir, id_cours, date_limite } = req.body
+
     const cours = await prisma.cours.findMany({
       where,
       include: {

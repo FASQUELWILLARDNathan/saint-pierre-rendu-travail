@@ -254,6 +254,26 @@ export function useApi() {
 
   const getCoursByOption = (optionId: string | number) => request(`/api/cours/option/${optionId}`)
 
+  const getMesDevoirs = () => request('/api/devoirs/mes-devoirs')
+
+  const getMesNotes = () => request('/api/rendus/mes-notes')
+
+  const rendreDevoir = (data: FormData) => request('/api/rendus', { method: 'POST', body: data })
+
+  const deleteRendu = (idDevoir: string | number) =>
+    request(`/api/rendus/devoir/${idDevoir}`, {
+      method: 'DELETE',
+    })
+
+  const updateRendu = (
+    idRendu: string | number,
+    data: { note?: string | number | null; retour?: string | null },
+  ) =>
+    request(`/api/rendus/${idRendu}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    })
+
   return {
     signIn,
     signUp,
@@ -299,5 +319,10 @@ export function useApi() {
     createEvenement,
     getCoursBySpecialite,
     getCoursByOption,
+    getMesDevoirs,
+    getMesNotes,
+    rendreDevoir,
+    deleteRendu,
+    updateRendu,
   }
 }

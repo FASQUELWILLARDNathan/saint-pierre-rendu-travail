@@ -12,6 +12,8 @@ import MessageriePage from './pages/MessageriePage.vue'
 import { useAuthStore } from './stores/auth.store'
 import MatierePage from './pages/MatierePage.vue'
 import CoursPage from './pages/CoursPage.vue'
+import DevoirsPage from './pages/DevoirsPage.vue'
+import NotesPage from './pages/NotesPage.vue'
 
 export const ROUTES = {
   HOME: '/',
@@ -27,6 +29,8 @@ export const ROUTES = {
   CATEGORIE: '/categorie/:id',
   MATIERE: '/categorie/:id',
   COURS: '/cours',
+  DEVOIRS: '/devoirs',
+  NOTES: '/notes',
 } as const
 
 const routes = [
@@ -84,6 +88,16 @@ const routes = [
   {
     path: '/cours',
     component: CoursPage,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/devoirs',
+    component: DevoirsPage,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/notes',
+    component: NotesPage,
     meta: { requiresAuth: true },
   },
   {

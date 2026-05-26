@@ -15,7 +15,6 @@ model matiere {
   icon_url                String?
   devoir_icon_url         String?
   cours                   cours[]
-  devoirs                 devoir[]
   evenements              evenement[]
   created_at              DateTime          @default(now())
   classes      ClasseMatiere[]
@@ -191,14 +190,12 @@ model ressource_cours {
 model devoir {
   id_devoir             BigInt              @id @default(autoincrement())
   id_cours              BigInt
-  id_matiere            BigInt
   nom_devoir            String              @db.VarChar(255)
   description_devoir    String?
   date_limite           DateTime?
   coefficient           Decimal?            @db.Decimal(5, 2)
   professeurs           assprofdevoir[]
   cours                 cours               @relation(fields: [id_cours], references: [id_cours])
-  matiere               matiere             @relation(fields: [id_matiere], references: [id_matiere])
   rendus                rendu[]
   @@unique([id_cours, nom_devoir])
 }
@@ -238,8 +235,21 @@ model rendu {
   retour                String?             @db.VarChar(255)
   devoir                devoir              @relation(fields: [id_devoir], references: [id_devoir])
   eleve                 eleve               @relation(fields: [id_user], references: [id_user])
+  pieces_jointes        piece_jointe_rendu[]
+
 
   @@unique([id_devoir, id_user])
+}
+
+model piece_jointe_rendu {
+  id_piece_jointe       BigInt              @id @default(autoincrement())
+  id_rendu              BigInt
+  nom_fichier           String              @db.VarChar(255)
+  chemin_fichier        String              @db.VarChar(500)
+  type_fichier          String              @db.VarChar(50)
+  taille_octets         BigInt
+  date_ajout            DateTime            @default(now())
+  rendu                 rendu               @relation(fields: [id_rendu], references: [id_rendu], onDelete: Cascade)
 }
 
 // Représente un événement (interrogation, examen, etc.)

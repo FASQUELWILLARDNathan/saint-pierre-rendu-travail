@@ -2,7 +2,9 @@
   <div class="travaux-recents-section">
     <div class="section-header">
       <h2>Travaux à rendre</h2>
-      <router-link to="/travaux" class="voir-tout">Voir Tout</router-link>
+      <router-link v-if="travaux.length > 3" to="/devoirs" class="voir-tout">
+        Voir Tous
+      </router-link>
     </div>
 
     <!-- Loading state -->
@@ -22,7 +24,12 @@
 
     <!-- Travaux list -->
     <div v-else class="travaux-list">
-      <div v-for="travail in travaux" :key="String(travail.id)" class="travail-item">
+      <div
+        v-for="travail in travaux.slice(0, 3)"
+        :key="String(travail.id)"
+        class="travail-item"
+        @click="handleTravailClick(travail)"
+      >
         <div
           class="travail-icon"
           :style="{
@@ -38,15 +45,19 @@
           <p class="travail-date">Date limite: {{ travail.dateLimit }}</p>
         </div>
 
-        <button class="btn-rendre">Rendre</button>
+        <button class="btn-action" :class="{ 'btn-prof': !isEleve }">
+          {{ isEleve ? 'Rendre' : 'Rendus' }}
+        </button>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { useApi } from '@/composables/useApi'
+import { useAuthStore } from '@/stores/auth.store'
 import { hexToRgba } from '@/utils/colors'
 
 interface Travail {
@@ -60,9 +71,21 @@ interface Travail {
 }
 
 const api = useApi()
+const router = useRouter()
+const authStore = useAuthStore()
 const travaux = ref<Travail[]>([])
 const isLoading = ref(true)
 const error = ref<string | null>(null)
+
+const isEleve = computed(() => authStore.user?.role === 'eleve')
+
+const handleTravailClick = async (travail: Travail) => {
+  // Navigate to devoirs page with focus on this specific devoir
+  await router.push({
+    path: '/devoirs',
+    query: { focus: String(travail.id) },
+  })
+}
 
 onMounted(async () => {
   try {
@@ -200,7 +223,7 @@ onMounted(async () => {
   font-weight: 500;
 }
 
-.btn-rendre {
+.btn-action {
   padding: 8px 24px;
   background: #4f959d;
   color: white;
@@ -213,9 +236,17 @@ onMounted(async () => {
   transition: all 0.3s ease;
 }
 
-.btn-rendre:hover {
+.btn-action:hover {
   background: #3d7a84;
   transform: translateY(-2px);
+}
+
+.btn-action.btn-prof {
+  background: #10b981;
+}
+
+.btn-action.btn-prof:hover {
+  background: #059669;
 }
 
 /* Tablette 768px-1024px */

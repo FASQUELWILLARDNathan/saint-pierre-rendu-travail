@@ -113,12 +113,12 @@ const userClass = computed(() => {
     console.log('specialites_enseignees:', user.professeur?.specialites_enseignees)
     const classes = user.professeur?.classes_enseignees
     if (classes && classes.length > 0) {
-      return classes.map(c => c.classe.nom_classe).join(', ')
+      return classes.map((c) => c.classe.nom_classe).join(', ')
     }
 
     const specialites = user.professeur?.specialites_enseignees
     if (specialites && specialites.length > 0) {
-      return specialites.map(s => s.specialite.nom_specialite).join(', ')
+      return specialites.map((s) => s.specialite.nom_specialite).join(', ')
     }
 
     return user.professeur?.matiere ?? 'Aucune matière'

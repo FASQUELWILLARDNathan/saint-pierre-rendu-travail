@@ -89,3 +89,7 @@ Thumbs.db
 # FILES
 public/uploads/messages/*
 public/cours/*
+public/rendus/*
+
+# OTHERS
+.idees

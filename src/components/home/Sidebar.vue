@@ -56,16 +56,6 @@
       </router-link>
 
       <router-link
-        to="/travaux"
-        class="menu-item"
-        :class="{ active: $route.path === '/travaux' }"
-        @click="isSidebarOpen = false"
-      >
-        <img src="/travaux-icon.svg" alt="Travaux" class="menu-icon" />
-        <span class="menu-text">Travaux</span>
-      </router-link>
-
-      <router-link
         to="/devoirs"
         class="menu-item"
         :class="{ active: $route.path === '/devoirs' }"

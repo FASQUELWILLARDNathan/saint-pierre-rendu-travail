@@ -40,7 +40,13 @@
             <n-empty v-if="cours.length === 0" description="Aucun cours" />
 
             <div v-else class="items-list">
-              <div v-for="c in cours.slice(0, 3)" :key="c.id_cours" class="item-card cours-item" @click="openCours(c)" style="cursor: pointer;">
+              <div
+                v-for="c in cours.slice(0, 3)"
+                :key="c.id_cours"
+                class="item-card cours-item"
+                @click="openCours(c)"
+                style="cursor: pointer"
+              >
                 <div class="item-icon" :style="{ backgroundColor: iconBg }">
                   <img v-if="categoryIcon" :src="categoryIcon" alt="" />
                   <span v-else>📖</span>
@@ -71,7 +77,11 @@
             <h2>Devoirs</h2>
             <n-empty v-if="devoirs.length === 0" description="Aucun devoir" />
             <div v-else class="items-list">
-              <div v-for="d in devoirs" :key="d.id_devoir" class="item-card devoir-item">
+              <div
+                v-for="d in devoirs.slice(0, 3)"
+                :key="d.id_devoir"
+                class="item-card devoir-item"
+              >
                 <div class="item-icon" :style="{ backgroundColor: iconBg }">
                   <img v-if="matiere?.devoir_icon_url" :src="matiere.devoir_icon_url" alt="" />
                   <span v-else>📝</span>
@@ -85,6 +95,10 @@
                 </div>
                 <div class="item-badge" v-if="d.coefficient">Coef. {{ d.coefficient }}</div>
               </div>
+
+              <button v-if="devoirs.length > 3" class="see-more-btn" @click="goToDevoirs()">
+                Voir plus →
+              </button>
             </div>
           </div>
 
@@ -193,7 +207,6 @@
         preset="dialog"
         size="medium"
       >
-
         <n-form ref="evenementFormRef" :model="evenementForm" :rules="evenementRules">
           <n-form-item label="Nom de l'événement" path="nom_evenement">
             <n-input v-model:value="evenementForm.nom_evenement" placeholder="Entrez le nom" />
@@ -229,10 +242,15 @@
       >
         <div v-if="selectedCours" class="cours-detail">
           <div class="detail-meta">
-            <span class="meta-badge" v-if="selectedCours.matiere">{{ selectedCours.matiere.nom_matiere }}</span>
-            <span class="meta-badge" v-if="selectedCours.classe">{{ selectedCours.classe.nom_classe }}</span>
+            <span class="meta-badge" v-if="selectedCours.matiere">{{
+              selectedCours.matiere.nom_matiere
+            }}</span>
+            <span class="meta-badge" v-if="selectedCours.classe">{{
+              selectedCours.classe.nom_classe
+            }}</span>
             <span class="meta-badge">
-              👤 {{ selectedCours.professeur?.user?.prenom }} {{ selectedCours.professeur?.user?.nom }}
+              👤 {{ selectedCours.professeur?.user?.prenom }}
+              {{ selectedCours.professeur?.user?.nom }}
             </span>
           </div>
 
@@ -251,7 +269,9 @@
                 <span>{{ getFileIcon(ressource.type_fichier) }}</span>
                 <div class="ressource-info">
                   <span class="ressource-nom">{{ ressource.nom_fichier }}</span>
-                  <span class="ressource-size">{{ formatSize(Number(ressource.taille_octets)) }}</span>
+                  <span class="ressource-size">{{
+                    formatSize(Number(ressource.taille_octets))
+                  }}</span>
                 </div>
                 <span class="ressource-dl">⬇</span>
               </a>
@@ -267,7 +287,21 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { NSpin, NAlert, NEmpty, NDropdown, NModal, NForm, NFormItem, NInput, NButton, NUpload, NDatePicker, NSelect, NInputNumber } from 'naive-ui'
+import {
+  NSpin,
+  NAlert,
+  NEmpty,
+  NDropdown,
+  NModal,
+  NForm,
+  NFormItem,
+  NInput,
+  NButton,
+  NUpload,
+  NDatePicker,
+  NSelect,
+  NInputNumber,
+} from 'naive-ui'
 import type { FormInst, UploadFileInfo } from 'naive-ui'
 import { useApi } from '@/composables/useApi'
 import { useAuthStore } from '@/stores/auth.store'
@@ -330,7 +364,7 @@ function formatSize(bytes: number) {
 }
 
 const matieresOptions = computed(() =>
-  matieres.value.map(m => ({ label: m.nom_matiere, value: String(m.id_matiere) }))
+  matieres.value.map((m) => ({ label: m.nom_matiere, value: String(m.id_matiere) })),
 )
 
 // Form states
@@ -437,36 +471,46 @@ async function loadData() {
         matiere.value = evenementsData[0].matiere
       }
     } else if (categoryKind.value === 'specialite') {
-  const coursData = (await api.getCoursBySpecialite(matiereId)) as any
-  cours.value = coursData || []
-  devoirs.value = []
-  evenements.value = []
+      const [coursData, devoirsData, evenementsData] = await Promise.all([
+        api.getCoursBySpecialite(matiereId) as any,
+        api.getDevoirsByCategory('specialite', matiereId) as any,
+        api.getEvenementsByCategory('specialite', matiereId) as any,
+      ]).catch(() => [[], [], []])
 
-  const label = categoryLabel.value || String(matiereId)
-  const foundIcon = getMatiereByName(label)
-  matiere.value = {
-    nom_matiere: label,
-    description: 'Catégorie de spécialité',
-    couleur: foundIcon?.color ?? '#70BEFA',
-    icon_url: foundIcon?.icon ?? '/others-icon.svg',
-    devoir_icon_url: foundIcon?.devoirIcon ?? '/other-devoir-icon.svg',
-  }
-} else if (categoryKind.value === 'option') {
-  const coursData = (await api.getCoursByOption(matiereId)) as any
-  cours.value = coursData || []
-  devoirs.value = []
-  evenements.value = []
+      cours.value = coursData || []
+      devoirs.value = devoirsData || []
+      evenements.value = evenementsData || []
 
-  const label = categoryLabel.value || String(matiereId)
-  const foundIcon = getMatiereByName(label)
-  matiere.value = {
-    nom_matiere: label,
-    description: "Catégorie d'option",
-    couleur: foundIcon?.color ?? '#70BEFA',
-    icon_url: foundIcon?.icon ?? '/others-icon.svg',
-    devoir_icon_url: foundIcon?.devoirIcon ?? '/other-devoir-icon.svg',
-  } 
-  }
+      const label = categoryLabel.value || String(matiereId)
+      const foundIcon = getMatiereByName(label)
+      matiere.value = {
+        nom_matiere: label,
+        description: 'Catégorie de spécialité',
+        couleur: foundIcon?.color ?? '#70BEFA',
+        icon_url: foundIcon?.icon ?? '/others-icon.svg',
+        devoir_icon_url: foundIcon?.devoirIcon ?? '/other-devoir-icon.svg',
+      }
+    } else if (categoryKind.value === 'option') {
+      const [coursData, devoirsData, evenementsData] = await Promise.all([
+        api.getCoursByOption(matiereId) as any,
+        api.getDevoirsByCategory('option', matiereId) as any,
+        api.getEvenementsByCategory('option', matiereId) as any,
+      ]).catch(() => [[], [], []])
+
+      cours.value = coursData || []
+      devoirs.value = devoirsData || []
+      evenements.value = evenementsData || []
+
+      const label = categoryLabel.value || String(matiereId)
+      const foundIcon = getMatiereByName(label)
+      matiere.value = {
+        nom_matiere: label,
+        description: "Catégorie d'option",
+        couleur: foundIcon?.color ?? '#70BEFA',
+        icon_url: foundIcon?.icon ?? '/others-icon.svg',
+        devoir_icon_url: foundIcon?.devoirIcon ?? '/other-devoir-icon.svg',
+      }
+    }
   } catch (err) {
     error.value = 'Erreur lors du chargement'
     console.error(err)
@@ -534,17 +578,24 @@ async function createDevoirHandler() {
   try {
     // Besoin de trouver un cours existant pour id_cours
     const cours_defaut = cours.value[0]?.id_cours
-    if (!cours_defaut && categoryKind.value === 'matiere') {
-      message.error('Créez d\'abord un cours pour cette matière')
+    if (!cours_defaut) {
+      const categoryMessage =
+        categoryKind.value === 'specialite'
+          ? 'spécialité'
+          : categoryKind.value === 'option'
+            ? 'option'
+            : 'matière'
+      message.error(`Créez d'abord un cours pour cette ${categoryMessage}`)
       return
     }
 
     await api.createDevoir({
       nom_devoir: devoirForm.value.nom_devoir,
       description_devoir: devoirForm.value.description_devoir || '',
-      date_limite: devoirForm.value.date_limite ? new Date(devoirForm.value.date_limite).toISOString() : null,
+      date_limite: devoirForm.value.date_limite
+        ? new Date(devoirForm.value.date_limite).toISOString()
+        : null,
       coefficient: devoirForm.value.coefficient || 1,
-      id_matiere: matiereId,
       id_cours: cours_defaut,
     })
 
@@ -569,7 +620,9 @@ async function createEvenementHandler() {
     await api.createEvenement({
       nom_evenement: evenementForm.value.nom_evenement,
       type_evenement: evenementForm.value.type_evenement,
-      date_evenement: evenementForm.value.date_evenement ? new Date(evenementForm.value.date_evenement).toISOString() : new Date().toISOString(),
+      date_evenement: evenementForm.value.date_evenement
+        ? new Date(evenementForm.value.date_evenement).toISOString()
+        : new Date().toISOString(),
       id_matiere: matiereId,
     })
 
@@ -582,7 +635,7 @@ async function createEvenementHandler() {
     }
     await loadData()
   } catch (err: any) {
-    message.error(err.message || 'Erreur lors de la création de l\'événement')
+    message.error(err.message || "Erreur lors de la création de l'événement")
   }
 }
 
@@ -591,6 +644,10 @@ function goToCours(type: string, value: string) {
     path: '/cours',
     query: { type, value },
   })
+}
+
+function goToDevoirs() {
+  router.push('/devoirs')
 }
 </script>
 
@@ -804,18 +861,70 @@ function goToCours(type: string, value: string) {
   flex-shrink: 0;
 }
 
-.cours-detail { padding: 8px 0; }
-.detail-meta { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
-.meta-badge { background: rgba(32,87,129,0.1); color: #205781; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
-.detail-desc { color: #6b7280; font-size: 14px; margin-bottom: 24px; }
-.detail-ressources h4 { font-size: 16px; font-weight: 700; color: #205781; margin: 0 0 12px 0; }
-.ressources-list { display: flex; flex-direction: column; gap: 8px; }
-.ressource-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: #f8f9fa; border-radius: 8px; text-decoration: none; transition: background 0.2s; }
-.ressource-item:hover { background: #eef3f8; }
-.ressource-info { flex: 1; display: flex; flex-direction: column; }
-.ressource-nom { font-size: 14px; font-weight: 600; color: #1a1a1a; }
-.ressource-size { font-size: 11px; color: #817f7f; }
-.ressource-dl { color: #205781; font-size: 16px; }
+.cours-detail {
+  padding: 8px 0;
+}
+.detail-meta {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.meta-badge {
+  background: rgba(32, 87, 129, 0.1);
+  color: #205781;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.detail-desc {
+  color: #6b7280;
+  font-size: 14px;
+  margin-bottom: 24px;
+}
+.detail-ressources h4 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #205781;
+  margin: 0 0 12px 0;
+}
+.ressources-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.ressource-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: background 0.2s;
+}
+.ressource-item:hover {
+  background: #eef3f8;
+}
+.ressource-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.ressource-nom {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+.ressource-size {
+  font-size: 11px;
+  color: #817f7f;
+}
+.ressource-dl {
+  color: #205781;
+  font-size: 16px;
+}
 
 .see-more-btn {
   background: none;
