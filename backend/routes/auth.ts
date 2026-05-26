@@ -45,14 +45,20 @@ export const safeUserSelect = {
       specialites: {
         select: {
           specialite: {
-            select: { nom_specialite: true },
+            select: { 
+              id_specialite: true,
+              nom_specialite: true 
+            },
           },
         },
       },
       options: {
         select: {
           option: {
-            select: { nom_option: true },
+            select: { 
+              id_option: true,
+              nom_option: true 
+            },
           },
         },
       },
@@ -76,7 +82,18 @@ export const safeUserSelect = {
         select: {
           specialite: {
             select: {
+              id_specialite: true,
               nom_specialite: true,
+            },
+          },
+        },
+      },
+      options_enseignees: {
+        select: {
+          option: {
+            select: {
+              id_option: true,
+              nom_option: true,
             },
           },
         },

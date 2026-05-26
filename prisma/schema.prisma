@@ -174,7 +174,6 @@ model cours {
   option                option?             @relation(fields: [id_option], references: [id_option])
   devoirs               devoir[]
   ressources            ressource_cours[]
-  @@unique([id_matiere, nom_cours])
 }
 
 model ressource_cours {

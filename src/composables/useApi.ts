@@ -237,6 +237,23 @@ export function useApi() {
       body: data,
     })
 
+  const createDevoir = (data: any) =>
+    request('/api/devoirs', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+
+  const createEvenement = (data: any) =>
+    request('/api/evenements', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+
+  const getCoursBySpecialite = (specialiteId: string | number) =>
+    request(`/api/cours/specialite/${specialiteId}`)
+
+  const getCoursByOption = (optionId: string | number) => request(`/api/cours/option/${optionId}`)
+
   return {
     signIn,
     signUp,
@@ -278,5 +295,9 @@ export function useApi() {
     getDevoirsByMatiere,
     getAllMatieres,
     createCours,
+    createDevoir,
+    createEvenement,
+    getCoursBySpecialite,
+    getCoursByOption,
   }
 }

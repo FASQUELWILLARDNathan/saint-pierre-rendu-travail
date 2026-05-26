@@ -15,9 +15,11 @@ export interface User {
     annee?: string
 
     specialites?: {
+      id_specialite: string | number
       nom_specialite: string
     }[]
     options?: {
+      id_option: string | number
       nom_option: string
     }[]
   }
@@ -27,10 +29,16 @@ export interface User {
     matiere?: string
     classes_enseignees?: { classe: Classe }[]
     specialites_enseignees?: {
-      specialite: { nom_specialite: string }
+      specialite: { 
+        id_specialite: string | number,
+        nom_specialite: string 
+      }
     }[]
     options_enseignees?: {
-      option: { nom_option: string }
+      option: { 
+        id_option: string | number,
+        nom_option: string 
+      }
     }[]
   }
 }

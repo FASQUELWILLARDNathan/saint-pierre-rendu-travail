@@ -17,6 +17,12 @@
             </div>
           </div>
         </div>
+
+        <div v-if="isProfessor" class="header-right">
+          <n-dropdown trigger="click" :options="createOptions" @select="handleCreateSelect">
+            <button class="create-btn">➕ Nouveau</button>
+          </n-dropdown>
+        </div>
       </header>
 
       <main class="matiere-content">
@@ -109,6 +115,111 @@
           </div>
         </div>
       </main>
+
+      <!-- Modal Créer Cours -->
+      <n-modal
+        v-model:show="showCreateCoursModal"
+        title="Créer un cours"
+        preset="dialog"
+        size="medium"
+      >
+        <n-form ref="coursFormRef" :model="coursForm" :rules="coursRules">
+          <n-form-item label="Nom du cours" path="nom_cours">
+            <n-input v-model:value="coursForm.nom_cours" placeholder="Entrez le nom du cours" />
+          </n-form-item>
+          <n-form-item label="Description" path="description_cours">
+            <n-input
+              v-model:value="coursForm.description_cours"
+              placeholder="Entrez la description"
+              type="textarea"
+              :rows="3"
+            />
+          </n-form-item>
+          <n-form-item label="Fichiers" path="files">
+            <n-upload
+              v-model:file-list="fileList"
+              accept=".pdf,.doc,.docx,.xls,.xlsx"
+              :max="10"
+              @change="handleFileChange"
+            >
+              <n-button>Sélectionner fichiers</n-button>
+            </n-upload>
+          </n-form-item>
+        </n-form>
+
+        <template #action>
+          <n-button @click="showCreateCoursModal = false">Annuler</n-button>
+          <n-button type="primary" @click="createCourseHandler">Créer</n-button>
+        </template>
+      </n-modal>
+
+      <!-- Modal Créer Devoir -->
+      <n-modal
+        v-model:show="showCreateDevoirModal"
+        title="Créer un devoir"
+        preset="dialog"
+        size="medium"
+      >
+        <n-form ref="devoirFormRef" :model="devoirForm" :rules="devoirRules">
+          <n-form-item label="Nom du devoir" path="nom_devoir">
+            <n-input v-model:value="devoirForm.nom_devoir" placeholder="Entrez le nom du devoir" />
+          </n-form-item>
+          <n-form-item label="Description" path="description_devoir">
+            <n-input
+              v-model:value="devoirForm.description_devoir"
+              placeholder="Entrez la description"
+              type="textarea"
+              :rows="3"
+            />
+          </n-form-item>
+          <n-form-item label="Date limite" path="date_limite">
+            <n-date-picker v-model:value="devoirForm.date_limite" type="datetime" />
+          </n-form-item>
+          <n-form-item label="Coefficient" path="coefficient">
+            <n-input-number v-model:value="devoirForm.coefficient" :min="0" :max="20" />
+          </n-form-item>
+        </n-form>
+
+        <template #action>
+          <n-button @click="showCreateDevoirModal = false">Annuler</n-button>
+          <n-button type="primary" @click="createDevoirHandler">Créer</n-button>
+        </template>
+      </n-modal>
+
+      <!-- Modal Créer Événement -->
+      <n-modal
+        v-model:show="showCreateEvenementModal"
+        title="Créer un événement"
+        preset="dialog"
+        size="medium"
+      >
+
+        <n-form ref="evenementFormRef" :model="evenementForm" :rules="evenementRules">
+          <n-form-item label="Nom de l'événement" path="nom_evenement">
+            <n-input v-model:value="evenementForm.nom_evenement" placeholder="Entrez le nom" />
+          </n-form-item>
+          <n-form-item label="Type" path="type_evenement">
+            <n-select
+              v-model:value="evenementForm.type_evenement"
+              :options="[
+                { label: 'Contrôle', value: 'Contrôle' },
+                { label: 'Évaluation', value: 'Évaluation' },
+                { label: 'Présentation', value: 'Présentation' },
+                { label: 'Visite', value: 'Visite' },
+                { label: 'Autre', value: 'Autre' },
+              ]"
+            />
+          </n-form-item>
+          <n-form-item label="Date et heure" path="date_evenement">
+            <n-date-picker v-model:value="evenementForm.date_evenement" type="datetime" />
+          </n-form-item>
+        </n-form>
+
+        <template #action>
+          <n-button @click="showCreateEvenementModal = false">Annuler</n-button>
+          <n-button type="primary" @click="createEvenementHandler">Créer</n-button>
+        </template>
+      </n-modal>
     </div>
   </div>
 </template>
@@ -116,14 +227,19 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { NSpin, NAlert, NEmpty } from 'naive-ui'
+import { NSpin, NAlert, NEmpty, NDropdown, NModal, NForm, NFormItem, NInput, NButton, NUpload, NDatePicker, NSelect, NInputNumber } from 'naive-ui'
+import type { FormInst, UploadFileInfo } from 'naive-ui'
 import { useApi } from '@/composables/useApi'
+import { useAuthStore } from '@/stores/auth.store'
+import { useMessage } from 'naive-ui'
 import Sidebar from '@/components/home/Sidebar.vue'
 import { getMatiereByName } from '@/utils/matieres.ts'
 
 const route = useRoute()
 const router = useRouter()
 const api = useApi()
+const authStore = useAuthStore()
+const message = useMessage()
 
 const matiereId = route.params.id as string
 const categoryKind = computed(() => String(route.query.kind ?? 'matiere'))
@@ -136,6 +252,69 @@ const matiere = ref<any>(null)
 const cours = ref<any[]>([])
 const devoirs = ref<any[]>([])
 const evenements = ref<any[]>([])
+
+// Modal states
+const showCreateCoursModal = ref(false)
+const showCreateDevoirModal = ref(false)
+const showCreateEvenementModal = ref(false)
+
+// Form refs
+const coursFormRef = ref<FormInst | null>(null)
+const devoirFormRef = ref<FormInst | null>(null)
+const evenementFormRef = ref<FormInst | null>(null)
+
+const matieres = ref<any[]>([])
+
+
+const matieresOptions = computed(() =>
+  matieres.value.map(m => ({ label: m.nom_matiere, value: String(m.id_matiere) }))
+)
+
+// Form states
+const coursForm = ref({
+  nom_cours: '',
+  description_cours: '',
+  id_matiere_override: null as string | null,
+})
+
+const devoirForm = ref({
+  nom_devoir: '',
+  description_devoir: '',
+  date_limite: null as number | null,
+  coefficient: 1 as number,
+})
+
+const evenementForm = ref({
+  nom_evenement: '',
+  type_evenement: 'Contrôle',
+  date_evenement: null as number | null,
+})
+
+// File upload
+const fileList = ref<UploadFileInfo[]>([])
+
+// Validation rules
+const coursRules = {
+  nom_cours: [
+    { required: true, message: 'Le nom est requis', trigger: 'blur' },
+    { min: 3, max: 255, message: 'Entre 3 et 255 caractères', trigger: 'blur' },
+  ],
+}
+
+const devoirRules = {
+  nom_devoir: [
+    { required: true, message: 'Le nom est requis', trigger: 'blur' },
+    { min: 3, max: 255, message: 'Entre 3 et 255 caractères', trigger: 'blur' },
+  ],
+}
+
+const evenementRules = {
+  nom_evenement: [
+    { required: true, message: 'Le nom est requis', trigger: 'blur' },
+    { min: 3, max: 255, message: 'Entre 3 et 255 caractères', trigger: 'blur' },
+  ],
+  type_evenement: [{ required: true, message: 'Le type est requis', trigger: 'blur' }],
+}
 
 const iconBg = computed(() => {
   const hex = (matiere.value?.couleur ?? '#70BEFA').replace('#', '')
@@ -153,7 +332,7 @@ const categoryTitle = computed(() => {
 const categoryDescription = computed(() => {
   if (categoryKind.value === 'matiere') return matiere.value?.description ?? ''
   if (categoryKind.value === 'specialite') return 'Catégorie de spécialité'
-  if (categoryKind.value === 'option') return 'Catégorie d’option'
+  if (categoryKind.value === 'option') return "Catégorie d'option"
   return matiere.value?.description ?? ''
 })
 
@@ -164,13 +343,15 @@ const categoryIcon = computed(() => {
   return matiere.value?.icon_url ?? '/others-icon.svg'
 })
 
-onMounted(async () => {
-  if (!matiereId || matiereId === 'null') {
-    error.value = 'Catégorie introuvable'
-    isLoading.value = false
-    return
-  }
+const isProfessor = computed(() => authStore.user?.role === 'professeur')
 
+const createOptions = [
+  { label: 'Créer un cours', key: 'cours' },
+  { label: 'Créer un devoir', key: 'devoir' },
+  { label: 'Créer un événement', key: 'evenement' },
+]
+
+async function loadData() {
   try {
     isLoading.value = true
 
@@ -179,61 +360,168 @@ onMounted(async () => {
         api.getCoursByMatiere(matiereId) as any,
         api.getDevoirsByMatiere(matiereId) as any,
         api.getEvenementsByMatiere(matiereId) as any,
-      ])
+      ]).catch(() => [[], [], []])
 
-      cours.value = coursData
-      devoirs.value = devoirsData
-      evenements.value = evenementsData
+      cours.value = coursData || []
+      devoirs.value = devoirsData || []
+      evenements.value = evenementsData || []
 
-      if (coursData.length > 0) {
+      if (coursData?.length > 0) {
         matiere.value = coursData[0].matiere
-      } else if (devoirsData.length > 0) {
+      } else if (devoirsData?.length > 0) {
         matiere.value = devoirsData[0].matiere
-      } else if (evenementsData.length > 0) {
+      } else if (evenementsData?.length > 0) {
         matiere.value = evenementsData[0].matiere
       }
-    } else {
-      const coursData = (await api.getCoursByCategory(categoryKind.value as any, matiereId)) as any
-      cours.value = coursData
+    } else if (categoryKind.value === 'specialite') {
+  const coursData = (await api.getCoursBySpecialite(matiereId)) as any
+  cours.value = coursData || []
+  devoirs.value = []
+  evenements.value = []
 
-      const matiereIds = Array.from(
-        new Set(
-          coursData
-            .map((c: any) => String(c.id_matiere ?? c.matiere?.id_matiere ?? ''))
-            .filter((value: string) => value && value !== 'null'),
-        ),
-      ) as string[]
+  const label = categoryLabel.value || String(matiereId)
+  const foundIcon = getMatiereByName(label)
+  matiere.value = {
+    nom_matiere: label,
+    description: 'Catégorie de spécialité',
+    couleur: foundIcon?.color ?? '#70BEFA',
+    icon_url: foundIcon?.icon ?? '/others-icon.svg',
+    devoir_icon_url: foundIcon?.devoirIcon ?? '/other-devoir-icon.svg',
+  }
+} else if (categoryKind.value === 'option') {
+  const coursData = (await api.getCoursByOption(matiereId)) as any
+  cours.value = coursData || []
+  devoirs.value = []
+  evenements.value = []
 
-      const [devoirsArrays, evenementsArrays] = await Promise.all([
-        Promise.all(matiereIds.map((id: string) => api.getDevoirsByMatiere(id) as any)),
-        Promise.all(matiereIds.map((id: string) => api.getEvenementsByMatiere(id) as any)),
-      ])
-
-      devoirs.value = Array.from(
-        new Map(devoirsArrays.flat().map((d: any) => [String(d.id_devoir), d])).values(),
-      )
-      evenements.value = Array.from(
-        new Map(evenementsArrays.flat().map((e: any) => [String(e.id_evenement), e])).values(),
-      )
-
-      const label = categoryLabel.value || String(matiereId)
-      const foundIcon = getMatiereByName(label)
-      matiere.value = {
-        nom_matiere: label,
-        description:
-          categoryKind.value === 'specialite' ? 'Catégorie de spécialité' : 'Catégorie d’option',
-        couleur: foundIcon?.color ?? '#70BEFA',
-        icon_url: foundIcon?.icon ?? '/others-icon.svg',
-        devoir_icon_url: foundIcon?.devoirIcon ?? '/other-devoir-icon.svg',
-      }
-    }
+  const label = categoryLabel.value || String(matiereId)
+  const foundIcon = getMatiereByName(label)
+  matiere.value = {
+    nom_matiere: label,
+    description: "Catégorie d'option",
+    couleur: foundIcon?.color ?? '#70BEFA',
+    icon_url: foundIcon?.icon ?? '/others-icon.svg',
+    devoir_icon_url: foundIcon?.devoirIcon ?? '/other-devoir-icon.svg',
+  } 
+  }
   } catch (err) {
     error.value = 'Erreur lors du chargement'
     console.error(err)
   } finally {
     isLoading.value = false
   }
+}
+
+onMounted(async () => {
+  if (!matiereId || matiereId === 'null') {
+    error.value = 'Catégorie introuvable'
+    isLoading.value = false
+    return
+  }
+
+  matieres.value = (await api.getAllMatieres()) as any
+
+  await loadData()
 })
+
+function handleCreateSelect(key: string) {
+  if (key === 'cours') showCreateCoursModal.value = true
+  else if (key === 'devoir') showCreateDevoirModal.value = true
+  else if (key === 'evenement') showCreateEvenementModal.value = true
+}
+
+function handleFileChange() {
+  // Fichiers ajoutés automatiquement via v-model:file-list
+}
+
+async function createCourseHandler() {
+  await coursFormRef.value?.validate()
+
+  try {
+    const formData = new FormData()
+    formData.append('nom_cours', coursForm.value.nom_cours)
+    formData.append('description_cours', coursForm.value.description_cours || '')
+
+    if (categoryKind.value === 'matiere') {
+      formData.append('id_matiere', matiereId)
+    } else if (categoryKind.value === 'specialite') {
+      formData.append('id_specialite', matiereId)
+    } else if (categoryKind.value === 'option') {
+      formData.append('id_option', matiereId)
+    }
+
+    fileList.value.forEach((file) => {
+      if (file.file) formData.append('fichiers', file.file)
+    })
+
+    await api.createCours(formData)
+    message.success('Cours créé avec succès')
+    showCreateCoursModal.value = false
+    coursForm.value = { nom_cours: '', description_cours: '', id_matiere_override: null }
+    fileList.value = []
+    await loadData()
+  } catch (err: any) {
+    message.error(err.message || 'Erreur lors de la création du cours')
+  }
+}
+
+async function createDevoirHandler() {
+  await devoirFormRef.value?.validate()
+
+  try {
+    // Besoin de trouver un cours existant pour id_cours
+    const cours_defaut = cours.value[0]?.id_cours
+    if (!cours_defaut && categoryKind.value === 'matiere') {
+      message.error('Créez d\'abord un cours pour cette matière')
+      return
+    }
+
+    await api.createDevoir({
+      nom_devoir: devoirForm.value.nom_devoir,
+      description_devoir: devoirForm.value.description_devoir || '',
+      date_limite: devoirForm.value.date_limite ? new Date(devoirForm.value.date_limite).toISOString() : null,
+      coefficient: devoirForm.value.coefficient || 1,
+      id_matiere: matiereId,
+      id_cours: cours_defaut,
+    })
+
+    message.success('Devoir créé avec succès')
+    showCreateDevoirModal.value = false
+    devoirForm.value = {
+      nom_devoir: '',
+      description_devoir: '',
+      date_limite: null,
+      coefficient: 1,
+    }
+    await loadData()
+  } catch (err: any) {
+    message.error(err.message || 'Erreur lors de la création du devoir')
+  }
+}
+
+async function createEvenementHandler() {
+  await evenementFormRef.value?.validate()
+
+  try {
+    await api.createEvenement({
+      nom_evenement: evenementForm.value.nom_evenement,
+      type_evenement: evenementForm.value.type_evenement,
+      date_evenement: evenementForm.value.date_evenement ? new Date(evenementForm.value.date_evenement).toISOString() : new Date().toISOString(),
+      id_matiere: matiereId,
+    })
+
+    message.success('Événement créé avec succès')
+    showCreateEvenementModal.value = false
+    evenementForm.value = {
+      nom_evenement: '',
+      type_evenement: 'Contrôle',
+      date_evenement: null,
+    }
+    await loadData()
+  } catch (err: any) {
+    message.error(err.message || 'Erreur lors de la création de l\'événement')
+  }
+}
 
 function goToCours(type: string, value: string) {
   router.push({
@@ -258,34 +546,40 @@ function goToCours(type: string, value: string) {
 }
 
 .matiere-header {
-  background: transparent;
-  padding: 32px 24px;
+  background: white;
+  padding: 24px;
+  border-bottom: 1px solid #e5e7eb;
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 32px;
-  box-shadow: none;
+  gap: 24px;
 }
 
 .header-left {
   display: flex;
-  flex-direction: column;
-  gap: 16px;
+  align-items: center;
+  gap: 24px;
+  flex: 1;
+}
+
+.header-right {
+  display: flex;
+  gap: 12px;
 }
 
 .back-btn {
   background: none;
   border: none;
-  color: #205781;
-  font-size: 14px;
-  font-weight: 600;
   cursor: pointer;
-  padding: 0;
-  width: fit-content;
-  transition: opacity 0.2s;
+  font-size: 16px;
+  color: #1f2937;
+  padding: 8px 12px;
+  border-radius: 6px;
+  transition: background-color 0.2s;
 }
 
 .back-btn:hover {
-  opacity: 0.7;
+  background-color: #f3f4f6;
 }
 
 .header-title {
@@ -294,10 +588,23 @@ function goToCours(type: string, value: string) {
   gap: 16px;
 }
 
+.header-title h1 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.header-title p {
+  margin: 4px 0 0 0;
+  font-size: 14px;
+  color: #6b7280;
+}
+
 .matiere-icon-header {
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -310,34 +617,31 @@ function goToCours(type: string, value: string) {
   object-fit: contain;
 }
 
-.matiere-icon-header span {
-  font-size: 28px;
+.create-btn {
+  background: #3b82f6;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: background-color 0.2s;
 }
 
-.header-title h1 {
-  font-size: 40px;
-  font-weight: 700;
-  color: #205781;
-  margin: 0;
-}
-
-.header-title p {
-  font-size: 16px;
-  color: #817f7f;
-  margin: 4px 0 0 0;
+.create-btn:hover {
+  background-color: #2563eb;
 }
 
 .matiere-content {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 24px 32px;
   flex: 1;
-  width: 100%;
+  padding: 32px 24px;
+  overflow-y: auto;
 }
 
 .content-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
   gap: 24px;
 }
 
@@ -345,18 +649,18 @@ function goToCours(type: string, value: string) {
   background: white;
   border-radius: 12px;
   padding: 24px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e5e7eb;
+}
+
+.section-card.full-width {
+  grid-column: 1 / -1;
 }
 
 .section-card h2 {
+  margin: 0 0 16px 0;
   font-size: 18px;
   font-weight: 700;
-  color: #205781;
-  margin: 0 0 20px 0;
-}
-
-.full-width {
-  grid-column: 1 / -1;
+  color: #1f2937;
 }
 
 .items-list {
@@ -367,22 +671,22 @@ function goToCours(type: string, value: string) {
 
 .item-card {
   display: flex;
-  align-items: flex-start;
   gap: 12px;
-  padding: 14px;
-  background: #f8f9fa;
-  border-radius: 10px;
-  transition: background 0.2s;
+  padding: 12px;
+  border-radius: 8px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  transition: border-color 0.2s;
 }
 
 .item-card:hover {
-  background: #eef3f8;
+  border-color: #3b82f6;
 }
 
 .item-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -390,144 +694,121 @@ function goToCours(type: string, value: string) {
 }
 
 .item-icon img {
-  width: 26px;
-  height: 26px;
+  width: 24px;
+  height: 24px;
   object-fit: contain;
-}
-
-.item-icon span {
-  font-size: 20px;
 }
 
 .item-content {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
 }
 
 .item-title {
-  font-size: 14px;
+  margin: 0;
   font-weight: 600;
-  color: #1a1a1a;
-  margin: 0 0 4px 0;
+  color: #1f2937;
+  font-size: 14px;
 }
 
 .item-sub {
-  font-size: 12px;
-  color: #817f7f;
-  margin: 0 0 4px 0;
+  margin: 4px 0 0 0;
+  color: #6b7280;
+  font-size: 13px;
+  line-clamp: 2;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .item-meta {
+  margin: 4px 0 0 0;
+  color: #9ca3af;
   font-size: 12px;
-  color: #205781;
-  margin: 0;
 }
 
 .item-badge {
-  font-size: 11px;
-  font-weight: 600;
-  color: #205781;
-  background: rgba(32, 87, 129, 0.1);
+  background: #f0f4ff;
+  color: #3b82f6;
   padding: 4px 8px;
-  border-radius: 6px;
-  white-space: nowrap;
-  align-self: center;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  flex-shrink: 0;
 }
 
 .see-more-btn {
-  margin-top: 12px;
-  width: 100%;
-  padding: 10px;
-  border: none;
-  border-radius: 8px;
-  background: rgba(32, 87, 129, 0.1);
-  color: #205781;
-  font-weight: 600;
+  background: none;
+  border: 1px solid #d1d5db;
+  padding: 10px 16px;
+  border-radius: 6px;
   cursor: pointer;
+  color: #3b82f6;
+  font-weight: 600;
   transition: all 0.2s;
 }
 
 .see-more-btn:hover {
-  background: rgba(32, 87, 129, 0.2);
+  background-color: #f3f4f6;
+  border-color: #3b82f6;
 }
 
 .evenements-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 16px;
 }
 
 .evenement-card {
-  background: #f8f9fa;
-  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
   padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  transition: background 0.2s;
-}
-
-.evenement-card:hover {
-  background: #eef3f8;
+  background: #f9fafb;
 }
 
 .evenement-type {
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  padding: 4px 10px;
+  display: inline-block;
+  padding: 4px 12px;
   border-radius: 20px;
-  width: fit-content;
-  color: #205781;
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 8px;
 }
 
 .evenement-title {
-  font-size: 14px;
+  margin: 0 0 8px 0;
   font-weight: 600;
-  color: #1a1a1a;
-  margin: 0;
+  color: #1f2937;
+  font-size: 14px;
 }
 
-.evenement-date {
-  font-size: 12px;
-  color: #205781;
-  margin: 0;
-}
-
-.evenement-duree {
-  font-size: 12px;
-  color: #817f7f;
-  margin: 0;
-}
-
+.evenement-date,
+.evenement-duree,
 .evenement-desc {
-  font-size: 12px;
-  color: #817f7f;
-  margin: 0;
+  margin: 4px 0 0 0;
+  color: #6b7280;
+  font-size: 13px;
 }
 
-@media (max-width: 1024px) {
-  .main-wrapper {
-    margin-left: 80px;
+@media (max-width: 768px) {
+  .matiere-layout {
+    flex-direction: column;
   }
-  .header-title h1 {
-    font-size: 32px;
-  }
-}
 
-@media (max-width: 767px) {
   .main-wrapper {
     margin-left: 0;
   }
+
   .matiere-header {
-    padding: 16px 12px;
-    padding-left: 60px;
+    flex-direction: column;
+    align-items: flex-start;
   }
-  .header-title h1 {
-    font-size: 24px;
-  }
-  .matiere-content {
-    padding: 0 12px 24px;
-  }
+
   .content-grid {
     grid-template-columns: 1fr;
   }
