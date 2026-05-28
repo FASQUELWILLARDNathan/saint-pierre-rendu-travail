@@ -233,12 +233,21 @@
           <n-empty v-else description="Aucun élève créé" />
         </div>
 
+        <n-button @click="exportCSV" secondary>
+          Export CSV
+        </n-button>
+
+        <n-button @click="exportXLSX" type="primary" secondary>
+          Export XLSX
+        </n-button>
+
       </n-modal>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import * as XLSX from 'xlsx'
 import { ref, onMounted, computed } from 'vue'
 import {
   NForm,
@@ -399,6 +408,47 @@ function selectClasse(classeId: string | null) {
   if (currentEleve.value) {
     loadEleveForm(currentEleve.value)
   }
+}
+
+function exportXLSX() {
+  // Utilisation de importResults.value au lieu de selectedClasseEleves
+  const data = importResults.value.map((e) => ({
+    Nom: e.nom,
+    Prenom: e.prenom,
+    Email: e.email,
+    Login: e.login,
+    'Mot de passe': e.password
+  }))
+
+  const worksheet = XLSX.utils.json_to_sheet(data)
+  const workbook = XLSX.utils.book_new()
+
+  XLSX.utils.book_append_sheet(workbook, worksheet, 'Eleves Importes')
+
+  XLSX.writeFile(workbook, 'eleves_importes.xlsx')
+}
+
+function exportCSV() {
+  const data = importResults.value.map((e) => ({
+    Nom: e.nom,
+    Prenom: e.prenom,
+    Email: e.email,
+    Login: e.login,
+    'Mot de passe': e.password
+  }))
+
+  const worksheet = XLSX.utils.json_to_sheet(data)
+  const csv = '\uFEFF' + XLSX.utils.sheet_to_csv(worksheet)
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+
+  const link = document.createElement('a')
+  link.href = url
+  link.setAttribute('download', 'eleves_importes.csv')
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
 }
 
 function selectEleve(index: number) {
