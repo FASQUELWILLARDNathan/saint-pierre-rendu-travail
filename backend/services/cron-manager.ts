@@ -1,10 +1,10 @@
-import { cleanupAllMessages } from './cleanup-service.ts'
+import { cleanupAllMessages, cleanupDevirsAndRendus } from './cleanup-service.ts'
 
 /**
  * Démarre les tâches cron pour le serveur
  */
 export function startCronJobs() {
-  // Nettoyer les messages chaque 20 août à minuit
+  // Nettoyer les messages et devoirs chaque 20 août à minuit
   scheduleCleanupJob()
 }
 
@@ -26,6 +26,7 @@ function scheduleCleanupJob() {
       if (hour === 0 && minute === 0) {
         console.log('🧹 Exécution du nettoyage annuel...')
         cleanupAllMessages()
+        cleanupDevirsAndRendus()
       }
     }
   }

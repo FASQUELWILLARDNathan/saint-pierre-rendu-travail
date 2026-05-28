@@ -8,7 +8,11 @@
           <h1>Mes cours</h1>
           <p>Retrouvez tous vos cours par matière</p>
         </div>
-        <n-button v-if="authStore.user?.role === 'professeur'" type="primary" @click="showCreateModal = true">
+        <n-button
+          v-if="authStore.user?.role === 'professeur'"
+          type="primary"
+          @click="showCreateModal = true"
+        >
           + Créer un cours
         </n-button>
       </header>
@@ -21,82 +25,74 @@
         <n-alert v-else-if="error" type="error">{{ error }}</n-alert>
 
         <div v-else>
-            <n-empty v-if="cours.length === 0" description="Aucun cours disponible" />
+          <n-empty v-if="cours.length === 0" description="Aucun cours disponible" />
 
-            <div v-else class="cours-sections">
+          <div v-else class="cours-sections">
+            <div v-for="group in coursParCategorie" :key="group.categorie" class="matiere-section">
+              <div class="matiere-header">
+                <h2>{{ group.categorie }}</h2>
+                <span class="matiere-count"> {{ group.cours.length }} cours </span>
+              </div>
+
+              <div class="cours-grid">
                 <div
-                    v-for="group in coursParCategorie"
-                    :key="group.categorie "
-                    class="matiere-section"
+                  v-for="c in group.cours"
+                  :key="c.id_cours"
+                  class="cours-card"
+                  @click="openCours(c)"
                 >
-                    <div class="matiere-header">
-                    <h2>{{ group.categorie }}</h2>
-                    <span class="matiere-count">
-                        {{ group.cours.length }} cours
-                    </span>
+                  <div
+                    class="cours-card-header"
+                    :style="{ backgroundColor: getColor(c.matiere?.couleur) }"
+                  >
+                    <img
+                      v-if="c.matiere?.icon_url"
+                      :src="c.matiere.icon_url"
+                      :alt="c.matiere.nom_matiere"
+                      class="cours-icon"
+                    />
+                    <span v-else>📖</span>
+                  </div>
+
+                  <div class="cours-card-body">
+                    <p class="cours-matiere">
+                      {{ c.matiere?.nom_matiere }}
+                    </p>
+
+                    <h3 class="cours-titre">
+                      {{ c.nom_cours }}
+                    </h3>
+
+                    <p class="cours-desc">
+                      {{ c.description_cours ?? 'Pas de description' }}
+                    </p>
+
+                    <p class="cours-classe" v-if="c.classe">📚 {{ c.classe.nom_classe }}</p>
+
+                    <p class="cours-prof">
+                      👤 {{ c.professeur?.user?.prenom }}
+                      {{ c.professeur?.user?.nom }}
+                    </p>
+
+                    <div class="cours-ressources" v-if="c.ressources?.length > 0">
+                      <span class="ressource-badge"> 📎 {{ c.ressources.length }} fichier(s) </span>
                     </div>
-
-                    <div class="cours-grid">
-                    <div
-                        v-for="c in group.cours"
-                        :key="c.id_cours"
-                        class="cours-card"
-                        @click="openCours(c)"
-                    >
-                        <div
-                        class="cours-card-header"
-                        :style="{ backgroundColor: getColor(c.matiere?.couleur) }"
-                        >
-                        <img
-                            v-if="c.matiere?.icon_url"
-                            :src="c.matiere.icon_url"
-                            :alt="c.matiere.nom_matiere"
-                            class="cours-icon"
-                        />
-                        <span v-else>📖</span>
-                        </div>
-
-                        <div class="cours-card-body">
-                        <p class="cours-matiere">
-                            {{ c.matiere?.nom_matiere }}
-                        </p>
-
-                        <h3 class="cours-titre">
-                            {{ c.nom_cours }}
-                        </h3>
-
-                        <p class="cours-desc">
-                            {{ c.description_cours ?? 'Pas de description' }}
-                        </p>
-
-                        <p class="cours-classe" v-if="c.classe">
-                            📚 {{ c.classe.nom_classe }}
-                        </p>
-
-                        <p class="cours-prof">
-                            👤 {{ c.professeur?.user?.prenom }}
-                            {{ c.professeur?.user?.nom }}
-                        </p>
-
-                        <div
-                            class="cours-ressources"
-                            v-if="c.ressources?.length > 0"
-                        >
-                            <span class="ressource-badge">
-                            📎 {{ c.ressources.length }} fichier(s)
-                            </span>
-                        </div>
-                        </div>
-                    </div>
-                    </div>
+                  </div>
                 </div>
-                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </main>
     </div>
 
     <!-- Modal création cours -->
-    <n-modal v-model:show="showCreateModal" preset="card" title="Créer un cours" style="max-width: 600px">
+    <n-modal
+      v-model:show="showCreateModal"
+      preset="card"
+      title="Créer un cours"
+      style="max-width: 600px"
+    >
       <n-form :model="form">
         <n-form-item label="Nom du cours">
           <n-input v-model:value="form.nom_cours" placeholder="Ex: Chapitre 3 - Les fonctions" />
@@ -120,22 +116,22 @@
         </n-form-item>
 
         <n-form-item label="Spécialité">
-            <n-select
-                v-model:value="form.id_specialite"
-                :options="specialitesOptions"
-                placeholder="Sélectionnez une spécialité"
-                clearable
-            />
-            </n-form-item>
+          <n-select
+            v-model:value="form.id_specialite"
+            :options="specialitesOptions"
+            placeholder="Sélectionnez une spécialité"
+            clearable
+          />
+        </n-form-item>
 
-            <n-form-item label="Option">
-            <n-select
-                v-model:value="form.id_option"
-                :options="optionsOptions"
-                placeholder="Sélectionnez une option"
-                clearable
-            />
-            </n-form-item>
+        <n-form-item label="Option">
+          <n-select
+            v-model:value="form.id_option"
+            :options="optionsOptions"
+            placeholder="Sélectionnez une option"
+            clearable
+          />
+        </n-form-item>
 
         <n-form-item label="Classe">
           <n-select
@@ -148,7 +144,13 @@
 
         <n-form-item label="Fichiers (PDF, images, etc.)">
           <div class="upload-zone" @dragover.prevent @drop.prevent="handleDrop">
-            <input ref="fileInput" type="file" multiple @change="handleFileChange" style="display:none" />
+            <input
+              ref="fileInput"
+              type="file"
+              multiple
+              @change="handleFileChange"
+              style="display: none"
+            />
             <div class="upload-placeholder" @click="fileInput?.click()">
               <span>📎 Cliquez ou glissez vos fichiers ici</span>
               <span class="upload-hint">PDF, images, documents...</span>
@@ -182,9 +184,12 @@
       <div v-if="selectedCours" class="cours-detail">
         <div class="detail-meta">
           <span class="meta-badge">{{ selectedCours.matiere?.nom_matiere }}</span>
-          <span class="meta-badge" v-if="selectedCours.classe">{{ selectedCours.classe.nom_classe }}</span>
+          <span class="meta-badge" v-if="selectedCours.classe">{{
+            selectedCours.classe.nom_classe
+          }}</span>
           <span class="meta-badge">
-            👤 {{ selectedCours.professeur?.user?.prenom }} {{ selectedCours.professeur?.user?.nom }}
+            👤 {{ selectedCours.professeur?.user?.prenom }}
+            {{ selectedCours.professeur?.user?.nom }}
           </span>
         </div>
 
@@ -203,7 +208,9 @@
               <span>{{ getFileIcon(ressource.type_fichier) }}</span>
               <div class="ressource-info">
                 <span class="ressource-nom">{{ ressource.nom_fichier }}</span>
-                <span class="ressource-size">{{ formatSize(Number(ressource.taille_octets)) }}</span>
+                <span class="ressource-size">{{
+                  formatSize(Number(ressource.taille_octets))
+                }}</span>
               </div>
               <span class="ressource-dl">⬇</span>
             </a>
@@ -211,14 +218,93 @@
         </div>
 
         <n-empty v-else description="Aucun fichier joint" />
+
+        <div style="margin-top: 20px; display: flex; gap: 12px">
+          <n-button
+            v-if="
+              authStore.user?.role === 'professeur' &&
+              selectedCours.id_user === authStore.user.id_user
+            "
+            type="primary"
+            @click="openCreateEvenementModal"
+          >
+            📅 Créer un événement
+          </n-button>
+        </div>
       </div>
+    </n-modal>
+
+    <!-- Modal création événement -->
+    <n-modal
+      v-model:show="showCreateEvenementModal"
+      preset="card"
+      title="Créer un événement"
+      style="max-width: 600px"
+    >
+      <n-form :model="formEvenement">
+        <n-form-item label="Type d'événement*">
+          <n-select
+            v-model:value="formEvenement.type_evenement"
+            :options="[
+              { label: 'Interrogation', value: 'Interrogation' },
+              { label: 'DS', value: 'DS' },
+              { label: 'EXAMUN', value: 'EXAMUN' },
+            ]"
+            placeholder="Sélectionnez le type"
+          />
+        </n-form-item>
+
+        <n-form-item label="Nom de l'événement*">
+          <n-input
+            v-model:value="formEvenement.nom_evenement"
+            placeholder="Ex: Interro mathématiques..."
+          />
+        </n-form-item>
+
+        <n-form-item label="Date et heure*">
+          <n-date-picker v-model:value="formEvenement.date_evenement" type="datetime" />
+        </n-form-item>
+
+        <n-form-item label="Durée (minutes)">
+          <n-input v-model:value="formEvenement.duree_minutes" type="text" placeholder="Ex: 50" />
+        </n-form-item>
+
+        <n-form-item label="Description">
+          <n-input
+            v-model:value="formEvenement.description"
+            type="textarea"
+            placeholder="Description de l'événement..."
+            :rows="3"
+          />
+        </n-form-item>
+      </n-form>
+
+      <template #footer>
+        <div class="modal-actions">
+          <n-button type="primary" @click="createEvenement" :loading="isCreatingEvenement">
+            Créer l'événement
+          </n-button>
+          <n-button quaternary @click="showCreateEvenementModal = false">Annuler</n-button>
+        </div>
+      </template>
     </n-modal>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { NButton, NModal, NForm, NFormItem, NInput, NSelect, NSpin, NAlert, NEmpty } from 'naive-ui'
+import {
+  NButton,
+  NModal,
+  NForm,
+  NFormItem,
+  NInput,
+  NSelect,
+  NSpin,
+  NAlert,
+  NEmpty,
+  NDatePicker,
+} from 'naive-ui'
 import { useApi } from '@/composables/useApi'
 import { useAuthStore } from '@/stores/auth.store'
 import Sidebar from '@/components/home/Sidebar.vue'
@@ -230,9 +316,11 @@ const apiBase = import.meta.env.VITE_API_URL
 
 const isLoading = ref(true)
 const isSaving = ref(false)
+const isCreatingEvenement = ref(false)
 const error = ref<string | null>(null)
 const showCreateModal = ref(false)
 const showDetailModal = ref(false)
+const showCreateEvenementModal = ref(false)
 const selectedCours = ref<any>(null)
 const fileInput = ref<HTMLInputElement | null>(null)
 
@@ -253,8 +341,16 @@ const form = ref({
   fichiers: [] as File[],
 })
 
+const formEvenement = ref({
+  type_evenement: null as string | null,
+  nom_evenement: '',
+  date_evenement: undefined as number | undefined,
+  duree_minutes: '',
+  description: '',
+})
+
 const matieresOptions = computed(() =>
-  matieres.value.map((m) => ({ label: m.nom_matiere, value: String(m.id_matiere) }))
+  matieres.value.map((m) => ({ label: m.nom_matiere, value: String(m.id_matiere) })),
 )
 
 const categoryId = computed(() => String(route.params.id ?? route.query.id ?? ''))
@@ -276,21 +372,20 @@ const specialitesOptions = computed(() =>
   specialites.value.map((s) => ({
     label: s.nom_specialite,
     value: String(s.id_specialite),
-  }))
+  })),
 )
 
 const optionsOptions = computed(() =>
   options.value.map((o) => ({
     label: o.nom_option,
     value: String(o.id_option),
-  }))
+  })),
 )
 
 const coursParCategorie = computed(() => {
   const grouped = new Map<string, any[]>()
 
   cours.value.forEach((c) => {
-
     let key = 'Autre'
 
     if (c.matiere) key = `Matière - ${c.matiere.nom_matiere}`
@@ -398,21 +493,15 @@ async function createCours() {
     formData.append('nom_cours', form.value.nom_cours)
     formData.append('description_cours', form.value.description_cours || '')
 
-    if (form.value.id_matiere)
-      formData.append('id_matiere', form.value.id_matiere)
+    if (form.value.id_matiere) formData.append('id_matiere', form.value.id_matiere)
 
-    if (form.value.id_classe)
-      formData.append('id_classe', form.value.id_classe)
+    if (form.value.id_classe) formData.append('id_classe', form.value.id_classe)
 
-    if (form.value.id_specialite)
-      formData.append('id_specialite', form.value.id_specialite)
+    if (form.value.id_specialite) formData.append('id_specialite', form.value.id_specialite)
 
-    if (form.value.id_option)
-      formData.append('id_option', form.value.id_option)
+    if (form.value.id_option) formData.append('id_option', form.value.id_option)
 
-    form.value.fichiers.forEach((f) =>
-      formData.append('fichiers', f)
-    )
+    form.value.fichiers.forEach((f) => formData.append('fichiers', f))
 
     const nouveau = await api.createCours(formData)
 
@@ -429,12 +518,57 @@ async function createCours() {
       id_option: null,
       fichiers: [],
     }
-
   } catch (err) {
     console.error(err)
     error.value = 'Erreur lors de la création'
   } finally {
     isSaving.value = false
+  }
+}
+
+function openCreateEvenementModal() {
+  formEvenement.value = {
+    type_evenement: null,
+    nom_evenement: '',
+    date_evenement: undefined,
+    duree_minutes: '',
+    description: '',
+  }
+  showCreateEvenementModal.value = true
+}
+
+async function createEvenement() {
+  if (
+    !formEvenement.value.nom_evenement ||
+    !formEvenement.value.type_evenement ||
+    !formEvenement.value.date_evenement
+  ) {
+    return
+  }
+
+  try {
+    isCreatingEvenement.value = true
+
+    await api.createEvenement({
+      id_cours: selectedCours.value.id_cours,
+      nom_evenement: formEvenement.value.nom_evenement,
+      type_evenement: formEvenement.value.type_evenement,
+      date_evenement: formEvenement.value.date_evenement
+        ? new Date(formEvenement.value.date_evenement).toISOString()
+        : new Date().toISOString(),
+      description: formEvenement.value.description || null,
+      duree_minutes: formEvenement.value.duree_minutes
+        ? Number(formEvenement.value.duree_minutes)
+        : null,
+    })
+
+    showCreateEvenementModal.value = false
+    showDetailModal.value = false
+  } catch (err) {
+    console.error(err)
+    error.value = "Erreur lors de la création de l'événement"
+  } finally {
+    isCreatingEvenement.value = false
   }
 }
 </script>

@@ -85,8 +85,8 @@ model specialite {
   eleves                  EleveSpecialite[]
   professeurs             ProfesseurSpecialite[]
   created_at              DateTime          @default(now())
-
-  cours cours[]
+  cours                   cours[]
+  evenements              evenement[]
 }
 
 // Représente une option (Sport, Latin, etc.)
@@ -96,8 +96,8 @@ model option {
   eleves                  EleveOption[]
   professeurs             ProfesseurOption[]
   created_at              DateTime          @default(now())
-
-  cours cours[]
+  cours                   cours[]
+  evenements              evenement[]
 }
 
 // Table de liaison explicite: Eleve - Specialite
@@ -233,6 +233,7 @@ model rendu {
   date_rendu            DateTime?
   note                  Decimal?            @db.Decimal(5, 2)
   retour                String?             @db.VarChar(255)
+  archive               Boolean             @default(false)
   devoir                devoir              @relation(fields: [id_devoir], references: [id_devoir])
   eleve                 eleve               @relation(fields: [id_user], references: [id_user])
   pieces_jointes        piece_jointe_rendu[]
@@ -255,14 +256,18 @@ model piece_jointe_rendu {
 // Représente un événement (interrogation, examen, etc.)
 model evenement {
   id_evenement          BigInt              @id @default(autoincrement())
-  id_matiere            BigInt
+  id_matiere            BigInt?
+  id_specialite         BigInt?
+  id_option             BigInt?
   nom_evenement         String              @db.VarChar(255)
   description           String?
   type_evenement        String              @db.VarChar(50)
   date_evenement        DateTime
   duree_minutes         Int?
   icon_url              String?
-  matiere               matiere             @relation(fields: [id_matiere], references: [id_matiere])
+  matiere               matiere?            @relation(fields: [id_matiere], references: [id_matiere])
+  specialite            specialite?         @relation(fields: [id_specialite], references: [id_specialite])
+  option                option?             @relation(fields: [id_option], references: [id_option])
   created_at            DateTime            @default(now())
 }
 

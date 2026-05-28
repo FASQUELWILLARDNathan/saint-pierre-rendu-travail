@@ -217,17 +217,40 @@ async function main() {
   })
 
   // Create options
-  const optSport = await prisma.option.upsert({
-    where: { nom_option: 'Sport' },
-    update: {},
-    create: { nom_option: 'Sport' },
-  })
+  const optionsList = [
+    // Langues
+    'Anglais',
+    'Espagnol',
+    'Allemand',
+    'Chinois',
+    'Chinois option',
+    // Section européenne
+    'Section Européenne',
+    // Options lycée
+    'Mathématiques expertes',
+    'Mathématiques complémentaires',
+    'Latin',
+    'DGEMC',
+    'Management',
+    // EPS
+    'Sport',
+    'Handball',
+    'Football',
+    'Volleyball',
+    // Cambridge / FirstCa
+    'ACCPE',
+    'FirstCa',
+    'FirstCa DNL',
+    'PET Cambridge',
+  ]
 
-  const optLatin = await prisma.option.upsert({
-    where: { nom_option: 'Latin' },
-    update: {},
-    create: { nom_option: 'Latin' },
-  })
+  for (const nom of optionsList) {
+    await prisma.option.upsert({
+      where: { nom_option: nom },
+      update: {},
+      create: { nom_option: nom },
+    })
+  }
 
   // Get classes
   const classeTerminaleA = await prisma.classe.findUnique({
@@ -248,7 +271,6 @@ async function main() {
         : specSVT?.id_specialite
           ? [specSVT.id_specialite]
           : []
-    const optionIds = index < 2 ? [optSport.id_option] : [optLatin.id_option]
 
     await prisma.eleve.upsert({
       where: { id_user: eleve.id_user },
@@ -257,10 +279,6 @@ async function main() {
           deleteMany: {},
           create: specialiteIds.filter(Boolean).map((id) => ({ id_specialite: id })),
         },
-        options: {
-          deleteMany: {},
-          create: optionIds.filter(Boolean).map((id) => ({ id_option: id })),
-        },
       },
       create: {
         id_user: eleve.id_user,
@@ -268,9 +286,6 @@ async function main() {
         annee: '2025-2026',
         specialites: {
           create: specialiteIds.filter(Boolean).map((id) => ({ id_specialite: id })),
-        },
-        options: {
-          create: optionIds.filter(Boolean).map((id) => ({ id_option: id })),
         },
       },
     })

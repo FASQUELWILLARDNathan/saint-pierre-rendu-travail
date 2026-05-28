@@ -8,6 +8,18 @@
           <h1>Gestion des élèves</h1>
           <p>Triés par classe</p>
         </div>
+        <div class="header-actions">
+          <input
+            ref="importFileInput"
+            type="file"
+            accept=".xlsx,.xls"
+            class="hidden-file-input"
+            @change="handleImportFileChange"
+          />
+          <n-button secondary @click="triggerImportFilePicker(false)" :loading="isImporting">
+            Importer un fichier
+          </n-button>
+        </div>
       </header>
 
       <main class="gestion-content">
@@ -111,9 +123,7 @@
                       :type="isCreatingNew ? 'text' : 'password'"
                       :placeholder="isCreatingNew ? '' : 'Laisser vide pour ne pas changer'"
                     />
-                    <n-button @click="generatePassword" secondary>
-                      Générer
-                    </n-button>
+                    <n-button @click="generatePassword" secondary> Générer </n-button>
                   </div>
                 </n-form-item>
 
@@ -196,6 +206,34 @@
           />
         </div>
       </main>
+
+      <n-modal v-model:show="showImportResultModal" preset="card" title="Résultat de l'import">
+        <div class="import-result">
+          <n-alert v-if="importErrors.length > 0" type="warning" class="import-warning">
+            {{ importErrors.length }} erreur(s) pendant l'import.
+          </n-alert>
+
+          <div v-if="importResults.length > 0" class="import-table">
+            <div class="import-table-header">
+              <span>Élève</span>
+              <span>Login</span>
+              <span>Mot de passe</span>
+            </div>
+            <div
+              v-for="item in importResults"
+              :key="`${item.login}-${item.email}`"
+              class="import-table-row"
+            >
+              <span>{{ item.prenom }} {{ item.nom }}</span>
+              <span>{{ item.login }}</span>
+              <span class="import-password">{{ item.password }}</span>
+            </div>
+          </div>
+
+          <n-empty v-else description="Aucun élève créé" />
+        </div>
+
+      </n-modal>
     </div>
   </div>
 </template>
@@ -213,6 +251,7 @@ import {
   NAlert,
   NDivider,
   NEmpty,
+  NModal,
   useMessage,
 } from 'naive-ui'
 import { useApi } from '@/composables/useApi'
@@ -258,8 +297,12 @@ const message = useMessage()
 
 const isLoading = ref(true)
 const isSaving = ref(false)
+const isImporting = ref(false)
 const error = ref<string | null>(null)
 const specialitesError = ref<string | null>(null)
+const showImportResultModal = ref(false)
+const importResults = ref<any[]>([])
+const importErrors = ref<any[]>([])
 
 const classes = ref<Classe[]>([])
 const specialites = ref<Specialite[]>([])
@@ -269,6 +312,8 @@ const eleves = ref<Eleve[]>([])
 const selectedClasseId = ref<string | null>(null)
 const currentEleveIndex = ref(0)
 const isCreatingNew = ref(false)
+const importFileInput = ref<HTMLInputElement | null>(null)
+const importDownloadMode = ref(false)
 const currentEleveForm = ref({
   nom: '',
   prenom: '',
@@ -361,6 +406,50 @@ function selectEleve(index: number) {
   const eleve = selectedClasseEleves.value[index]
   if (eleve) {
     loadEleveForm(eleve)
+  }
+}
+
+function triggerImportFilePicker(download: boolean) {
+  importDownloadMode.value = download
+  importFileInput.value?.click()
+}
+
+async function handleImportFileChange(event: Event) {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file) return
+
+  if (!file.name.toLowerCase().endsWith('.xlsx') && !file.name.toLowerCase().endsWith('.xls')) {
+    message.error('Veuillez sélectionner un fichier .xlsx ou .xls')
+    input.value = ''
+    return
+  }
+
+  try {
+    isImporting.value = true
+    const formData = new FormData()
+    formData.append('fichier', file)
+
+    if (importDownloadMode.value) {
+      await api.importElevesAndDownload(formData)
+      message.success('Import terminé et fichier téléchargé')
+      eleves.value = (await api.getAllEleves()) as any
+      if (selectedClasseId.value) selectClasse(selectedClasseId.value)
+    } else {
+      const result = (await api.importEleves(formData)) as any
+      message.success(`Import terminé: ${result.crees ?? 0} élève(s) créé(s)`)
+      importResults.value = result.details ?? []
+      importErrors.value = result.erreurs_details ?? []
+      showImportResultModal.value = true
+      eleves.value = (await api.getAllEleves()) as any
+      if (selectedClasseId.value) selectClasse(selectedClasseId.value)
+    }
+  } catch (err: any) {
+    message.error(err.message || "Erreur lors de l'import")
+  } finally {
+    isImporting.value = false
+    input.value = ''
+    importDownloadMode.value = false
   }
 }
 
@@ -459,12 +548,14 @@ async function saveEleve() {
     }
 
     const generateEmail = (nom: string, prenom: string) => {
-      return `${nom}.${prenom}`
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '') // enlève accents
-        .replace(/[^a-z.]/g, '') // enlève caractères bizarres
-        + '@cs-saintpierrecalais.fr'
+      return (
+        `${nom}.${prenom}`
+          .toLowerCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '') // enlève accents
+          .replace(/[^a-z.]/g, '') + // enlève caractères bizarres
+        '@cs-saintpierrecalais.fr'
+      )
     }
     if (isCreatingNew.value) {
       // Créer un nouvel élève
@@ -544,14 +635,11 @@ async function saveEleve() {
 
 async function generatePassword() {
   try {
-    const response = await fetch(
-      'https://api.api-ninjas.com/v1/passwordgenerator?length=10',
-      {
-        headers: {
-          'X-Api-Key': import.meta.env.VITE_API_NINJAS_KEY,
-        },
+    const response = await fetch('https://api.api-ninjas.com/v1/passwordgenerator?length=10', {
+      headers: {
+        'X-Api-Key': import.meta.env.VITE_API_NINJAS_KEY,
       },
-    )
+    })
 
     const data = await response.json()
 
@@ -620,6 +708,58 @@ async function deleteEleve() {
   margin-left: 180px;
   display: flex;
   flex-direction: column;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.hidden-file-input {
+  display: none;
+}
+
+.import-result {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.import-warning {
+  margin-bottom: 0;
+}
+
+.import-table {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.import-table-header,
+.import-table-row {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr 1fr;
+  gap: 12px;
+  align-items: center;
+}
+
+.import-table-header {
+  font-weight: 700;
+  color: #1f2937;
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 8px;
+}
+
+.import-table-row {
+  padding: 10px 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.import-password {
+  font-family: monospace;
+  font-weight: 700;
+  color: #205781;
 }
 
 .gestion-header {

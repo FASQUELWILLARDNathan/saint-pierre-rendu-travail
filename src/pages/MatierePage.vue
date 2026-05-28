@@ -108,7 +108,7 @@
             <n-empty v-if="evenements.length === 0" description="Aucun événement" />
             <div v-else class="evenements-grid">
               <div v-for="e in evenements" :key="e.id_evenement" class="evenement-card">
-                <div class="evenement-type" :style="{ backgroundColor: iconBg }">
+                <div class="evenement-type" :style="getBadgeStyle(e.type_evenement)">
                   {{ e.type_evenement }}
                 </div>
                 <p class="evenement-title">{{ e.nom_evenement }}</p>
@@ -215,11 +215,9 @@
             <n-select
               v-model:value="evenementForm.type_evenement"
               :options="[
-                { label: 'Contrôle', value: 'Contrôle' },
-                { label: 'Évaluation', value: 'Évaluation' },
-                { label: 'Présentation', value: 'Présentation' },
-                { label: 'Visite', value: 'Visite' },
-                { label: 'Autre', value: 'Autre' },
+                { label: 'Interrogation', value: 'Interrogation' },
+                { label: 'DS', value: 'DS' },
+                { label: 'EXAMUN', value: 'EXAMUN' },
               ]"
             />
           </n-form-item>
@@ -367,6 +365,24 @@ const matieresOptions = computed(() =>
   matieres.value.map((m) => ({ label: m.nom_matiere, value: String(m.id_matiere) })),
 )
 
+// Extract unique matières from cours
+const coursMatieres = computed(() => {
+  const unique = new Map<string, any>()
+  cours.value.forEach((c) => {
+    if (c.matiere?.id_matiere) {
+      const key = String(c.matiere.id_matiere)
+      if (!unique.has(key)) {
+        unique.set(key, c.matiere)
+      }
+    }
+  })
+  return Array.from(unique.values())
+})
+
+const coursMatieresOptions = computed(() =>
+  coursMatieres.value.map((m) => ({ label: m.nom_matiere, value: String(m.id_matiere) })),
+)
+
 // Form states
 const coursForm = ref({
   nom_cours: '',
@@ -383,8 +399,9 @@ const devoirForm = ref({
 
 const evenementForm = ref({
   nom_evenement: '',
-  type_evenement: 'Contrôle',
+  type_evenement: 'Interrogation',
   date_evenement: null as number | null,
+  id_matiere: null as string | null,
 })
 
 // File upload
@@ -420,6 +437,44 @@ const iconBg = computed(() => {
   const b = parseInt(hex.substring(4, 6), 16)
   return `rgba(${r}, ${g}, ${b}, 0.2)`
 })
+
+// Return badge style for an event type (fixed colors). Fallback uses matiere color.
+function hexToRgb(hex: string) {
+  const h = hex.replace('#', '')
+  const r = parseInt(h.substring(0, 2), 16)
+  const g = parseInt(h.substring(2, 4), 16)
+  const b = parseInt(h.substring(4, 6), 16)
+  return { r, g, b }
+}
+
+function luminance(r: number, g: number, b: number) {
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b
+}
+
+const typeColorMap: Record<string, { bg: string; text: string }> = {
+  Interrogation: { bg: '#1E88E5', text: '#FFFFFF' },
+  DS: { bg: '#F97316', text: '#FFFFFF' },
+  EXAMUN: { bg: '#EF4444', text: '#FFFFFF' },
+}
+
+function getBadgeStyle(type: string) {
+  const key = String(type ?? '').trim()
+  if (typeColorMap[key]) {
+    return { backgroundColor: typeColorMap[key].bg, color: typeColorMap[key].text }
+  }
+
+  // fallback to matiere color (darker)
+  const hex = (matiere.value?.couleur ?? '#70BEFA').replace('#', '')
+  try {
+    const { r, g, b } = hexToRgb(hex)
+    // slightly darker, solid
+    const bg = `rgba(${r}, ${g}, ${b}, 0.85)`
+    const text = luminance(r, g, b) > 180 ? '#0f172a' : '#ffffff'
+    return { backgroundColor: bg, color: text }
+  } catch (e) {
+    return { backgroundColor: '#70BEFA', color: '#0f172a' }
+  }
+}
 
 const categoryTitle = computed(() => {
   if (categoryLabel.value) return categoryLabel.value
@@ -534,7 +589,27 @@ onMounted(async () => {
 function handleCreateSelect(key: string) {
   if (key === 'cours') showCreateCoursModal.value = true
   else if (key === 'devoir') showCreateDevoirModal.value = true
-  else if (key === 'evenement') showCreateEvenementModal.value = true
+  else if (key === 'evenement') openCreateEvenementModal()
+}
+
+function openCreateEvenementModal() {
+  // Pour matière : pré-remplir avec la matière
+  // Pour spécialité/option : id_matiere est juste un placeholder (pas utilisé)
+  let defaultMatierId: string | null = null
+
+  if (categoryKind.value === 'matiere') {
+    defaultMatierId = matiereId
+  }
+
+  // Pré-remplir le formulaire
+  evenementForm.value = {
+    nom_evenement: '',
+    type_evenement: 'Interrogation',
+    date_evenement: null,
+    id_matiere: defaultMatierId,
+  }
+
+  showCreateEvenementModal.value = true
 }
 
 function handleFileChange() {
@@ -617,21 +692,47 @@ async function createEvenementHandler() {
   await evenementFormRef.value?.validate()
 
   try {
-    await api.createEvenement({
-      nom_evenement: evenementForm.value.nom_evenement,
-      type_evenement: evenementForm.value.type_evenement,
-      date_evenement: evenementForm.value.date_evenement
-        ? new Date(evenementForm.value.date_evenement).toISOString()
-        : new Date().toISOString(),
-      id_matiere: matiereId,
-    })
+    // Déterminer quel endpoint utiliser selon la catégorie
+    if (categoryKind.value === 'matiere') {
+      if (!evenementForm.value.id_matiere) {
+        message.error('Veuillez sélectionner une matière')
+        return
+      }
+      await api.createEvenementFromMatiere({
+        nom_evenement: evenementForm.value.nom_evenement,
+        type_evenement: evenementForm.value.type_evenement,
+        date_evenement: evenementForm.value.date_evenement
+          ? new Date(evenementForm.value.date_evenement).toISOString()
+          : new Date().toISOString(),
+        id_matiere: evenementForm.value.id_matiere,
+      })
+    } else if (categoryKind.value === 'specialite') {
+      await api.createEvenementFromSpecialite({
+        nom_evenement: evenementForm.value.nom_evenement,
+        type_evenement: evenementForm.value.type_evenement,
+        date_evenement: evenementForm.value.date_evenement
+          ? new Date(evenementForm.value.date_evenement).toISOString()
+          : new Date().toISOString(),
+        id_specialite: matiereId,
+      })
+    } else if (categoryKind.value === 'option') {
+      await api.createEvenementFromOption({
+        nom_evenement: evenementForm.value.nom_evenement,
+        type_evenement: evenementForm.value.type_evenement,
+        date_evenement: evenementForm.value.date_evenement
+          ? new Date(evenementForm.value.date_evenement).toISOString()
+          : new Date().toISOString(),
+        id_option: matiereId,
+      })
+    }
 
     message.success('Événement créé avec succès')
     showCreateEvenementModal.value = false
     evenementForm.value = {
       nom_evenement: '',
-      type_evenement: 'Contrôle',
+      type_evenement: 'Interrogation',
       date_evenement: null,
+      id_matiere: null,
     }
     await loadData()
   } catch (err: any) {
@@ -739,7 +840,7 @@ function goToDevoirs() {
 
 .create-btn {
   background: #3b82f6;
-  color: white;
+  color: #0f172a;
   border: none;
   padding: 8px 16px;
   border-radius: 6px;

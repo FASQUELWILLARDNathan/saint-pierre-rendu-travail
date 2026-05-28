@@ -13,6 +13,7 @@ import messagesRoutes from './routes/messages.ts'
 import matieresRoutes from './routes/matieres.ts'
 import coursRoutes from './routes/cours.ts'
 import rendusRoutes from './routes/rendus.ts'
+import importRoutes from './routes/import.ts'
 import path from 'path'
 
 const app = express()
@@ -46,6 +47,7 @@ app.use('/api/profile', profilRoutes)
 app.use('/api/messages', messagesRoutes)
 app.use('/api/matieres', matieresRoutes)
 app.use('/api/cours', coursRoutes)
+app.use('/api/import', importRoutes)
 app.use('/cours', express.static('/app/public/cours'))
 app.use('/public', express.static('/app/public'))
 app.use('/api/rendus', rendusRoutes)

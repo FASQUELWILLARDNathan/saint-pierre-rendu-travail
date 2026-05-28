@@ -18,7 +18,7 @@ const request = async <T>(path: string, options: RequestInit = {}) => {
   Object.assign(headers, options.headers as Record<string, string>)
 
   if (token) {
-    headers['Authorization'] = `Bearer ${token}`
+    headers['Authorization'] = `Bearer ${token as string}`
   }
 
   const res = await fetch(`${BASE_URL}${path}`, { ...options, headers })
@@ -243,8 +243,100 @@ export function useApi() {
       body: JSON.stringify(data),
     })
 
+  const importEleves = (data: FormData) =>
+    request('/api/import/eleves', {
+      method: 'POST',
+      body: data,
+    })
+
+  const importElevesAndDownload = async (data: FormData) => {
+    const token = storage.get<string>('token')
+    const headers: Record<string, string> = {}
+    if (token) headers['Authorization'] = `Bearer ${token as string}`
+
+    const res = await fetch(`${BASE_URL}/api/import/eleves?download=1`, {
+      method: 'POST',
+      body: data,
+      headers,
+    })
+
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}))
+      throw new Error((d as any).error || `Erreur ${res.status}`)
+    }
+
+    const blob = await res.blob()
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    const disposition = res.headers.get('content-disposition')
+    let filename = 'import-result.xlsx'
+    if (disposition) {
+      const m = disposition.match(/filename="?([^";]+)"?/)
+      if (m?.[1]) filename = m[1]
+    }
+    a.download = filename
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    URL.revokeObjectURL(url)
+    return true
+  }
+
+  const exportImportResults = async (results: any[]) => {
+    const token = storage.get<string>('token')
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+    if (token) headers['Authorization'] = `Bearer ${token as string}`
+
+    const res = await fetch(`${BASE_URL}/api/import/export-results`, {
+      method: 'POST',
+      body: JSON.stringify({ results }),
+      headers,
+    })
+
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}))
+      throw new Error((d as any).error || `Erreur ${res.status}`)
+    }
+
+    const blob = await res.blob()
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    const disposition = res.headers.get('content-disposition')
+    let filename = 'import-result.xlsx'
+    if (disposition) {
+      const m = disposition.match(/filename="?([^";]+)"?/)
+      if (m?.[1]) filename = m[1]
+    }
+    a.download = filename
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    URL.revokeObjectURL(url)
+    return true
+  }
+
   const createEvenement = (data: any) =>
     request('/api/evenements', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+
+  const createEvenementFromMatiere = (data: any) =>
+    request('/api/evenements/matiere', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+
+  const createEvenementFromSpecialite = (data: any) =>
+    request('/api/evenements/specialite', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+
+  const createEvenementFromOption = (data: any) =>
+    request('/api/evenements/option', {
       method: 'POST',
       body: JSON.stringify(data),
     })
@@ -272,6 +364,11 @@ export function useApi() {
     request(`/api/rendus/${idRendu}`, {
       method: 'PUT',
       body: JSON.stringify(data),
+    })
+
+  const archiveRendu = (idRendu: string | number) =>
+    request(`/api/rendus/${idRendu}/archive`, {
+      method: 'POST',
     })
 
   return {
@@ -316,7 +413,13 @@ export function useApi() {
     getAllMatieres,
     createCours,
     createDevoir,
+    importEleves,
+    importElevesAndDownload,
+    exportImportResults,
     createEvenement,
+    createEvenementFromMatiere,
+    createEvenementFromSpecialite,
+    createEvenementFromOption,
     getCoursBySpecialite,
     getCoursByOption,
     getMesDevoirs,
@@ -324,5 +427,6 @@ export function useApi() {
     rendreDevoir,
     deleteRendu,
     updateRendu,
+    archiveRendu,
   }
 }

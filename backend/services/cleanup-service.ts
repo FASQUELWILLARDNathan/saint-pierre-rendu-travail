@@ -72,6 +72,51 @@ export async function cleanupAllMessages() {
 }
 
 /**
+ * Supprime tous les devoirs et rendus non archivés (20 août)
+ * Les rendus archivés et les cours sont conservés
+ */
+export async function cleanupDevirsAndRendus() {
+  try {
+    console.log('Début du nettoyage annuel des devoirs et rendus...')
+
+    // Récupérer tous les devoirs non archivés
+    const rendusNonArchives = await prisma.rendu.findMany({
+      where: { archive: false },
+      include: { pieces_jointes: true },
+    })
+
+    // Supprimer les fichiers des rendus non archivés
+    const uploadDir = path.join(process.cwd(), 'public', 'rendus')
+    for (const rendu of rendusNonArchives) {
+      if (rendu.pieces_jointes.length > 0) {
+        for (const pj of rendu.pieces_jointes) {
+          const filePath = path.join(uploadDir, path.basename(pj.chemin_fichier))
+          if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath)
+          }
+        }
+      }
+    }
+
+    // Supprimer tous les rendus non archivés (les fichiers en cascade)
+    const devoirsToDelete = await prisma.devoir.findMany()
+
+    const deletedRendus = await prisma.rendu.deleteMany({
+      where: { archive: false },
+    })
+
+    // Supprimer tous les devoirs
+    const deletedDevoirs = await prisma.devoir.deleteMany({})
+
+    console.log(`✓ ${deletedRendus.count} rendus supprimés`)
+    console.log(`✓ ${deletedDevoirs.count} devoirs supprimés`)
+    console.log('Nettoyage annuel des devoirs et rendus terminé')
+  } catch (error) {
+    console.error('Erreur lors du nettoyage des devoirs et rendus:', error)
+  }
+}
+
+/**
  * Calcule l'espace utilisé par un utilisateur et nettoie les pièces jointes orphelines
  */
 export async function getUserStorageUsage(userId: bigint): Promise<number> {

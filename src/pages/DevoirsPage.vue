@@ -163,7 +163,7 @@
 
           <div v-else class="rendus-eleves-list">
             <div
-              v-for="rendu in selectedDevoir.rendus"
+              v-for="rendu in getSortedRendus(selectedDevoir.rendus)"
               :key="rendu.id_rendu"
               class="rendu-eleve-card"
             >
@@ -224,6 +224,15 @@
                   @click="saveReview(rendu)"
                 >
                   Enregistrer
+                </n-button>
+
+                <n-button
+                  type="default"
+                  :loading="archivingRenduId === String(rendu.id_rendu)"
+                  @click="archiveRendu(rendu)"
+                  style="margin-left: 8px"
+                >
+                  📦 Archiver
                 </n-button>
               </div>
             </div>
@@ -338,6 +347,7 @@ const fileInput = ref<HTMLInputElement | null>(null)
 const fichiers = ref<File[]>([])
 const devoirs = ref<any[]>([])
 const filtreActif = ref('tous')
+const archivingRenduId = ref<string | null>(null)
 const filtreCategorie = ref<{ id: string | number; type: string; nom: string } | null>(null)
 const isProfessor = computed(() => authStore.user?.role === 'professeur')
 const reviewDrafts = ref<Record<string, { note: number | null; retour: string }>>({})
@@ -383,6 +393,21 @@ const devoirsFiltres = computed(() => {
       result = result.filter((d) => d.cours?.option?.id_option === cat.id)
     }
   }
+
+  // Tri: en retard en priorité, puis par date la plus proche
+  result.sort((a, b) => {
+    const aEnRetard = isEnRetard(a)
+    const bEnRetard = isEnRetard(b)
+
+    // En retard en priorité
+    if (aEnRetard && !bEnRetard) return -1
+    if (!aEnRetard && bEnRetard) return 1
+
+    // Puis tri par date la plus proche
+    const aDate = new Date(a.date_limite).getTime()
+    const bDate = new Date(b.date_limite).getTime()
+    return aDate - bDate
+  })
 
   return result
 })
@@ -455,6 +480,15 @@ function isEnRetard(devoir: any) {
 
 function getRendu(devoir: any) {
   return devoir.rendus?.[0] ?? null
+}
+
+function getSortedRendus(rendus: any[] | undefined) {
+  if (!rendus) return []
+  return [...rendus].sort((a, b) => {
+    const aDate = new Date(a.date_rendu).getTime()
+    const bDate = new Date(b.date_rendu).getTime()
+    return bDate - aDate // Plus récent d'abord
+  })
 }
 
 onMounted(async () => {
@@ -633,6 +667,26 @@ async function saveReview(rendu: any) {
     message.error(err.message || 'Erreur lors de l’enregistrement')
   } finally {
     reviewSavingId.value = null
+  }
+}
+
+async function archiveRendu(rendu: any) {
+  if (!selectedDevoir.value) return
+
+  try {
+    archivingRenduId.value = String(rendu.id_rendu)
+    await api.archiveRendu(rendu.id_rendu)
+    message.success('Rendu archivé avec succès')
+    devoirs.value = (await api.getMesDevoirs()) as any
+    if (selectedDevoir.value) {
+      selectedDevoir.value = devoirs.value.find(
+        (devoir) => String(devoir.id_devoir) === String(selectedDevoir.value.id_devoir),
+      )
+    }
+  } catch (err: any) {
+    message.error(err.message || "Erreur lors de l'archivage")
+  } finally {
+    archivingRenduId.value = null
   }
 }
 </script>

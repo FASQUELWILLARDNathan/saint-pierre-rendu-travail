@@ -41,7 +41,7 @@ export function useStorage() {
    * Lit une valeur depuis les cookies ou localStorage.
    * Les clés sensibles vont dans les cookies.
    */
-  const get = <T>(key: string) => {
+  const get = <T>(key: string): T | null => {
     let item: string | null = null
 
     if (COOKIE_KEYS.includes(key)) {

@@ -220,4 +220,45 @@ router.get('/mes-notes', authenticateToken, async (req, res) => {
   }
 })
 
+// Archiver un rendu (le marquer comme archivé)
+router.post('/:idRendu/archive', authenticateToken, async (req, res) => {
+  try {
+    const { idRendu } = req.params
+    const userId = req.user?.id_user
+
+    // Vérifie que le rendu appartient à un devoir du prof
+    const rendu = await prisma.rendu.findUnique({
+      where: { id_rendu: BigInt(idRendu) },
+      include: {
+        devoir: {
+          include: {
+            professeurs: true,
+          },
+        },
+      },
+    })
+
+    if (!rendu) {
+      return res.status(404).json({ error: 'Rendu non trouvé' })
+    }
+
+    // Vérifie que l'utilisateur est un professeur du devoir
+    const isProfessor = rendu.devoir.professeurs.some((p) => p.id_user === BigInt(userId))
+    if (!isProfessor) {
+      return res.status(403).json({ error: 'Non autorisé' })
+    }
+
+    // Archive le rendu
+    const archived = await prisma.rendu.update({
+      where: { id_rendu: BigInt(idRendu) },
+      data: { archive: true },
+    })
+
+    res.json(archived)
+  } catch (error) {
+    console.error('Erreur archivage rendu:', error)
+    res.status(500).json({ error: 'Erreur serveur' })
+  }
+})
+
 export default router
