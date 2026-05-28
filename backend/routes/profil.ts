@@ -1,6 +1,7 @@
 import { type Request, type Response, Router } from 'express'
 import { prisma } from '../config.ts'
 import { authenticateToken } from '../middleware/auth.ts'
+import { promoteStudents } from '../services/cron-manager.ts'
 
 const router = Router()
 
@@ -415,6 +416,22 @@ router.put('/', authenticateToken, async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Erreur lors de la mise à jour du profil:', error)
     res.status(500).json({ error: 'Erreur serveur' })
+  }
+})
+
+router.post('/test-promotion', async (req, res) => {
+  try {
+    await promoteStudents()
+
+    res.json({
+      message: 'Promotion exécutée',
+    })
+  } catch (error) {
+    console.error(error)
+
+    res.status(500).json({
+      error: 'Erreur test promotion',
+    })
   }
 })
 

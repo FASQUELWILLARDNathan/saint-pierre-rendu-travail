@@ -371,6 +371,13 @@ export function useApi() {
       method: 'POST',
     })
 
+  async function post(url: string, data?: any) {
+    return request(url, {
+      method: 'POST',
+      body: data !== undefined ? JSON.stringify(data) : undefined,
+    })
+  }
+
   return {
     signIn,
     signUp,
@@ -428,5 +435,6 @@ export function useApi() {
     deleteRendu,
     updateRendu,
     archiveRendu,
+    post,
   }
 }

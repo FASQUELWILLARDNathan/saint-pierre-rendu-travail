@@ -1,58 +1,174 @@
 import { cleanupAllMessages, cleanupDevirsAndRendus } from './cleanup-service.ts'
+import { prisma } from '../config.ts'
+import cron from 'node-cron'
 
 /**
- * Démarre les tâches cron pour le serveur
+ * Démarre les tâches cron
  */
 export function startCronJobs() {
-  // Nettoyer les messages et devoirs chaque 20 août à minuit
-  scheduleCleanupJob()
+  cron.schedule('0 0 20 8 *', async () => {
+    try {
+      console.log('🧹 Nettoyage annuel...')
+      await cleanupAllMessages()
+      await cleanupDevirsAndRendus()
+
+      console.log('🎓 Promotion élèves...')
+      await promoteStudents()
+
+      console.log('✅ Promotion terminée')
+    } catch (error) {
+      console.error('❌ Erreur cron promotion:', error)
+    }
+  })
+
+  console.log('✓ Cron 20 août actif')
 }
 
-/**
- * Planifie le nettoyage annuel pour le 20 août
- */
-function scheduleCleanupJob() {
-  const checkCleanup = () => {
-    const now = new Date()
-    const currentDay = now.getDate()
-    const currentMonth = now.getMonth() + 1 // 0-indexed
+export async function promoteStudents() {
+  const classes = await prisma.classe.findMany()
 
-    // Si c'est le 20 août
-    if (currentMonth === 8 && currentDay === 20) {
-      const hour = now.getHours()
-      const minute = now.getMinutes()
+  const normalize = (str: string) =>
+    str
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
 
-      // Exécuter à minuit (00:00)
-      if (hour === 0 && minute === 0) {
-        console.log('🧹 Exécution du nettoyage annuel...')
-        cleanupAllMessages()
-        cleanupDevirsAndRendus()
-      }
+  const getLevel = (name: string) => {
+    const n = normalize(name)
+
+    if (n.includes('6eme')) return '6eme'
+    if (n.includes('5eme')) return '5eme'
+    if (n.includes('4eme')) return '4eme'
+    if (n.includes('3eme')) return '3eme'
+
+    if (n.includes('2nde') || n.includes('seconde')) {
+      return 'seconde'
+    }
+
+    if (n.includes('1ere') || n.includes('premiere')) {
+      return 'premiere'
+    }
+
+    if (n.includes('terminale')) {
+      return 'terminale'
+    }
+
+    return null
+  }
+
+  const getSuffix = (name: string) => {
+    const n = normalize(name)
+
+    return n
+      .replace(/6eme|5eme|4eme|3eme/g, '')
+      .replace(/2nde|seconde/g, '')
+      .replace(/1ere|premiere/g, '')
+      .replace(/terminale/g, '')
+      .replace(/[^a-z0-9]/g, '')
+      .trim()
+  }
+
+  const letterToNum: Record<string, string> = {
+    a: '1',
+    b: '2',
+    c: '3',
+    d: '4',
+    e: '5',
+  }
+
+  const numToLetter: Record<string, string> = {
+    '1': 'a',
+    '2': 'b',
+    '3': 'c',
+    '4': 'd',
+    '5': 'e',
+  }
+
+  // =========================
+  // TERMINALES -> DELETE
+  // =========================
+
+  const terminaleClasses = classes.filter((c) => getLevel(c.nom_classe) === 'terminale')
+
+  for (const classe of terminaleClasses) {
+    const eleves = await prisma.eleve.findMany({
+      where: { id_classe: classe.id_classe },
+      select: { id_user: true },
+    })
+
+    const ids = eleves.map((e) => e.id_user)
+
+    if (ids.length > 0) {
+      await prisma.eleve.deleteMany({
+        where: { id_classe: classe.id_classe },
+      })
+
+      await prisma.utilisateur.deleteMany({
+        where: {
+          id_user: {
+            in: ids,
+          },
+        },
+      })
+
+      console.log(`🗑 ${classe.nom_classe}: ${ids.length} supprimés`)
     }
   }
 
-  // Vérifier chaque minute si c'est le moment de nettoyer
-  setInterval(checkCleanup, 60 * 1000)
+  // =========================
+  // PROMOTIONS
+  // =========================
 
-  console.log('✓ Tâche cron de nettoyage programmée (20 août à 00:00)')
+  const promotionMap: Record<string, string> = {
+    '6eme': '5eme',
+    '5eme': '4eme',
+    '4eme': '3eme',
+    '3eme': 'seconde',
+    seconde: 'premiere',
+    premiere: 'terminale',
+  }
+
+  const processingOrder = ['premiere', 'seconde', '3eme', '4eme', '5eme', '6eme']
+
+  for (const currentLevel of processingOrder) {
+    const currentClasses = classes.filter((c) => getLevel(c.nom_classe) === currentLevel)
+
+    for (const classe of currentClasses) {
+      const nextLevel = promotionMap[currentLevel]
+
+      if (!nextLevel) continue
+
+      const currentSuffix = getSuffix(classe.nom_classe)
+
+      let targetSuffix = currentSuffix
+
+      if (currentLevel === '3eme' && nextLevel === 'seconde') {
+        targetSuffix = letterToNum[currentSuffix] || currentSuffix
+      } else if (currentLevel === 'seconde' && nextLevel === 'premiere') {
+        targetSuffix = numToLetter[currentSuffix] || currentSuffix
+      }
+
+      const nextClass = classes.find((c) => {
+        return getLevel(c.nom_classe) === nextLevel && getSuffix(c.nom_classe) === targetSuffix
+      })
+
+      if (!nextClass) {
+        console.log(`❌ Pas de classe cible pour ${classe.nom_classe}`)
+        continue
+      }
+
+      const updated = await prisma.eleve.updateMany({
+        where: {
+          id_classe: classe.id_classe,
+        },
+        data: {
+          id_classe: nextClass.id_classe,
+        },
+      })
+
+      if (updated.count > 0) {
+        console.log(`✔ ${classe.nom_classe} -> ${nextClass.nom_classe} (${updated.count})`)
+      }
+    }
+  }
 }
-
-/**
- * Alternative: utiliser node-cron pour une meilleure gestion (optional)
- * Pour utiliser ceci, installer: npm install node-cron
- * Décommenter le code ci-dessous et commenter la solution précédente
- */
-
-/*
-import cron from 'node-cron'
-
-export function startCronJobs() {
-  // Nettoyer les messages le 20 août à minuit
-  cron.schedule('0 0 20 8 *', () => {
-    console.log('🧹 Exécution du nettoyage annuel...')
-    cleanupAllMessages()
-  })
-
-  console.log('✓ Tâche cron de nettoyage programmée (20 août à 00:00)')
-}
-*/

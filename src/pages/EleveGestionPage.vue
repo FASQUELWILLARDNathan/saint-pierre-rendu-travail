@@ -19,6 +19,9 @@
           <n-button secondary @click="triggerImportFilePicker(false)" :loading="isImporting">
             Importer un fichier
           </n-button>
+          <n-button type="warning" @click="testPromotion" :loading="isTesting">
+            Test promotion
+          </n-button>
         </div>
       </header>
 
@@ -32,7 +35,6 @@
         </n-alert>
 
         <div v-else class="gestion-container">
-          <!-- Sélecteur de classe -->
           <n-card class="classe-selector-card">
             <div class="classe-selector-header">
               <label>Sélectionnez une classe :</label>
@@ -48,14 +50,18 @@
                   }))
                 "
                 clearable
+                placeholder="Sélectionnez une classe"
                 @update:value="selectClasse"
               />
             </div>
           </n-card>
 
-          <!-- Élèves de la classe -->
-          <div v-if="selectedClasseEleves.length > 0" class="eleves-section">
-            <n-card class="eleves-list-card">
+          <div 
+            v-if="selectedClasseEleves.length > 0 || isCreatingNew" 
+            class="eleves-section" 
+            :class="{ 'full-width': selectedClasseEleves.length === 0 }"
+          >
+            <n-card v-if="selectedClasseEleves.length > 0" class="eleves-list-card">
               <div class="eleves-list-header">
                 <h3>Élèves ({{ selectedClasseEleves.length }})</h3>
               </div>
@@ -74,7 +80,6 @@
               </div>
             </n-card>
 
-            <!-- Formulaire de modification -->
             <n-card v-if="currentEleve || isCreatingNew" class="eleve-form-card">
               <div class="form-header">
                 <div>
@@ -248,7 +253,8 @@
 
 <script setup lang="ts">
 import * as XLSX from 'xlsx'
-import { ref, onMounted, computed } from 'vue'
+// Ajout de "watch" dans les imports de vue
+import { ref, onMounted, computed, watch } from 'vue'
 import {
   NForm,
   NFormItem,
@@ -317,6 +323,7 @@ const classes = ref<Classe[]>([])
 const specialites = ref<Specialite[]>([])
 const options = ref<Option[]>([])
 const eleves = ref<Eleve[]>([])
+const isTesting = ref(false)
 
 const selectedClasseId = ref<string | null>(null)
 const currentEleveIndex = ref(0)
@@ -382,6 +389,17 @@ const specialitesOptions = computed(() => {
   })
 })
 
+// Sécurité : Si la classe actuellement sélectionnée devient vide (suite à la promotion),
+// elle sort de "classesWithEleves". On remet alors selectedClasseId à null.
+watch(classesWithEleves, (newClasses) => {
+  if (selectedClasseId.value) {
+    const stillExists = newClasses.some((c) => String(c.id_classe) === String(selectedClasseId.value))
+    if (!stillExists) {
+      selectedClasseId.value = null
+    }
+  }
+})
+
 onMounted(async () => {
   try {
     isLoading.value = true
@@ -411,7 +429,6 @@ function selectClasse(classeId: string | null) {
 }
 
 function exportXLSX() {
-  // Utilisation de importResults.value au lieu de selectedClasseEleves
   const data = importResults.value.map((e) => ({
     Nom: e.nom,
     Prenom: e.prenom,
@@ -422,9 +439,7 @@ function exportXLSX() {
 
   const worksheet = XLSX.utils.json_to_sheet(data)
   const workbook = XLSX.utils.book_new()
-
   XLSX.utils.book_append_sheet(workbook, worksheet, 'Eleves Importes')
-
   XLSX.writeFile(workbook, 'eleves_importes.xlsx')
 }
 
@@ -456,6 +471,32 @@ function selectEleve(index: number) {
   const eleve = selectedClasseEleves.value[index]
   if (eleve) {
     loadEleveForm(eleve)
+  }
+}
+
+async function testPromotion() {
+  const confirm = window.confirm(
+    '⚠️ Test promotion : les terminales seront supprimées. Continuer ?',
+  )
+
+  if (!confirm) return
+
+  try {
+    isTesting.value = true
+
+    const res = await api.post('/api/profile/test-promotion')
+
+    console.log(res)
+    message.success('Test promotion terminé')
+
+    // reload élèves
+    eleves.value = (await api.getAllEleves()) as any
+
+    if (selectedClasseId.value) selectClasse(selectedClasseId.value)
+  } catch (err) {
+    message.error('Erreur test promotion')
+  } finally {
+    isTesting.value = false
   }
 }
 
@@ -520,7 +561,6 @@ function loadEleveForm(eleve: Eleve) {
 async function createNewEleve() {
   isCreatingNew.value = true
   await generatePassword()
-  // Get current school year
   const now = new Date()
   const year = now.getFullYear()
   const nextYear = year + 1
@@ -584,7 +624,6 @@ async function saveEleve() {
     error.value = null
     specialitesError.value = null
 
-    // Valider les spécialités si nécessaire
     if (shouldShowSpecialites()) {
       const level = getSchoolLevel()
       const requiredCount = level === 'premiere' ? 3 : 2
@@ -602,13 +641,12 @@ async function saveEleve() {
         `${nom}.${prenom}`
           .toLowerCase()
           .normalize('NFD')
-          .replace(/[\u0300-\u036f]/g, '') // enlève accents
-          .replace(/[^a-z.]/g, '') + // enlève caractères bizarres
+          .replace(/[\u0300-\u036f]/g, '')
+          .replace(/[^a-z.]/g, '') +
         '@cs-saintpierrecalais.fr'
       )
     }
     if (isCreatingNew.value) {
-      // Créer un nouvel élève
       await api.createUser({
         nom: currentEleveForm.value.nom,
         prenom: currentEleveForm.value.prenom,
@@ -622,16 +660,13 @@ async function saveEleve() {
         role: 'eleve',
       })
 
-      // Reload eleves
       eleves.value = (await api.getAllEleves()) as any
       isCreatingNew.value = false
 
-      // Sélectionner la classe et l'élève créé
       if (selectedClasseId.value) {
         selectClasse(selectedClasseId.value)
       }
     } else {
-      // Mettre à jour l'élève existant
       await api.updateUser(currentEleve.value!.id_user, {
         nom: currentEleveForm.value.nom,
         prenom: currentEleveForm.value.prenom,
@@ -643,25 +678,20 @@ async function saveEleve() {
         options: currentEleveForm.value.options,
       })
 
-      // Reload eleves
       const savedEleveId = currentEleve.value!.id_user
       eleves.value = (await api.getAllEleves()) as any
 
-      // Reload current eleve
       const newIndex = selectedClasseEleves.value.findIndex(
         (e) => String(e.id_user) === String(savedEleveId),
       )
 
       if (newIndex !== -1) {
-        // L'élève est toujours dans la même classe
         currentEleveIndex.value = newIndex
-
         const eleve = selectedClasseEleves.value[newIndex]
         if (eleve) {
           loadEleveForm(eleve)
         }
       } else {
-        // L'élève a changé de classe -> passer au suivant
         if (selectedClasseEleves.value.length > 0) {
           currentEleveIndex.value = Math.min(
             currentEleveIndex.value,
@@ -692,7 +722,6 @@ async function generatePassword() {
     })
 
     const data = await response.json()
-
     currentEleveForm.value.password = data.random_password
   } catch (err) {
     console.error(err)
@@ -722,11 +751,8 @@ async function deleteEleve() {
     error.value = null
 
     await api.deleteUser(currentEleve.value.id_user)
-
-    // Reload eleves
     eleves.value = (await api.getAllEleves()) as any
 
-    // Reset form
     selectedClasseId.value = null
     isCreatingNew.value = false
 
@@ -734,7 +760,7 @@ async function deleteEleve() {
       duration: 3000,
     })
   } catch (err) {
-    error.value = 'Erreur lors de la suppression'
+    error.value = 'Erreur lors du suppression'
     console.error('Erreur:', err)
 
     message.error("Erreur lors de la suppression de l'élève", {
@@ -747,6 +773,7 @@ async function deleteEleve() {
 </script>
 
 <style scoped>
+/* Conserver tes styles d'origine intacts */
 .gestion-layout {
   min-height: 100vh;
   background: #f5f7fa;
@@ -877,6 +904,10 @@ async function deleteEleve() {
   grid-template-columns: 300px 1fr;
   gap: 24px;
   align-items: start;
+}
+
+.eleves-section.full-width {
+  grid-template-columns: 1fr;
 }
 
 .eleves-list-card {
