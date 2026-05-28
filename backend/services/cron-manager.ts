@@ -84,10 +84,6 @@ export async function promoteStudents() {
     '5': 'e',
   }
 
-  // =========================
-  // TERMINALES -> DELETE
-  // =========================
-
   const terminaleClasses = classes.filter((c) => getLevel(c.nom_classe) === 'terminale')
 
   for (const classe of terminaleClasses) {
@@ -114,10 +110,6 @@ export async function promoteStudents() {
       console.log(`🗑 ${classe.nom_classe}: ${ids.length} supprimés`)
     }
   }
-
-  // =========================
-  // PROMOTIONS
-  // =========================
 
   const promotionMap: Record<string, string> = {
     '6eme': '5eme',

@@ -292,7 +292,7 @@ async function creerEleve(data: any, classe: any, niveau: string, results: any[]
   try {
     const login = genererLogin(data.nom, data.prenom)
     const email = `${login}@cs-saintpierrecalais.fr`
-    const password = genererMotDePasse()
+    const password = generateSecurePassword()
     const hashedPassword = await bcrypt.hash(password, 10)
 
     const existing = await prisma.utilisateur.findFirst({
@@ -376,9 +376,53 @@ function genererLogin(nom: string, prenom: string): string {
   return `${clean(nom)}.${clean(prenom)}`
 }
 
-function genererMotDePasse(): string {
-  const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789'
-  return Array.from({ length: 10 }, () => chars[Math.floor(Math.random() * chars.length)]).join('')
+export function generateSecurePassword(): string {
+  const lowercase = 'abcdefghijklmnopqrstuvwxyz'
+  const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+  const digits = '0123456789'
+  const specialChars = '!@#$%^&*()-_=+[]{}?:;'
+  const allChars = lowercase + uppercase + digits + specialChars
+
+  // Détection automatique de l'environnement (Navigateur ou Node.js) pour la sécurité
+  const cryptoObj = typeof window !== 'undefined' ? window.crypto : (globalThis as any).crypto
+
+  const getRandomChar = (pool: string): string => {
+    if (cryptoObj?.getRandomValues) {
+      const randomBuffer = new Uint32Array(1)
+      cryptoObj.getRandomValues(randomBuffer)
+      return pool[randomBuffer[0] % pool.length]
+    }
+    return pool[Math.floor(Math.random() * pool.length)]
+  }
+
+  const passwordArr: string[] = []
+  passwordArr.push(getRandomChar(lowercase))
+  passwordArr.push(getRandomChar(uppercase))
+  passwordArr.push(getRandomChar(digits))
+  passwordArr.push(getRandomChar(digits))
+  passwordArr.push(getRandomChar(specialChars))
+  passwordArr.push(getRandomChar(specialChars))
+
+  while (passwordArr.length < 12) {
+    passwordArr.push(getRandomChar(allChars))
+  }
+
+  // Mélange de Fisher-Yates
+  for (let i = passwordArr.length - 1; i > 0; i--) {
+    let j = 0
+    if (cryptoObj?.getRandomValues) {
+      const randomBuffer = new Uint32Array(1)
+      cryptoObj.getRandomValues(randomBuffer)
+      j = randomBuffer[0] % (i + 1)
+    } else {
+      j = Math.floor(Math.random() * (i + 1))
+    }
+    const temp = passwordArr[i]
+    passwordArr[i] = passwordArr[j]
+    passwordArr[j] = temp
+  }
+
+  return passwordArr.join('')
 }
 
 // Endpoint pour générer un XLSX depuis des résultats d'import (client-side request)

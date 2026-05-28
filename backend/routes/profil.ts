@@ -419,8 +419,11 @@ router.put('/', authenticateToken, async (req: Request, res: Response) => {
   }
 })
 
-router.post('/test-promotion', async (req, res) => {
+router.post('/test-promotion', authenticateToken, async (req: Request, res: Response) => {
   try {
+    if (req.user?.role !== 'administrateur') {
+      return res.status(403).json({ error: 'Accès interdit' })
+    }
     await promoteStudents()
 
     res.json({

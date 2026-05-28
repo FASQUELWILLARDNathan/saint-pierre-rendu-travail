@@ -19,6 +19,9 @@
           <n-button secondary @click="triggerImportFilePicker(false)" :loading="isImporting">
             Importer un fichier
           </n-button>
+          <n-button type="warning" @click="testPromotion" :loading="isTesting">
+            Test promotion
+          </n-button>
         </div>
       </header>
 
@@ -125,7 +128,9 @@
                       :type="isCreatingNew ? 'text' : 'password'"
                       :placeholder="isCreatingNew ? '' : 'Laisser vide pour ne pas changer'"
                     />
-                    <n-button @click="generatePassword" secondary> Générer </n-button>
+                    <n-button @click="onGeneratePassword" secondary>
+                      Générer
+                    </n-button>
                   </div>
                 </n-form-item>
 
@@ -425,6 +430,11 @@ function selectClasse(classeId: string | null) {
   }
 }
 
+function onGeneratePassword() {
+  const pwd = generateSecurePassword()
+  currentEleveForm.value.password = pwd
+}
+
 function exportXLSX() {
   const data = importResults.value.map((e) => ({
     Nom: e.nom,
@@ -557,7 +567,7 @@ function loadEleveForm(eleve: Eleve) {
 
 async function createNewEleve() {
   isCreatingNew.value = true
-  await generatePassword()
+  await generateSecurePassword()
   const now = new Date()
   const year = now.getFullYear()
   const nextYear = year + 1
@@ -710,20 +720,55 @@ async function saveEleve() {
   }
 }
 
-async function generatePassword() {
-  try {
-    const response = await fetch('https://api.api-ninjas.com/v1/passwordgenerator?length=10', {
-      headers: {
-        'X-Api-Key': import.meta.env.VITE_API_NINJAS_KEY,
-      },
-    })
+function generateSecurePassword(): string {
+  const lowercase = 'abcdefghijklmnopqrstuvwxyz'
+  const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+  const digits = '0123456789'
+  const specialChars = '!@#$%^&*()-_=+[]{}?:;'
+  const allChars = lowercase + uppercase + digits + specialChars
 
-    const data = await response.json()
-    currentEleveForm.value.password = data.random_password
-  } catch (err) {
-    console.error(err)
-    message.error('Erreur génération mot de passe')
+  const cryptoObj: Crypto | undefined = typeof window !== 'undefined' ? window.crypto : (globalThis as any).crypto
+
+  const getRandomChar = (pool: string): string => {
+    // Changement ici : on teste directement l'objet, TS comprend qu'il n'est plus undefined
+    if (cryptoObj) {
+      const randomBuffer = new Uint32Array(1)
+      cryptoObj.getRandomValues(randomBuffer)
+      return pool[randomBuffer[0]! % pool.length]!
+    }
+    return pool[Math.floor(Math.random() * pool.length)]!
   }
+
+  const passwordArr: string[] = []
+  passwordArr.push(getRandomChar(lowercase))
+  passwordArr.push(getRandomChar(uppercase))
+  passwordArr.push(getRandomChar(digits))
+  passwordArr.push(getRandomChar(digits))
+  passwordArr.push(getRandomChar(specialChars))
+  passwordArr.push(getRandomChar(specialChars))
+
+  while (passwordArr.length < 12) {
+    passwordArr.push(getRandomChar(allChars))
+  }
+
+  // Mélange de Fisher-Yates
+  for (let i = passwordArr.length - 1; i > 0; i--) {
+    let j = 0
+    // Changement ici aussi
+    if (cryptoObj) {
+      const randomBuffer = new Uint32Array(1)
+      cryptoObj.getRandomValues(randomBuffer)
+      j = randomBuffer[0]! % (i + 1)
+    } else {
+      j = Math.floor(Math.random() * (i + 1))
+    }
+    
+    const temp = passwordArr[i]!
+    passwordArr[i] = passwordArr[j]!
+    passwordArr[j] = temp
+  }
+
+  return passwordArr.join('')
 }
 
 function cancelEdit() {

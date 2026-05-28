@@ -67,7 +67,7 @@ const routes = [
   {
     path: ROUTES.ELEVE_GESTION,
     component: EleveGestionPage,
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, role: 'administrateur' },
   },
   {
     path: ROUTES.CLASSES,
@@ -119,12 +119,22 @@ const router = createRouter({
 router.beforeEach((to) => {
   const authStore = useAuthStore()
 
+  // pas connecté
+  if (to.meta.requiresAuth && !authStore.isAuth) {
+    return ROUTES.LOGIN
+  }
+
+  // déjà connecté → empêcher login/register
   if (authStore.isAuth && (to.path === ROUTES.LOGIN || to.path === ROUTES.REGISTER)) {
     return ROUTES.HOME
   }
 
-  if (to.meta.requiresAuth && !authStore.isAuth) {
-    return ROUTES.LOGIN
+  const requiredRole = to.meta.role as string | undefined
+
+  if (requiredRole) {
+    if (authStore.user?.role !== requiredRole) {
+      return ROUTES.HOME
+    }
   }
 
   return true
