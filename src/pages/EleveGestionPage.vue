@@ -19,9 +19,6 @@
           <n-button secondary @click="triggerImportFilePicker(false)" :loading="isImporting">
             Importer un fichier
           </n-button>
-          <n-button type="warning" @click="testPromotion" :loading="isTesting">
-            Test promotion
-          </n-button>
         </div>
       </header>
 
