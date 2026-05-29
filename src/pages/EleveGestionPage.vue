@@ -123,11 +123,34 @@
 
                 <n-form-item label="Mot de passe">
                   <div class="password-container">
-                    <n-input
-                      v-model:value="currentEleveForm.password"
-                      :type="isCreatingNew ? 'text' : 'password'"
-                      :placeholder="isCreatingNew ? '' : 'Laisser vide pour ne pas changer'"
-                    />
+                    <div class="password-input-wrapper">
+                      <n-input
+                        v-model:value="currentEleveForm.password"
+                        :type="showPassword ? 'text' : 'password'"
+                        :placeholder="isCreatingNew ? '' : 'Laisser vide pour ne pas changer'"
+                      />
+
+                      <button
+                        type="button"
+                        class="password-toggle"
+                        @click="showPassword = !showPassword"
+                        :aria-label="showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'"
+                      >
+                        <img
+                          v-if="!showPassword"
+                          src="/eye-password-show-svgrepo-com.svg"
+                          alt="Afficher"
+                          class="password-icon"
+                        />
+                        <img
+                          v-else
+                          src="/eye-password-hide-svgrepo-com.svg"
+                          alt="Masquer"
+                          class="password-icon"
+                        />
+                      </button>
+                    </div>
+
                     <n-button @click="onGeneratePassword" secondary>
                       Générer
                     </n-button>
@@ -320,6 +343,7 @@ const specialitesError = ref<string | null>(null)
 const showImportResultModal = ref(false)
 const importResults = ref<any[]>([])
 const importErrors = ref<any[]>([])
+const showPassword = ref(false)
 
 const classes = ref<Classe[]>([])
 const specialites = ref<Specialite[]>([])
@@ -879,6 +903,39 @@ async function deleteEleve() {
   font-family: monospace;
   font-weight: 700;
   color: #205781;
+}
+
+.password-container {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.password-input-wrapper {
+  position: relative;
+  flex: 1;
+}
+
+.password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+}
+
+.password-icon {
+  width: 20px;
+  height: 20px;
+}
+
+:deep(.n-input input) {
+  padding-right: 70px;
 }
 
 .gestion-header {
