@@ -336,7 +336,7 @@ router.get('/mes-devoirs', authenticateToken, async (req, res) => {
         },
         include: {
           cours: coursSelect,
-          piece_jointe_devoir: true,
+          pieceJointeDevoirs: true,
           rendus: {
             include: {
               pieces_jointes: true,
@@ -404,7 +404,7 @@ router.get('/mes-devoirs', authenticateToken, async (req, res) => {
       },
       include: {
         cours: coursSelect,
-        piece_jointe_devoir: true,
+        pieceJointeDevoirs: true,
         rendus: {
           where: { id_user: BigInt(userId) },
           include: { pieces_jointes: true },
