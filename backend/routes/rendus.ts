@@ -198,19 +198,47 @@ router.get('/mes-notes', authenticateToken, async (req, res) => {
     const userId = req.user?.id_user
 
     const rendus = await prisma.rendu.findMany({
-      where: { id_user: BigInt(userId), note: { not: null } },
+      where: {
+        id_user: userId,
+        note: {
+          not: null,
+        },
+      },
       include: {
         devoir: {
           include: {
-            matiere: {
-              select: { nom_matiere: true, couleur: true, icon_url: true },
+            cours: {
+              include: {
+                matiere: {
+                  select: {
+                    nom_matiere: true,
+                    couleur: true,
+                    icon_url: true,
+                  },
+                },
+                specialite: {
+                  select: {
+                    nom_specialite: true,
+                    couleur: true,
+                    icon_url: true,
+                  },
+                },
+                option: {
+                  select: {
+                    nom_option: true,
+                    couleur: true,
+                    icon_url: true,
+                  },
+                },
+              },
             },
-            cours: { select: { nom_cours: true } },
           },
         },
         pieces_jointes: true,
       },
-      orderBy: { date_rendu: 'desc' },
+      orderBy: {
+        date_rendu: 'desc',
+      },
     })
 
     res.json(rendus)

@@ -140,17 +140,36 @@ const showDetailModal = ref(false)
 const selectedRendu = ref<any>(null)
 const rendus = ref<any[]>([])
 
+const toNumber = (v: any) => {
+  const n = Number(String(v).replace(',', '.'))
+  return isNaN(n) ? 0 : n
+}
+
 const moyenne = computed(() => {
-  const avecNote = rendus.value.filter(r => r.note !== null)
-  if (avecNote.length === 0) return null
-  return avecNote.reduce((sum, r) => sum + Number(r.note), 0) / avecNote.length
+  const notes = rendus.value.filter(r => r.note !== null)
+
+  const total = notes.reduce((sum, r) => {
+    return sum + toNumber(r.note) * toNumber(r.devoir?.coefficient)
+  }, 0)
+
+  const totalCoef = notes.reduce((sum, r) => {
+    return sum + toNumber(r.devoir?.coefficient)
+  }, 0)
+
+  return totalCoef === 0 ? null : total / totalCoef
 })
 
 const notesParMatiere = computed(() => {
   const grouped = new Map<string, any>()
 
-  rendus.value.forEach(r => {
-    const nom = r.devoir?.matiere?.nom_matiere ?? 'Autre'
+  rendus.value.forEach((r) => {
+    const nom =
+    r.devoir?.cours?.matiere?.nom_matiere ??
+    r.devoir?.cours?.specialite?.nom_specialite ??
+    r.devoir?.cours?.option?.nom_option ??
+    r.devoir?.cours?.nom_cours ??
+    'Autre'
+
     if (!grouped.has(nom)) {
       grouped.set(nom, {
         matiere: nom,
@@ -159,15 +178,27 @@ const notesParMatiere = computed(() => {
         rendus: [],
       })
     }
+
     grouped.get(nom).rendus.push(r)
   })
 
-  return Array.from(grouped.values()).map(g => ({
-    ...g,
-    moyenne: g.rendus.filter((r: any) => r.note !== null)
-      .reduce((sum: number, r: any) => sum + Number(r.note), 0) /
-      Math.max(g.rendus.filter((r: any) => r.note !== null).length, 1),
-  }))
+  return Array.from(grouped.values()).map((g) => {
+    const notesValides = g.rendus.filter((r: any) => r.note !== null)
+
+    const total = notesValides.reduce((sum: number, r: any) => {
+      const coef = r.devoir?.coefficient ?? 1
+      return sum + Number(r.note) * coef
+    }, 0)
+
+    const totalCoef = notesValides.reduce((sum: number, r: any) => {
+      return sum + (r.devoir?.coefficient ?? 1)
+    }, 0)
+
+    return {
+      ...g,
+      moyenne: totalCoef === 0 ? 0 : total / totalCoef,
+    }
+  })
 })
 
 onMounted(async () => {
