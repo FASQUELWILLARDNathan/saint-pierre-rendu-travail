@@ -20,7 +20,7 @@
             Importer un fichier
           </n-button>
           <n-button type="warning" @click="testPromotion" :loading="isTesting">
-            Test promotion
+            Promotion manuelle
           </n-button>
         </div>
       </header>
@@ -483,7 +483,7 @@ function selectEleve(index: number) {
 
 async function testPromotion() {
   const confirm = window.confirm(
-    '⚠️ Test promotion : les terminales seront supprimées. Continuer ?',
+    'Test promotion : les terminales seront supprimées. Continuer ?',
   )
 
   if (!confirm) return
