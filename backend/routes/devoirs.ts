@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { prisma } from '../config.ts'
 import { authenticateToken } from '../middleware/auth.ts'
+import { uploadDevoir } from '../middleware/uploadDevoir.ts'
 
 const router = Router()
 
@@ -211,53 +212,45 @@ function formatDevoirWithMatiere(devoir: any) {
   }
 }
 
-router.post('/', authenticateToken, async (req, res) => {
+router.post('/', authenticateToken, uploadDevoir.array('fichiers', 10), async (req, res) => {
   try {
-    const { nom_devoir, description_devoir, id_cours, date_limite } = req.body
+    const { nom_devoir, description_devoir, id_cours, date_limite, coefficient } = req.body
 
-    if (!id_cours || !nom_devoir) {
+    if (!nom_devoir || !id_cours) {
       return res.status(400).json({ error: 'Champs manquants' })
-    }
-
-    const cours = await prisma.cours.findUnique({
-      where: { id_cours: BigInt(id_cours) },
-    })
-
-    if (!cours) {
-      return res.status(404).json({ error: 'Cours introuvable' })
-    }
-
-    const data: any = {
-      nom_devoir,
-      description_devoir: description_devoir ?? null,
-      date_limite: date_limite ? new Date(date_limite) : null,
-
-      cours: {
-        connect: {
-          id_cours: BigInt(id_cours),
-        },
-      },
-    }
-
-    if (cours.id_matiere) {
-      data.id_matiere = cours.id_matiere
     }
 
     const devoir = await prisma.devoir.create({
       data: {
         nom_devoir,
-        description_devoir,
+        description_devoir: description_devoir || null,
         date_limite: date_limite ? new Date(date_limite) : null,
+        coefficient: coefficient ? Number(coefficient) : 1,
         cours: {
           connect: { id_cours: BigInt(id_cours) },
         },
       },
     })
 
-    return res.json(devoir)
-  } catch (error) {
-    console.error(error)
-    return res.status(500).json({ error: 'Erreur serveur' })
+    const files = req.files as Express.Multer.File[]
+
+    if (files?.length) {
+      console.log('PIECES MODELS:', Object.keys(prisma))
+      await prisma.piece_jointe_devoir.createMany({
+        data: files.map((f) => ({
+          id_devoir: devoir.id_devoir,
+          nom_fichier: f.originalname,
+          chemin_fichier: `/devoirs/${f.filename}`,
+          type_fichier: f.mimetype,
+          taille_octets: BigInt(f.size),
+        })),
+      })
+    }
+
+    res.json(devoir)
+  } catch (e) {
+    console.error(e)
+    res.status(500).json({ error: 'Erreur serveur' })
   }
 })
 
@@ -282,6 +275,7 @@ router.get('/travaux-a-rendre', authenticateToken, async (req, res) => {
       },
       include: {
         cours: coursSelect,
+        pieceJointeDevoirs: true,
       },
       orderBy: {
         date_limite: 'asc',
@@ -342,6 +336,7 @@ router.get('/mes-devoirs', authenticateToken, async (req, res) => {
         },
         include: {
           cours: coursSelect,
+          piece_jointe_devoir: true,
           rendus: {
             include: {
               pieces_jointes: true,
@@ -409,6 +404,7 @@ router.get('/mes-devoirs', authenticateToken, async (req, res) => {
       },
       include: {
         cours: coursSelect,
+        piece_jointe_devoir: true,
         rendus: {
           where: { id_user: BigInt(userId) },
           include: { pieces_jointes: true },
@@ -439,6 +435,7 @@ router.get('/matiere/:matiereId', authenticateToken, async (req, res) => {
       },
       include: {
         cours: coursSelect,
+        pieceJointeDevoirs: true,
       },
     })
 
@@ -505,6 +502,7 @@ router.get('/categorie', authenticateToken, async (req, res) => {
       where,
       include: {
         cours: coursSelect,
+        pieceJointeDevoirs: true,
       },
       orderBy: {
         date_limite: 'asc',
@@ -516,6 +514,16 @@ router.get('/categorie', authenticateToken, async (req, res) => {
     console.error('Erreur lors de la récupération des devoirs par catégorie:', error)
     res.status(500).json({ error: 'Erreur serveur' })
   }
+})
+
+router.delete('/:id', async (req, res) => {
+  const id = Number(req.params.id)
+
+  await prisma.devoir.delete({
+    where: { id_devoir: id },
+  })
+
+  res.json({ success: true })
 })
 
 export default router

@@ -465,4 +465,19 @@ router.post('/option', authenticateToken, async (req, res) => {
   }
 })
 
+router.delete('/:id', async (req, res) => {
+  try {
+    const id = Number(req.params.id)
+
+    await prisma.evenement.delete({
+      where: { id_evenement: id },
+    })
+
+    res.json({ success: true })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Erreur suppression événement' })
+  }
+})
+
 export default router

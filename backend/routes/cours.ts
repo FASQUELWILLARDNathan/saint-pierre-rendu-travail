@@ -4,6 +4,7 @@ import { authenticateToken } from '../middleware/auth.ts'
 import multer from 'multer'
 import path from 'path'
 import fs from 'fs'
+import fsPromises from 'fs/promises'
 
 const router = Router()
 const uploadDir = '/app/public/cours'
@@ -348,6 +349,48 @@ router.get('/:id', authenticateToken, async (req, res) => {
     where: { id_matiere: BigInt(req.params.id) },
   })
   res.json(matiere)
+})
+
+router.delete('/:id', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params
+    const userId = BigInt(req.user?.id_user)
+
+    const cours = await prisma.cours.findFirst({
+      where: {
+        id_cours: BigInt(id),
+        id_user: userId,
+      },
+      include: {
+        ressources: true,
+      },
+    })
+
+    if (!cours) {
+      return res.status(404).json({ error: 'Cours non trouvé' })
+    }
+
+    for (const ressource of cours.ressources) {
+      const filePath = path.join(process.cwd(), 'public', ressource.chemin_fichier)
+
+      if (fs.existsSync(filePath)) {
+        await fsPromises.unlink(filePath).catch(() => {})
+      }
+    }
+
+    await prisma.cours.delete({
+      where: {
+        id_cours: BigInt(id),
+      },
+    })
+
+    res.json({
+      message: 'Cours supprimé avec succès',
+    })
+  } catch (error) {
+    console.error('Erreur suppression cours:', error)
+    res.status(500).json({ error: 'Erreur serveur' })
+  }
 })
 
 export default router

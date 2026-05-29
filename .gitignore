@@ -90,6 +90,7 @@ Thumbs.db
 public/uploads/messages/*
 public/cours/*
 public/rendus/*
+public/devoirs/*
 
 # OTHERS
 .idees

@@ -198,8 +198,19 @@ model devoir {
   cours                 cours               @relation(fields: [id_cours], references: [id_cours])
   rendus                rendu[]
   @@unique([id_cours, nom_devoir])
+  devoirFichiers        DevoirFichier[]
+  pieceJointeDevoirs piece_jointe_devoir[]
 }
 
+model DevoirFichier {
+  id          BigInt @id @default(autoincrement())
+  nom_fichier String
+  chemin      String
+  type        String?
+  taille      Int?
+  id_devoir   BigInt
+  devoir      devoir @relation(fields: [id_devoir], references: [id_devoir])
+}
 
 // Table de liaison entre professeur et devoir (relation N:N)
 model assprofdevoir {
@@ -251,6 +262,22 @@ model piece_jointe_rendu {
   taille_octets         BigInt
   date_ajout            DateTime            @default(now())
   rendu                 rendu               @relation(fields: [id_rendu], references: [id_rendu], onDelete: Cascade)
+}
+
+model piece_jointe_devoir {
+  id_piece_jointe_devoir BigInt   @id @default(autoincrement())
+
+  nom_fichier     String
+  chemin_fichier  String
+  type_fichier    String
+  taille_octets   BigInt
+
+  id_devoir BigInt
+  devoir    devoir @relation(fields: [id_devoir], references: [id_devoir], onDelete: Cascade)
+
+  created_at DateTime @default(now())
+
+  @@index([id_devoir])
 }
 
 // Représente un événement (interrogation, examen, etc.)

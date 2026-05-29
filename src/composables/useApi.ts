@@ -237,10 +237,10 @@ export function useApi() {
       body: data,
     })
 
-  const createDevoir = (data: any) =>
+  const createDevoir = (data: FormData) =>
     request('/api/devoirs', {
       method: 'POST',
-      body: JSON.stringify(data),
+      body: data,
     })
 
   const importEleves = (data: FormData) =>
@@ -378,6 +378,24 @@ export function useApi() {
     })
   }
 
+  async function deleteCours(id: string) {
+    return request(`/api/cours/${id}`, {
+      method: 'DELETE',
+    })
+  }
+
+  async function deleteDevoir(id: string) {
+    return request(`/api/devoirs/${id}`, {
+      method: 'DELETE',
+    })
+  }
+
+  async function deleteEvenement(id: string) {
+    return request(`/api/evenements/${id}`, {
+      method: 'DELETE',
+    })
+  }
+
   return {
     signIn,
     signUp,
@@ -436,5 +454,8 @@ export function useApi() {
     updateRendu,
     archiveRendu,
     post,
+    deleteCours,
+    deleteDevoir,
+    deleteEvenement,
   }
 }

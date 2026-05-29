@@ -47,6 +47,11 @@
                 @click="openCours(c)"
                 style="cursor: pointer"
               >
+              <div class="item-actions" v-if="isProfessor">
+                <button class="delete-btn" @click.stop="deleteCours(c.id_cours)">
+                  <img src="/red-cross-icon.svg" alt="Supprimer" class="delete-icon" />
+                </button>
+              </div>
                 <div class="item-icon" :style="{ backgroundColor: iconBg }">
                   <img v-if="categoryIcon" :src="categoryIcon" alt="" />
                   <span v-else>📖</span>
@@ -81,20 +86,31 @@
                 v-for="d in devoirs.slice(0, 3)"
                 :key="d.id_devoir"
                 class="item-card devoir-item"
+                @click="openDevoir(d)"
               >
-                <div class="item-icon" :style="{ backgroundColor: iconBg }">
-                  <img v-if="matiere?.devoir_icon_url" :src="matiere.devoir_icon_url" alt="" />
-                  <span v-else>📝</span>
-                </div>
-                <div class="item-content">
-                  <p class="item-title">{{ d.nom_devoir }}</p>
-                  <p class="item-sub">{{ d.description_devoir ?? 'Pas de description' }}</p>
-                  <p class="item-meta" v-if="d.date_limite">
-                    📅 {{ new Date(d.date_limite).toLocaleDateString('fr-FR') }}
-                  </p>
-                </div>
-                <div class="item-badge" v-if="d.coefficient">Coef. {{ d.coefficient }}</div>
+              <div class="item-actions" v-if="isProfessor">
+                <button class="delete-btn" @click.stop="deleteDevoir(d.id_devoir)">
+                  <img src="/red-cross-icon.svg" alt="Supprimer" class="delete-icon" />
+                </button>
               </div>
+
+              <div class="item-icon" :style="{ backgroundColor: iconBg }">
+                <img v-if="matiere?.devoir_icon_url" :src="matiere.devoir_icon_url" alt="" />
+                <span v-else>📝</span>
+              </div>
+
+              <div class="item-content">
+                <p class="item-title">{{ d.nom_devoir }}</p>
+                <p class="item-sub">{{ d.description_devoir ?? 'Pas de description' }}</p>
+                <p class="item-meta" v-if="d.date_limite">
+                  📅 {{ new Date(d.date_limite).toLocaleDateString('fr-FR') }}
+                </p>
+              </div>
+
+              <div class="item-badge" v-if="d.coefficient">
+                Coef. {{ d.coefficient }}
+              </div>
+            </div>
 
               <button v-if="devoirs.length > 3" class="see-more-btn" @click="goToDevoirs()">
                 Voir plus →
@@ -108,6 +124,11 @@
             <n-empty v-if="evenements.length === 0" description="Aucun événement" />
             <div v-else class="evenements-grid">
               <div v-for="e in evenements" :key="e.id_evenement" class="evenement-card">
+                <div class="item-actions" v-if="isProfessor">
+                  <button class="delete-btn" @click="deleteEvenement(e.id_evenement)">
+                    <img src="/red-cross-icon.svg" alt="Supprimer" class="delete-icon" />
+                  </button>
+                </div>
                 <div class="evenement-type" :style="getBadgeStyle(e.type_evenement)">
                   {{ e.type_evenement }}
                 </div>
@@ -152,7 +173,7 @@
           <n-form-item label="Fichiers" path="files">
             <n-upload
               v-model:file-list="fileList"
-              accept=".pdf,.doc,.docx,.xls,.xlsx"
+              accept=".pdf,.doc,.docx,.xls,.xlsx,.zip,.rar,.7z,.py,.c,.sql,.html,.css,.js,.java"
               :max="10"
               @change="handleFileChange"
             >
@@ -191,6 +212,15 @@
           </n-form-item>
           <n-form-item label="Coefficient" path="coefficient">
             <n-input-number v-model:value="devoirForm.coefficient" :min="0" :max="20" />
+          </n-form-item>
+          <n-form-item label="Fichiers">
+            <n-upload
+              v-model:file-list="devoirFileList"
+              :max="10"
+              accept=".pdf,.doc,.docx,.xls,.xlsx,.zip,.rar,.7z,.py,.c,.sql,.html,.css,.js,.java"
+            >
+              <n-button>Ajouter fichiers</n-button>
+            </n-upload>
           </n-form-item>
         </n-form>
 
@@ -278,6 +308,55 @@
           <n-empty v-else description="Aucun fichier joint" />
         </div>
       </n-modal>
+      <!-- Modal détail devoir -->
+      <n-modal
+        v-model:show="showDevoirDetailModal"
+        preset="card"
+        :title="selectedDevoir?.nom_devoir"
+        style="max-width: 600px"
+      >
+        <div v-if="selectedDevoir" class="devoir-detail">
+
+          <p class="detail-desc">
+            {{ selectedDevoir.description_devoir ?? 'Pas de description' }}
+          </p>
+
+          <div class="detail-meta">
+            <span class="meta-badge" v-if="selectedDevoir.coefficient">
+              Coefficient : {{ selectedDevoir.coefficient }}
+            </span>
+
+            <span class="meta-badge" v-if="selectedDevoir.date_limite">
+              📅 {{ new Date(selectedDevoir.date_limite).toLocaleString('fr-FR') }}
+            </span>
+          </div>
+
+          <div v-if="selectedDevoir?.pieceJointeDevoirs?.length" class="detail-ressources">
+            <h4>Fichiers du devoir</h4>
+
+            <div class="ressources-list">
+              <a
+                v-for="file in selectedDevoir.pieceJointeDevoirs"
+                :key="file.id_piece_jointe_devoir"
+                :href="`${apiBase}/public${file.chemin_fichier}`"
+                target="_blank"
+                class="ressource-item"
+              >
+                <span>📎</span>
+
+                <div class="ressource-info">
+                  <span class="ressource-nom">{{ file.nom_fichier }}</span>
+                </div>
+
+                <span class="ressource-dl">⬇</span>
+              </a>
+            </div>
+          </div>
+
+          <n-empty v-else description="Aucun fichier joint" />
+
+        </div>
+      </n-modal>
     </div>
   </div>
 </template>
@@ -324,6 +403,9 @@ const matiere = ref<any>(null)
 const cours = ref<any[]>([])
 const devoirs = ref<any[]>([])
 const evenements = ref<any[]>([])
+const devoirFileList = ref<UploadFileInfo[]>([])
+const showDevoirDetailModal = ref(false)
+const selectedDevoir = ref<any>(null)
 
 // Modal states
 const showCreateCoursModal = ref(false)
@@ -503,6 +585,36 @@ const createOptions = [
   { label: 'Créer un événement', key: 'evenement' },
 ]
 
+async function deleteCours(id: string) {
+  try {
+    await api.deleteCours(id)
+    message.success('Cours supprimé')
+    await loadData()
+  } catch (err: any) {
+    message.error(err.message || 'Erreur suppression cours')
+  }
+}
+
+async function deleteDevoir(id: string) {
+  try {
+    await api.deleteDevoir(id)
+    message.success('Devoir supprimé')
+    await loadData()
+  } catch (err: any) {
+    message.error(err.message || 'Erreur suppression devoir')
+  }
+}
+
+async function deleteEvenement(id: string) {
+  try {
+    await api.deleteEvenement(id)
+    message.success('Événement supprimé')
+    await loadData()
+  } catch (err: any) {
+    message.error(err.message || 'Erreur suppression événement')
+  }
+}
+
 async function loadData() {
   try {
     isLoading.value = true
@@ -616,6 +728,11 @@ function handleFileChange() {
   // Fichiers ajoutés automatiquement via v-model:file-list
 }
 
+function openDevoir(d: any) {
+  selectedDevoir.value = d
+  showDevoirDetailModal.value = true
+}
+
 async function createCourseHandler() {
   await coursFormRef.value?.validate()
 
@@ -651,40 +768,41 @@ async function createDevoirHandler() {
   await devoirFormRef.value?.validate()
 
   try {
-    // Besoin de trouver un cours existant pour id_cours
+    const formData = new FormData()
+
+    formData.append('nom_devoir', devoirForm.value.nom_devoir)
+    formData.append('description_devoir', devoirForm.value.description_devoir || '')
+
+    if (devoirForm.value.date_limite) {
+      formData.append(
+        'date_limite',
+        new Date(devoirForm.value.date_limite).toISOString(),
+      )
+    }
+
+    formData.append('coefficient', String(devoirForm.value.coefficient || 1))
+
     const cours_defaut = cours.value[0]?.id_cours
     if (!cours_defaut) {
-      const categoryMessage =
-        categoryKind.value === 'specialite'
-          ? 'spécialité'
-          : categoryKind.value === 'option'
-            ? 'option'
-            : 'matière'
-      message.error(`Créez d'abord un cours pour cette ${categoryMessage}`)
+      message.error('Créez d’abord un cours')
       return
     }
 
-    await api.createDevoir({
-      nom_devoir: devoirForm.value.nom_devoir,
-      description_devoir: devoirForm.value.description_devoir || '',
-      date_limite: devoirForm.value.date_limite
-        ? new Date(devoirForm.value.date_limite).toISOString()
-        : null,
-      coefficient: devoirForm.value.coefficient || 1,
-      id_cours: cours_defaut,
+    formData.append('id_cours', String(cours_defaut))
+
+    // fichiers devoir
+    devoirFileList.value.forEach((f) => {
+      if (f.file) formData.append('fichiers', f.file)
     })
 
-    message.success('Devoir créé avec succès')
+    await api.createDevoir(formData)
+
+    message.success('Devoir créé avec fichiers')
     showCreateDevoirModal.value = false
-    devoirForm.value = {
-      nom_devoir: '',
-      description_devoir: '',
-      date_limite: null,
-      coefficient: 1,
-    }
+    devoirFileList.value = []
     await loadData()
   } catch (err: any) {
-    message.error(err.message || 'Erreur lors de la création du devoir')
+    message.error(err.message || 'Erreur création devoir')
   }
 }
 
@@ -803,6 +921,17 @@ function goToDevoirs() {
   background-color: #f3f4f6;
 }
 
+.delete-icon {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  transition: transform 0.15s ease;
+}
+
+.delete-btn:hover .delete-icon {
+  transform: scale(1.15);
+}
+
 .header-title {
   display: flex;
   align-items: center;
@@ -820,6 +949,24 @@ function goToDevoirs() {
   margin: 4px 0 0 0;
   font-size: 14px;
   color: #6b7280;
+}
+
+.item-actions {
+  display: flex;
+  align-items: center;
+  margin-left: 8px;
+}
+
+.delete-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #ef4444;
+  font-size: 16px;
+}
+
+.delete-btn:hover {
+  transform: scale(1.1);
 }
 
 .matiere-icon-header {
