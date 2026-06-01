@@ -240,7 +240,7 @@ router.post('/', authenticateToken, uploadDevoir.array('fichiers', 10), async (r
         data: files.map((f) => ({
           id_devoir: devoir.id_devoir,
           nom_fichier: f.originalname.slice(0, 254),
-          chemin_fichier: `/devoirs/${f.filename}`.slice(0, 255),
+          chemin_fichier: `/devoirs/${f.filename}`.slice(0, 499),
           type_fichier: f.mimetype,
           taille_octets: BigInt(f.size),
         })),

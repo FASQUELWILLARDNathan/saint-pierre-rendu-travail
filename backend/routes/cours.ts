@@ -182,7 +182,7 @@ router.post('/', authenticateToken, upload.array('fichiers', 10), async (req, re
         data: files.map((f) => ({
           id_cours: cours.id_cours,
           nom_fichier: f.originalname.slice(0, 254),
-          chemin_fichier: `/cours/${f.filename}`.slice(0, 255),
+          chemin_fichier: `/cours/${f.filename}`.slice(0, 499),
           type_fichier: f.mimetype,
           taille_octets: BigInt(f.size),
         })),
