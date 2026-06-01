@@ -206,22 +206,21 @@
             <n-tab-pane name="compose" tab="✏️ Nouveau Message">
               <div class="compose-form">
                 <n-form :model="newMessage">
-                  <n-form-item label="Destinataire">
-                    <n-select
-                      v-model:value="newMessage.destinataire_id"
-                      :options="
-                        allUsers
-                          .filter((u) => u.id_user !== currentUserId)
-                          .map((u) => ({
-                            label: `${u.prenom} ${u.nom}`,
-                            value: u.id_user,
-                          }))
-                      "
-                      placeholder="Sélectionnez un destinataire"
-                      clearable
-                      filterable
+                    <n-form-item label="Destinataire(s)">
+                      <n-button @click="showRecipientSelector = true" style="width:100%; justify-content:flex-start">
+                        {{ selectedRecipients.length
+                          ? selectedRecipients.map(u => `${u.prenom} ${u.nom}`).join(', ')
+                          : 'Sélectionner des destinataires...' }}
+                      </n-button>
+                    </n-form-item>
+
+                    <RecipientSelectorModal
+                      v-if="showRecipientSelector"
+                      :users="allUsers"
+                      :eleve-details="allEleveDetails"
+                      @confirm="(users: RawUser[]) => { selectedRecipients = users; newMessage.destinataire_id = users[0]?.id_user }"
+                      @close="showRecipientSelector = false"
                     />
-                  </n-form-item>
 
                   <n-form-item label="Sujet">
                     <n-input
@@ -299,6 +298,7 @@ import {
 import { useApi } from '@/composables/useApi'
 import { useAuthStore } from '@/stores/auth.store'
 import Sidebar from '@/components/home/Sidebar.vue'
+import RecipientSelectorModal, { type RawUser } from '@/components/messagerie/Selector.vue'
 
 interface Message {
   id_message: string
@@ -343,14 +343,17 @@ const isRepairingStorage = ref(false)
 const error = ref<string | null>(null)
 const activeTab = ref('received')
 const isMessageSent = ref(false)
+const showRecipientSelector = ref(false)
+const selectedRecipients = ref<RawUser[]>([])
 
 const receivedMessages = ref<Message[]>([])
 const sentMessages = ref<Message[]>([])
-const allUsers = ref<User[]>([])
+const allUsers = ref<RawUser[]>([])
 const selectedMsg = ref<Message | null>(null)
 const selectedFiles = ref<File[]>([])
 const storageInfo = ref<any>(null)
 const currentUserId = authStore.user?.id_user
+const allEleveDetails = ref<any[]>([])
 
 const newMessage = ref({
   destinataire_id: null as any,
@@ -370,7 +373,8 @@ onMounted(async () => {
     sentMessages.value = (await api.getSentMessages()) as any
 
     // Fetch all users
-    allUsers.value = (await api.getUsers()) as any
+    allUsers.value = (await api.getUsers()) as RawUser[]
+    allEleveDetails.value = (await api.getAllEleves()) as any[]
 
     // Fetch storage info
     storageInfo.value = (await api.getStorageInfo()) as any
@@ -405,16 +409,14 @@ function removeFile(idx: number) {
 }
 
 async function sendNewMessage() {
-  if (!newMessage.value.destinataire_id) {
-    message.error('Sélectionnez un destinataire')
+  if (!selectedRecipients.value.length) {
+    message.error('Sélectionnez au moins un destinataire')
     return
   }
-
   if (!newMessage.value.sujet.trim()) {
     message.error('Entrez un sujet')
     return
   }
-
   if (!newMessage.value.contenu.trim()) {
     message.error('Écrivez un message')
     return
@@ -422,28 +424,28 @@ async function sendNewMessage() {
 
   try {
     isSending.value = true
+    const count = selectedRecipients.value.length
 
-    const formData = new FormData()
-    formData.append('id_destinataire', newMessage.value.destinataire_id)
-    formData.append('sujet', newMessage.value.sujet)
-    formData.append('contenu', newMessage.value.contenu)
-
-    // Add files
-    for (const file of selectedFiles.value) {
-      formData.append('pieces_jointes', file)
+    // Envoie un message par destinataire
+    for (const recipient of selectedRecipients.value) {
+      selectedRecipients.value = []
+      const formData = new FormData()
+      formData.append('id_destinataire', String(recipient.id_user))
+      formData.append('sujet', newMessage.value.sujet)
+      formData.append('contenu', newMessage.value.contenu)
+      for (const file of selectedFiles.value) {
+        formData.append('pieces_jointes', file)
+      }
+      await api.sendMessage(formData)
     }
 
-    await api.sendMessage(formData)
-
-    // Reload sent messages
     sentMessages.value = (await api.getSentMessages()) as any
-
-    // Reload storage info
     storageInfo.value = (await api.getStorageInfo()) as any
 
     resetForm()
+    selectedRecipients.value = []
     activeTab.value = 'sent'
-    message.success('Message envoyé avec succès')
+    message.success(`Message envoyé à ${count} destinataire${count > 1 ? 's' : ''}`)
   } catch (err) {
     error.value = "Erreur lors de l'envoi du message"
     console.error('Erreur:', err)
