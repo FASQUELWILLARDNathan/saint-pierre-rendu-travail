@@ -47,11 +47,11 @@
                 @click="openCours(c)"
                 style="cursor: pointer"
               >
-              <div class="item-actions" v-if="isProfessor">
-                <button class="delete-btn" @click.stop="deleteCours(c.id_cours)">
-                  <img src="/red-cross-icon.svg" alt="Supprimer" class="delete-icon" />
-                </button>
-              </div>
+                <div class="item-actions" v-if="isProfessor">
+                  <button class="delete-btn" @click.stop="deleteCours(c.id_cours)">
+                    <img src="/red-cross-icon.svg" alt="Supprimer" class="delete-icon" />
+                  </button>
+                </div>
                 <div class="item-icon" :style="{ backgroundColor: iconBg }">
                   <img v-if="categoryIcon" :src="categoryIcon" alt="" />
                   <span v-else>📖</span>
@@ -88,29 +88,27 @@
                 class="item-card devoir-item"
                 @click="openDevoir(d)"
               >
-              <div class="item-actions" v-if="isProfessor">
-                <button class="delete-btn" @click.stop="deleteDevoir(d.id_devoir)">
-                  <img src="/red-cross-icon.svg" alt="Supprimer" class="delete-icon" />
-                </button>
-              </div>
+                <div class="item-actions" v-if="isProfessor">
+                  <button class="delete-btn" @click.stop="deleteDevoir(d.id_devoir)">
+                    <img src="/red-cross-icon.svg" alt="Supprimer" class="delete-icon" />
+                  </button>
+                </div>
 
-              <div class="item-icon" :style="{ backgroundColor: iconBg }">
-                <img v-if="matiere?.devoir_icon_url" :src="matiere.devoir_icon_url" alt="" />
-                <span v-else>📝</span>
-              </div>
+                <div class="item-icon" :style="{ backgroundColor: iconBg }">
+                  <img v-if="matiere?.devoir_icon_url" :src="matiere.devoir_icon_url" alt="" />
+                  <span v-else>📝</span>
+                </div>
 
-              <div class="item-content">
-                <p class="item-title">{{ d.nom_devoir }}</p>
-                <p class="item-sub">{{ d.description_devoir ?? 'Pas de description' }}</p>
-                <p class="item-meta" v-if="d.date_limite">
-                  📅 {{ new Date(d.date_limite).toLocaleDateString('fr-FR') }}
-                </p>
-              </div>
+                <div class="item-content">
+                  <p class="item-title">{{ d.nom_devoir }}</p>
+                  <p class="item-sub">{{ d.description_devoir ?? 'Pas de description' }}</p>
+                  <p class="item-meta" v-if="d.date_limite">
+                    📅 {{ new Date(d.date_limite).toLocaleDateString('fr-FR') }}
+                  </p>
+                </div>
 
-              <div class="item-badge" v-if="d.coefficient">
-                Coef. {{ d.coefficient }}
+                <div class="item-badge" v-if="d.coefficient">Coef. {{ d.coefficient }}</div>
               </div>
-            </div>
 
               <button v-if="devoirs.length > 3" class="see-more-btn" @click="goToDevoirs()">
                 Voir plus →
@@ -316,7 +314,6 @@
         style="max-width: 600px"
       >
         <div v-if="selectedDevoir" class="devoir-detail">
-
           <p class="detail-desc">
             {{ selectedDevoir.description_devoir ?? 'Pas de description' }}
           </p>
@@ -354,7 +351,6 @@
           </div>
 
           <n-empty v-else description="Aucun fichier joint" />
-
         </div>
       </n-modal>
     </div>
@@ -774,10 +770,7 @@ async function createDevoirHandler() {
     formData.append('description_devoir', devoirForm.value.description_devoir || '')
 
     if (devoirForm.value.date_limite) {
-      formData.append(
-        'date_limite',
-        new Date(devoirForm.value.date_limite).toISOString(),
-      )
+      formData.append('date_limite', new Date(devoirForm.value.date_limite).toISOString())
     }
 
     formData.append('coefficient', String(devoirForm.value.coefficient || 1))

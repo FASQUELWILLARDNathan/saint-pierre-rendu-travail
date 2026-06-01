@@ -33,11 +33,7 @@
 
           <!-- Notes par matière -->
           <div v-else class="notes-par-matiere">
-            <div
-              v-for="group in notesParMatiere"
-              :key="group.matiere"
-              class="matiere-group"
-            >
+            <div v-for="group in notesParMatiere" :key="group.matiere" class="matiere-group">
               <div class="matiere-group-header">
                 <div class="matiere-icon" :style="{ backgroundColor: getColor(group.couleur) }">
                   <img v-if="group.icon" :src="group.icon" alt="" />
@@ -117,9 +113,7 @@
           </a>
         </div>
 
-        <p class="rendu-date">
-          Rendu le {{ formatDate(selectedRendu.date_rendu) }}
-        </p>
+        <p class="rendu-date">Rendu le {{ formatDate(selectedRendu.date_rendu) }}</p>
       </div>
     </n-modal>
   </div>
@@ -146,7 +140,7 @@ const toNumber = (v: any) => {
 }
 
 const moyenne = computed(() => {
-  const notes = rendus.value.filter(r => r.note !== null)
+  const notes = rendus.value.filter((r) => r.note !== null)
 
   const total = notes.reduce((sum, r) => {
     return sum + toNumber(r.note) * toNumber(r.devoir?.coefficient)
@@ -164,11 +158,11 @@ const notesParMatiere = computed(() => {
 
   rendus.value.forEach((r) => {
     const nom =
-    r.devoir?.cours?.matiere?.nom_matiere ??
-    r.devoir?.cours?.specialite?.nom_specialite ??
-    r.devoir?.cours?.option?.nom_option ??
-    r.devoir?.cours?.nom_cours ??
-    'Autre'
+      r.devoir?.cours?.matiere?.nom_matiere ??
+      r.devoir?.cours?.specialite?.nom_specialite ??
+      r.devoir?.cours?.option?.nom_option ??
+      r.devoir?.cours?.nom_cours ??
+      'Autre'
 
     if (!grouped.has(nom)) {
       grouped.set(nom, {
@@ -238,7 +232,9 @@ function getColor(hex: string | null) {
 function formatDate(date: string | null) {
   if (!date) return ''
   return new Date(date).toLocaleDateString('fr-FR', {
-    day: '2-digit', month: 'long', year: 'numeric'
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
   })
 }
 
@@ -310,7 +306,7 @@ function formatSize(bytes: number) {
   background: white;
   border-radius: 16px;
   padding: 24px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
 .moyenne-circle {
@@ -334,7 +330,7 @@ function formatSize(bytes: number) {
 
 .moyenne-label {
   font-size: 11px;
-  color: rgba(255,255,255,0.8);
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .moyenne-title {
@@ -360,7 +356,7 @@ function formatSize(bytes: number) {
   background: white;
   border-radius: 12px;
   padding: 20px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
 .matiere-group-header {
@@ -418,7 +414,9 @@ function formatSize(bytes: number) {
   transition: background 0.2s;
 }
 
-.note-card:hover { background: #eef3f8; }
+.note-card:hover {
+  background: #eef3f8;
+}
 
 .note-devoir {
   font-size: 14px;
@@ -451,14 +449,27 @@ function formatSize(bytes: number) {
   font-weight: 700;
 }
 
-.note-value.tres-bien { color: #10b981; }
-.note-value.bien { color: #3b82f6; }
-.note-value.passable { color: #f59e0b; }
-.note-value.insuffisant { color: #ef4444; }
+.note-value.tres-bien {
+  color: #10b981;
+}
+.note-value.bien {
+  color: #3b82f6;
+}
+.note-value.passable {
+  color: #f59e0b;
+}
+.note-value.insuffisant {
+  color: #ef4444;
+}
 
-.note-sur { font-size: 14px; color: #817f7f; }
+.note-sur {
+  font-size: 14px;
+  color: #817f7f;
+}
 
-.rendu-detail { padding: 8px 0; }
+.rendu-detail {
+  padding: 8px 0;
+}
 
 .detail-meta {
   display: flex;
@@ -468,7 +479,7 @@ function formatSize(bytes: number) {
 }
 
 .meta-badge {
-  background: rgba(32,87,129,0.1);
+  background: rgba(32, 87, 129, 0.1);
   color: #205781;
   padding: 4px 12px;
   border-radius: 20px;
@@ -488,7 +499,10 @@ function formatSize(bytes: number) {
   font-weight: 700;
 }
 
-.note-grande-label { font-size: 24px; color: #817f7f; }
+.note-grande-label {
+  font-size: 24px;
+  color: #817f7f;
+}
 
 .retour-section h4 {
   font-size: 14px;
@@ -527,8 +541,14 @@ function formatSize(bytes: number) {
   transition: background 0.2s;
 }
 
-.fichier-link:hover { background: #eef3f8; }
-.fichier-size { margin-left: auto; color: #817f7f; font-size: 11px; }
+.fichier-link:hover {
+  background: #eef3f8;
+}
+.fichier-size {
+  margin-left: auto;
+  color: #817f7f;
+  font-size: 11px;
+}
 
 .rendu-date {
   font-size: 12px;
@@ -537,13 +557,24 @@ function formatSize(bytes: number) {
 }
 
 @media (max-width: 1024px) {
-  .main-wrapper { margin-left: 80px; }
-  .header-title h1 { font-size: 32px; }
+  .main-wrapper {
+    margin-left: 80px;
+  }
+  .header-title h1 {
+    font-size: 32px;
+  }
 }
 
 @media (max-width: 767px) {
-  .main-wrapper { margin-left: 0; }
-  .notes-header { padding: 16px 12px; padding-left: 60px; }
-  .notes-content { padding: 0 12px 24px; }
+  .main-wrapper {
+    margin-left: 0;
+  }
+  .notes-header {
+    padding: 16px 12px;
+    padding-left: 60px;
+  }
+  .notes-content {
+    padding: 0 12px 24px;
+  }
 }
 </style>

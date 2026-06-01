@@ -8,7 +8,7 @@
     <!-- Contenu principal -->
     <div class="forgot-password-card auth-card">
       <h1 class="title">Mot de passe oublié</h1>
-      
+
       <p class="subtitle">Entrez votre email pour recevoir un lien de réinitialisation</p>
 
       <!-- Formulaire -->

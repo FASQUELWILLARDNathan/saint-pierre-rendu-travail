@@ -206,21 +206,31 @@
             <n-tab-pane name="compose" tab="✏️ Nouveau Message">
               <div class="compose-form">
                 <n-form :model="newMessage">
-                    <n-form-item label="Destinataire(s)">
-                      <n-button @click="showRecipientSelector = true" style="width:100%; justify-content:flex-start">
-                        {{ selectedRecipients.length
-                          ? selectedRecipients.map(u => `${u.prenom} ${u.nom}`).join(', ')
-                          : 'Sélectionner des destinataires...' }}
-                      </n-button>
-                    </n-form-item>
+                  <n-form-item label="Destinataire(s)">
+                    <n-button
+                      @click="showRecipientSelector = true"
+                      style="width: 100%; justify-content: flex-start"
+                    >
+                      {{
+                        selectedRecipients.length
+                          ? selectedRecipients.map((u) => `${u.prenom} ${u.nom}`).join(', ')
+                          : 'Sélectionner des destinataires...'
+                      }}
+                    </n-button>
+                  </n-form-item>
 
-                    <RecipientSelectorModal
-                      v-if="showRecipientSelector"
-                      :users="allUsers"
-                      :eleve-details="allEleveDetails"
-                      @confirm="(users: RawUser[]) => { selectedRecipients = users; newMessage.destinataire_id = users[0]?.id_user }"
-                      @close="showRecipientSelector = false"
-                    />
+                  <RecipientSelectorModal
+                    v-if="showRecipientSelector"
+                    :users="allUsers"
+                    :eleve-details="allEleveDetails"
+                    @confirm="
+                      (users: RawUser[]) => {
+                        selectedRecipients = users
+                        newMessage.destinataire_id = users[0]?.id_user
+                      }
+                    "
+                    @close="showRecipientSelector = false"
+                  />
 
                   <n-form-item label="Sujet">
                     <n-input

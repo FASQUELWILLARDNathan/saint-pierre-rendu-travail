@@ -37,66 +37,66 @@ const categories = computed(() => {
   if (allMatieresBDD.value.length === 0) return []
 
   if (user.role === 'professeur') {
-  const result: any[] = []
+    const result: any[] = []
 
-  // Matière principale
-  if (user.professeur?.matiere) {
-    const nom = user.professeur.matiere
-    const found = allMatieresBDD.value.find(
-      (m: any) => m.nom_matiere.toLowerCase() === nom.toLowerCase()
-    )
-    if (found) {
+    // Matière principale
+    if (user.professeur?.matiere) {
+      const nom = user.professeur.matiere
+      const found = allMatieresBDD.value.find(
+        (m: any) => m.nom_matiere.toLowerCase() === nom.toLowerCase(),
+      )
+      if (found) {
+        result.push({
+          id: found.id_matiere,
+          nom,
+          icon: found.icon_url ?? '/others-icon.svg',
+          color: found.couleur ?? '#888',
+          devoirIcon: found.devoir_icon_url ?? '/other-devoir-icon.svg',
+          cardType: 'matiere',
+          categoryType: 'matiere',
+          categoryName: nom,
+        })
+      }
+    }
+
+    // Spécialités — on utilise l'id_specialite du prof
+    user.professeur?.specialites_enseignees?.forEach((s) => {
+      const nom = s.specialite.nom_specialite
+      const found = allMatieresBDD.value.find(
+        (m: any) => m.nom_matiere.toLowerCase() === nom.toLowerCase(),
+      )
       result.push({
-        id: found.id_matiere,
+        id: s.specialite.id_specialite,
         nom,
-        icon: found.icon_url ?? '/others-icon.svg',
-        color: found.couleur ?? '#888',
-        devoirIcon: found.devoir_icon_url ?? '/other-devoir-icon.svg',
-        cardType: 'matiere',
-        categoryType: 'matiere',
+        icon: found?.icon_url ?? '/others-icon.svg',
+        color: found?.couleur ?? '#888',
+        devoirIcon: found?.devoir_icon_url ?? '/other-devoir-icon.svg',
+        cardType: 'specialite',
+        categoryType: 'specialite',
         categoryName: nom,
       })
-    }
+    })
+
+    // Options
+    user.professeur?.options_enseignees?.forEach((o) => {
+      const nom = o.option.nom_option
+      const found = allMatieresBDD.value.find(
+        (m: any) => m.nom_matiere.toLowerCase() === nom.toLowerCase(),
+      )
+      result.push({
+        id: o.option.id_option,
+        nom,
+        icon: found?.icon_url ?? '/others-icon.svg',
+        color: found?.couleur ?? '#888',
+        devoirIcon: found?.devoir_icon_url ?? '/other-devoir-icon.svg',
+        cardType: 'option',
+        categoryType: 'option',
+        categoryName: nom,
+      })
+    })
+
+    return result
   }
-
-  // Spécialités — on utilise l'id_specialite du prof
-  user.professeur?.specialites_enseignees?.forEach((s) => {
-    const nom = s.specialite.nom_specialite
-    const found = allMatieresBDD.value.find(
-      (m: any) => m.nom_matiere.toLowerCase() === nom.toLowerCase()
-    )
-    result.push({
-      id: s.specialite.id_specialite,
-      nom,
-      icon: found?.icon_url ?? '/others-icon.svg',
-      color: found?.couleur ?? '#888',
-      devoirIcon: found?.devoir_icon_url ?? '/other-devoir-icon.svg',
-      cardType: 'specialite',
-      categoryType: 'specialite',
-      categoryName: nom,
-    })
-  })
-
-  // Options
-  user.professeur?.options_enseignees?.forEach((o) => {
-    const nom = o.option.nom_option
-    const found = allMatieresBDD.value.find(
-      (m: any) => m.nom_matiere.toLowerCase() === nom.toLowerCase()
-    )
-    result.push({
-      id: o.option.id_option,
-      nom,
-      icon: found?.icon_url ?? '/others-icon.svg',
-      color: found?.couleur ?? '#888',
-      devoirIcon: found?.devoir_icon_url ?? '/other-devoir-icon.svg',
-      cardType: 'option',
-      categoryType: 'option',
-      categoryName: nom,
-    })
-  })
-
-  return result
-}
 
   if (user.role === 'eleve') {
     const classe = user.eleve?.classe as any

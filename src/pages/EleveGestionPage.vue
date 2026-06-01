@@ -56,9 +56,9 @@
             </div>
           </n-card>
 
-          <div 
-            v-if="selectedClasseEleves.length > 0 || isCreatingNew" 
-            class="eleves-section" 
+          <div
+            v-if="selectedClasseEleves.length > 0 || isCreatingNew"
+            class="eleves-section"
             :class="{ 'full-width': selectedClasseEleves.length === 0 }"
           >
             <n-card v-if="selectedClasseEleves.length > 0" class="eleves-list-card">
@@ -134,7 +134,9 @@
                         type="button"
                         class="password-toggle"
                         @click="showPassword = !showPassword"
-                        :aria-label="showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'"
+                        :aria-label="
+                          showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'
+                        "
                       >
                         <img
                           v-if="!showPassword"
@@ -151,9 +153,7 @@
                       </button>
                     </div>
 
-                    <n-button @click="onGeneratePassword" secondary>
-                      Générer
-                    </n-button>
+                    <n-button @click="onGeneratePassword" secondary> Générer </n-button>
                   </div>
                 </n-form-item>
 
@@ -263,14 +263,9 @@
           <n-empty v-else description="Aucun élève créé" />
         </div>
 
-        <n-button @click="exportCSV" secondary>
-          Export CSV
-        </n-button>
+        <n-button @click="exportCSV" secondary> Export CSV </n-button>
 
-        <n-button @click="exportXLSX" type="primary" secondary>
-          Export XLSX
-        </n-button>
-
+        <n-button @click="exportXLSX" type="primary" secondary> Export XLSX </n-button>
       </n-modal>
     </div>
   </div>
@@ -419,7 +414,9 @@ const specialitesOptions = computed(() => {
 // elle sort de "classesWithEleves". On remet alors selectedClasseId à null.
 watch(classesWithEleves, (newClasses) => {
   if (selectedClasseId.value) {
-    const stillExists = newClasses.some((c) => String(c.id_classe) === String(selectedClasseId.value))
+    const stillExists = newClasses.some(
+      (c) => String(c.id_classe) === String(selectedClasseId.value),
+    )
     if (!stillExists) {
       selectedClasseId.value = null
     }
@@ -465,7 +462,7 @@ function exportXLSX() {
     Prenom: e.prenom,
     Email: e.email,
     Login: e.login,
-    'Mot de passe': e.password
+    'Mot de passe': e.password,
   }))
 
   const worksheet = XLSX.utils.json_to_sheet(data)
@@ -480,7 +477,7 @@ function exportCSV() {
     Prenom: e.prenom,
     Email: e.email,
     Login: e.login,
-    'Mot de passe': e.password
+    'Mot de passe': e.password,
   }))
 
   const worksheet = XLSX.utils.json_to_sheet(data)
@@ -506,9 +503,7 @@ function selectEleve(index: number) {
 }
 
 async function testPromotion() {
-  const confirm = window.confirm(
-    'Test promotion : les terminales seront supprimées. Continuer ?',
-  )
+  const confirm = window.confirm('Test promotion : les terminales seront supprimées. Continuer ?')
 
   if (!confirm) return
 
@@ -673,8 +668,7 @@ async function saveEleve() {
           .toLowerCase()
           .normalize('NFD')
           .replace(/[\u0300-\u036f]/g, '')
-          .replace(/[^a-z.]/g, '') +
-        '@cs-saintpierrecalais.fr'
+          .replace(/[^a-z.]/g, '') + '@cs-saintpierrecalais.fr'
       )
     }
     if (isCreatingNew.value) {
@@ -751,7 +745,8 @@ function generateSecurePassword(): string {
   const specialChars = '!@#$%^&*()-_=+[]{}?:;'
   const allChars = lowercase + uppercase + digits + specialChars
 
-  const cryptoObj: Crypto | undefined = typeof window !== 'undefined' ? window.crypto : (globalThis as any).crypto
+  const cryptoObj: Crypto | undefined =
+    typeof window !== 'undefined' ? window.crypto : (globalThis as any).crypto
 
   const getRandomChar = (pool: string): string => {
     // Changement ici : on teste directement l'objet, TS comprend qu'il n'est plus undefined
@@ -786,7 +781,7 @@ function generateSecurePassword(): string {
     } else {
       j = Math.floor(Math.random() * (i + 1))
     }
-    
+
     const temp = passwordArr[i]!
     passwordArr[i] = passwordArr[j]!
     passwordArr[j] = temp

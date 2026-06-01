@@ -29,15 +29,15 @@ export interface User {
     matiere?: string
     classes_enseignees?: { classe: Classe }[]
     specialites_enseignees?: {
-      specialite: { 
-        id_specialite: string | number,
-        nom_specialite: string 
+      specialite: {
+        id_specialite: string | number
+        nom_specialite: string
       }
     }[]
     options_enseignees?: {
-      option: { 
-        id_option: string | number,
-        nom_option: string 
+      option: {
+        id_option: string | number
+        nom_option: string
       }
     }[]
   }

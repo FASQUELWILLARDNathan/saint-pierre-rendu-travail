@@ -63,7 +63,7 @@
           >
         </div>
 
-      <!-- Bouton se connecter -->
+        <!-- Bouton se connecter -->
         <button type="submit" class="submit-btn" :disabled="isLoading">Se connecter</button>
       </form>
 
@@ -119,7 +119,6 @@ const handleSignIn = async () => {
 
 <style scoped>
 @import '@/styles/auth-forms.css';
-
 
 .login-card {
   max-width: 650px;

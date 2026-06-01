@@ -46,7 +46,11 @@
               <label class="filter-label">Classe</label>
               <select v-model="selectedClasse" class="filter-select">
                 <option value="">Toutes les classes</option>
-                <option v-for="c in availableClasses" :key="c.id_classe" :value="String(c.id_classe)">
+                <option
+                  v-for="c in availableClasses"
+                  :key="c.id_classe"
+                  :value="String(c.id_classe)"
+                >
                   {{ c.nom_classe }}
                 </option>
               </select>
@@ -56,7 +60,11 @@
               <label class="filter-label">Spécialité</label>
               <select v-model="selectedSpe" class="filter-select">
                 <option value="">Toutes les spécialités</option>
-                <option v-for="s in availableSpecialites" :key="s.id_specialite" :value="String(s.id_specialite)">
+                <option
+                  v-for="s in availableSpecialites"
+                  :key="s.id_specialite"
+                  :value="String(s.id_specialite)"
+                >
                   {{ s.nom_specialite }}
                 </option>
               </select>
@@ -66,7 +74,11 @@
               <label class="filter-label">Option</label>
               <select v-model="selectedOption" class="filter-select">
                 <option value="">Toutes les options</option>
-                <option v-for="o in availableOptions" :key="o.id_option" :value="String(o.id_option)">
+                <option
+                  v-for="o in availableOptions"
+                  :key="o.id_option"
+                  :value="String(o.id_option)"
+                >
                   {{ o.nom_option }}
                 </option>
               </select>
@@ -106,9 +118,7 @@
 
         <!-- Users list -->
         <div class="users-list">
-          <div v-if="filteredUsers.length === 0" class="empty-state">
-            Aucun utilisateur trouvé
-          </div>
+          <div v-if="filteredUsers.length === 0" class="empty-state">Aucun utilisateur trouvé</div>
 
           <div
             v-for="user in filteredUsers"
@@ -135,7 +145,9 @@
 
         <!-- Selected chips -->
         <div v-if="selectedUsers.length > 0" class="selected-section">
-          <label class="filter-label">Destinataires sélectionnés ({{ selectedUsers.length }})</label>
+          <label class="filter-label"
+            >Destinataires sélectionnés ({{ selectedUsers.length }})</label
+          >
           <div class="chips-container">
             <div v-for="user in selectedUsers" :key="user.id_user" class="chip">
               <span>{{ user.prenom }} {{ user.nom }}</span>
@@ -148,11 +160,7 @@
       <!-- Footer -->
       <div class="modal-footer">
         <n-button quaternary @click="$emit('close')">Annuler</n-button>
-        <n-button
-          type="primary"
-          :disabled="selectedUsers.length === 0"
-          @click="confirm"
-        >
+        <n-button type="primary" :disabled="selectedUsers.length === 0" @click="confirm">
           Confirmer
           <template v-if="selectedUsers.length > 0"> ({{ selectedUsers.length }})</template>
         </n-button>
@@ -217,10 +225,10 @@ const searchQuery = ref('')
 const selectedUsers = ref<RawUser[]>([])
 
 const roles: Array<{ value: RoleFilter; label: string; icon: string }> = [
-  { value: 'all',           label: 'Tous',           icon: '👤' },
-  { value: 'administrateur',label: 'Administration',  icon: '🏫' },
-  { value: 'professeur',    label: 'Professeurs',     icon: '📚' },
-  { value: 'eleve',         label: 'Élèves',          icon: '🎓' },
+  { value: 'all', label: 'Tous', icon: '👤' },
+  { value: 'administrateur', label: 'Administration', icon: '🏫' },
+  { value: 'professeur', label: 'Professeurs', icon: '📚' },
+  { value: 'eleve', label: 'Élèves', icon: '🎓' },
 ]
 
 // ─── Computed: options de filtres ─────────────────────────
@@ -296,7 +304,8 @@ const filteredUsers = computed<RawUser[]>(() => {
     // Spécialité (élèves)
     if (selectedSpe.value) {
       const detail = (props.eleveDetails ?? []).find((e) => String(e.id_user) === String(u.id_user))
-      if (!detail?.specialites.some((s) => String(s.id_specialite) === selectedSpe.value)) return false
+      if (!detail?.specialites.some((s) => String(s.id_specialite) === selectedSpe.value))
+        return false
     }
 
     // Option (élèves)
@@ -321,9 +330,8 @@ const filteredUsers = computed<RawUser[]>(() => {
   })
 })
 
-const allFilteredSelected = computed(() =>
-  filteredUsers.value.length > 0 &&
-  filteredUsers.value.every((u) => isSelected(u)),
+const allFilteredSelected = computed(
+  () => filteredUsers.value.length > 0 && filteredUsers.value.every((u) => isSelected(u)),
 )
 
 // ─── Methods ──────────────────────────────────────────────
@@ -342,9 +350,7 @@ function isSelected(user: RawUser) {
 }
 
 function toggleUser(user: RawUser) {
-  const idx = selectedUsers.value.findIndex(
-    (u) => String(u.id_user) === String(user.id_user),
-  )
+  const idx = selectedUsers.value.findIndex((u) => String(u.id_user) === String(user.id_user))
   if (idx >= 0) selectedUsers.value.splice(idx, 1)
   else selectedUsers.value.push(user)
 }
@@ -354,7 +360,9 @@ function toggleSelectAll() {
     const ids = new Set(filteredUsers.value.map((u) => String(u.id_user)))
     selectedUsers.value = selectedUsers.value.filter((u) => !ids.has(String(u.id_user)))
   } else {
-    filteredUsers.value.forEach((u) => { if (!isSelected(u)) selectedUsers.value.push(u) })
+    filteredUsers.value.forEach((u) => {
+      if (!isSelected(u)) selectedUsers.value.push(u)
+    })
   }
 }
 
@@ -405,7 +413,9 @@ function getUserMeta(user: RawUser): string {
   max-height: 90vh;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.2), 0 4px 16px rgba(0,0,0,0.1);
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.2),
+    0 4px 16px rgba(0, 0, 0, 0.1);
   overflow: hidden;
 }
 
@@ -424,7 +434,9 @@ function getUserMeta(user: RawUser): string {
   gap: 12px;
 }
 
-.header-icon { font-size: 24px; }
+.header-icon {
+  font-size: 24px;
+}
 
 .modal-header h2 {
   font-size: 17px;
@@ -450,7 +462,10 @@ function getUserMeta(user: RawUser): string {
   line-height: 1;
   transition: all 0.15s;
 }
-.close-btn:hover { background: #f5f7fa; color: #205781; }
+.close-btn:hover {
+  background: #f5f7fa;
+  color: #205781;
+}
 
 .modal-body {
   padding: 20px 24px;
@@ -471,7 +486,11 @@ function getUserMeta(user: RawUser): string {
   margin-bottom: 8px;
 }
 
-.role-pills { display: flex; gap: 8px; flex-wrap: wrap; }
+.role-pills {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
 
 .role-pill {
   padding: 7px 14px;
@@ -484,16 +503,42 @@ function getUserMeta(user: RawUser): string {
   transition: all 0.15s;
   font-weight: 500;
 }
-.role-pill:hover { border-color: #205781; color: #205781; }
+.role-pill:hover {
+  border-color: #205781;
+  color: #205781;
+}
 
-.pill-all.active           { background: #f0f8ff; border-color: #205781; color: #205781; }
-.pill-administrateur.active { background: #fff3f0; border-color: #e05c30; color: #c94a20; }
-.pill-professeur.active    { background: #f0faf5; border-color: #2d9e6b; color: #1e7a50; }
-.pill-eleve.active         { background: #eef5ff; border-color: #3b82c4; color: #2563a8; }
+.pill-all.active {
+  background: #f0f8ff;
+  border-color: #205781;
+  color: #205781;
+}
+.pill-administrateur.active {
+  background: #fff3f0;
+  border-color: #e05c30;
+  color: #c94a20;
+}
+.pill-professeur.active {
+  background: #f0faf5;
+  border-color: #2d9e6b;
+  color: #1e7a50;
+}
+.pill-eleve.active {
+  background: #eef5ff;
+  border-color: #3b82c4;
+  color: #2563a8;
+}
 
-.sub-filters { display: flex; gap: 12px; flex-wrap: wrap; }
+.sub-filters {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
 
-.filter-group { flex: 1; min-width: 160px; }
+.filter-group {
+  flex: 1;
+  min-width: 160px;
+}
 
 .filter-select {
   width: 100%;
@@ -511,16 +556,23 @@ function getUserMeta(user: RawUser): string {
   background-repeat: no-repeat;
   background-position: right 10px center;
 }
-.filter-select:focus { border-color: #205781; }
+.filter-select:focus {
+  border-color: #205781;
+}
 
 .slide-down-enter-active,
 .slide-down-leave-active {
-  transition: max-height 0.25s ease, opacity 0.2s ease;
+  transition:
+    max-height 0.25s ease,
+    opacity 0.2s ease;
   overflow: hidden;
   max-height: 120px;
 }
 .slide-down-enter-from,
-.slide-down-leave-to { max-height: 0; opacity: 0; }
+.slide-down-leave-to {
+  max-height: 0;
+  opacity: 0;
+}
 
 .search-wrapper {
   display: flex;
@@ -532,9 +584,15 @@ function getUserMeta(user: RawUser): string {
   background: #fafafa;
   transition: border-color 0.15s;
 }
-.search-wrapper:focus-within { border-color: #205781; background: white; }
+.search-wrapper:focus-within {
+  border-color: #205781;
+  background: white;
+}
 
-.search-icon { font-size: 14px; flex-shrink: 0; }
+.search-icon {
+  font-size: 14px;
+  flex-shrink: 0;
+}
 
 .search-input {
   border: none;
@@ -544,7 +602,9 @@ function getUserMeta(user: RawUser): string {
   color: #333;
   width: 100%;
 }
-.search-input::placeholder { color: #bbb; }
+.search-input::placeholder {
+  color: #bbb;
+}
 
 .search-clear {
   background: none;
@@ -556,11 +616,20 @@ function getUserMeta(user: RawUser): string {
   line-height: 1;
   flex-shrink: 0;
 }
-.search-clear:hover { color: #666; }
+.search-clear:hover {
+  color: #666;
+}
 
-.results-header { display: flex; justify-content: space-between; align-items: center; }
+.results-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
 
-.results-count { font-size: 12px; color: #817f7f; }
+.results-count {
+  font-size: 12px;
+  color: #817f7f;
+}
 
 .select-all-btn {
   font-size: 12px;
@@ -599,9 +668,15 @@ function getUserMeta(user: RawUser): string {
   transition: background 0.12s;
   border-bottom: 1px solid #f8f8f8;
 }
-.user-row:last-child { border-bottom: none; }
-.user-row:hover { background: #f8fbff; }
-.user-row.selected { background: #f0f6ff; }
+.user-row:last-child {
+  border-bottom: none;
+}
+.user-row:hover {
+  background: #f8fbff;
+}
+.user-row.selected {
+  background: #f0f6ff;
+}
 
 .user-checkbox {
   width: 18px;
@@ -617,7 +692,11 @@ function getUserMeta(user: RawUser): string {
   transition: all 0.12s;
   background: white;
 }
-.user-checkbox.checked { background: #205781; border-color: #205781; color: white; }
+.user-checkbox.checked {
+  background: #205781;
+  border-color: #205781;
+  color: white;
+}
 
 .user-avatar {
   width: 34px;
@@ -630,9 +709,18 @@ function getUserMeta(user: RawUser): string {
   font-weight: 600;
   flex-shrink: 0;
 }
-.avatar-administrateur { background: #fff3f0; color: #c94a20; }
-.avatar-professeur     { background: #f0faf5; color: #1e7a50; }
-.avatar-eleve          { background: #eef5ff; color: #2563a8; }
+.avatar-administrateur {
+  background: #fff3f0;
+  color: #c94a20;
+}
+.avatar-professeur {
+  background: #f0faf5;
+  color: #1e7a50;
+}
+.avatar-eleve {
+  background: #eef5ff;
+  color: #2563a8;
+}
 
 .user-info {
   flex: 1;
@@ -666,9 +754,18 @@ function getUserMeta(user: RawUser): string {
   font-weight: 600;
   flex-shrink: 0;
 }
-.badge-administrateur { background: #fff3f0; color: #c94a20; }
-.badge-professeur     { background: #f0faf5; color: #1e7a50; }
-.badge-eleve          { background: #eef5ff; color: #2563a8; }
+.badge-administrateur {
+  background: #fff3f0;
+  color: #c94a20;
+}
+.badge-professeur {
+  background: #f0faf5;
+  color: #1e7a50;
+}
+.badge-eleve {
+  background: #eef5ff;
+  color: #2563a8;
+}
 
 .selected-section {
   border-top: 1px solid #f0f0f0;
@@ -712,7 +809,9 @@ function getUserMeta(user: RawUser): string {
   opacity: 0.6;
   transition: opacity 0.1s;
 }
-.chip-remove:hover { opacity: 1; }
+.chip-remove:hover {
+  opacity: 1;
+}
 
 .modal-footer {
   padding: 16px 24px;
@@ -724,15 +823,30 @@ function getUserMeta(user: RawUser): string {
 }
 
 .users-list::-webkit-scrollbar,
-.modal-body::-webkit-scrollbar { width: 4px; }
+.modal-body::-webkit-scrollbar {
+  width: 4px;
+}
 .users-list::-webkit-scrollbar-track,
-.modal-body::-webkit-scrollbar-track { background: transparent; }
+.modal-body::-webkit-scrollbar-track {
+  background: transparent;
+}
 .users-list::-webkit-scrollbar-thumb,
-.modal-body::-webkit-scrollbar-thumb { background: #ddd; border-radius: 4px; }
+.modal-body::-webkit-scrollbar-thumb {
+  background: #ddd;
+  border-radius: 4px;
+}
 
 @media (max-width: 640px) {
-  .modal-overlay { align-items: flex-end; padding: 0; }
-  .modal-container { border-radius: 16px 16px 0 0; max-height: 92vh; }
-  .sub-filters { flex-direction: column; }
+  .modal-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+  .modal-container {
+    border-radius: 16px 16px 0 0;
+    max-height: 92vh;
+  }
+  .sub-filters {
+    flex-direction: column;
+  }
 }
 </style>

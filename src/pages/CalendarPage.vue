@@ -44,11 +44,7 @@
           <!-- Events for selected date -->
           <div v-if="upcomingEvents.length > 0" class="events-panel">
             <div class="events-list">
-              <div
-                v-for="event in upcomingEvents"
-                :key="String(event.id)"
-                class="event-item"
-              >
+              <div v-for="event in upcomingEvents" :key="String(event.id)" class="event-item">
                 <div
                   class="event-icon"
                   :style="{
@@ -175,12 +171,10 @@ onMounted(async () => {
       const eventDate = parseEventDate(event.date)
       return eventDate >= now
     })
-
   } catch (error) {
     console.error('Error loading calendar data:', error)
   }
 })
-
 
 const userMenuOptions = computed(() => {
   const options: any[] = [
@@ -306,7 +300,7 @@ const calendarAttributes = computed(() => {
       class: 'event-dot',
     }))
 
-   const firstEventTypeColor = getTypeColor(dateEvents[0]?.type ?? '')
+    const firstEventTypeColor = getTypeColor(dateEvents[0]?.type ?? '')
 
     attrs.push({
       key: dateStr,
@@ -326,8 +320,6 @@ const calendarAttributes = computed(() => {
   return attrs
 })
 
-
-
 // Events for selected date
 const upcomingEvents = computed(() => {
   const now = new Date()
@@ -337,8 +329,6 @@ const upcomingEvents = computed(() => {
     return eventDate >= now
   })
 })
-
-
 
 // Format date for display
 const formatDate = (date: Date): string => {
