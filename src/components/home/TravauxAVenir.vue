@@ -22,20 +22,38 @@
 
     <!-- Events list -->
     <div v-else class="travaux-coming">
-      <div v-for="event in events" :key="String(event.id)" class="event-card">
+      <div v-for="event in events.slice(0, 3)" :key="String(event.id)" class="event-card">
         <div
           class="event-icon"
           :style="{
-            backgroundColor: hexToRgba(event.matiereColor, 0.5),
+            backgroundColor: hexToRgba(getMatiereColorAndIcon(event.matiere).color, 0.5),
           }"
         >
-          <img :src="event.matiereIcon" :alt="event.matiere" class="icon-img" />
+          <img
+            :src="getMatiereColorAndIcon(event.matiere).icon"
+            :alt="event.matiere"
+            class="icon-img"
+          />
         </div>
         <div class="event-info">
-          <h4 class="event-titre">{{ event.titre }}</h4>
+          <div class="event-header">
+            <h4 class="event-titre">{{ event.titre }}</h4>
+            <span
+              class="event-type-dot"
+              :style="{
+                backgroundColor: getTypeColor(event.type),
+              }"
+              :title="event.type"
+            />
+          </div>
           <p class="event-date">{{ event.date }}</p>
         </div>
       </div>
+
+      <!-- Voir plus button -->
+      <router-link v-if="events.length > 3" to="/calendrier" class="see-more-btn">
+        Voir plus →
+      </router-link>
     </div>
   </div>
 </template>
@@ -61,11 +79,45 @@ const api = useApi()
 const events = ref<Evenement[]>([])
 const isLoading = ref(true)
 const error = ref<string | null>(null)
+const allMatieres = ref<any[]>([])
+
+// Type color map
+const typeColorMap: Record<string, string> = {
+  Interrogation: '#1E88E5',
+  DS: '#F97316',
+  EXAMUN: '#EF4444',
+}
+
+// Get color for event type
+const getTypeColor = (type: string): string => {
+  return typeColorMap[type] || '#70BEFA'
+}
+
+// Find matiere color and icon by name (with category mapping)
+const getMatiereColorAndIcon = (matiereNom: string): { color: string; icon: string } => {
+  if (!allMatieres.value || allMatieres.value.length === 0) {
+    return { color: '#888', icon: '/others-icon.svg' }
+  }
+
+  const found = allMatieres.value.find(
+    (m: any) => m.nom_matiere.toLowerCase() === matiereNom.toLowerCase(),
+  )
+
+  if (found) {
+    return {
+      color: found.couleur ?? '#888',
+      icon: found.icon_url ?? '/others-icon.svg',
+    }
+  }
+
+  return { color: '#888', icon: '/others-icon.svg' }
+}
 
 onMounted(async () => {
   try {
     isLoading.value = true
     error.value = null
+    allMatieres.value = (await api.getAllMatieres()) as any
     events.value = (await api.getEvenementsAVenir()) as Evenement[]
   } catch (err) {
     error.value = 'Impossible de charger les événements. Veuillez réessayer.'
@@ -179,18 +231,53 @@ onMounted(async () => {
   min-width: 0;
 }
 
+.event-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
 .event-titre {
   font-size: 14px;
   font-weight: 600;
   color: #1a1a1a;
-  margin: 0 0 4px 0;
+  margin: 0;
   word-break: break-word;
+  flex: 1;
+}
+
+.event-type-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 
 .event-date {
   font-size: 12px;
   color: #666;
   margin: 0;
+}
+
+.see-more-btn {
+  display: block;
+  text-align: center;
+  padding: 12px 16px;
+  margin-top: 8px;
+  color: #4f959d;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+}
+
+.see-more-btn:hover {
+  text-decoration: underline;
+  background: rgba(32, 87, 129, 0.05);
 }
 
 /* Tablette 768px-1024px */

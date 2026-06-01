@@ -3,6 +3,7 @@ import { createRouter, createWebHistory, type RouteLocationNormalized } from 'vu
 import LoginPage from './pages/LoginPage.vue'
 import RegisterPage from './pages/RegisterPage.vue'
 import HomePage from './pages/HomePage.vue'
+import CalendarPage from './pages/CalendarPage.vue'
 import ForgotPasswordPage from './pages/ForgotPasswordPage.vue'
 import ResetPasswordPage from './pages/ResetPasswordPage.vue'
 import ProfilePage from './pages/ProfilPage.vue'
@@ -23,6 +24,7 @@ export const ROUTES = {
   FORGOT_PASSWORD: '/forgot-password',
   RESET_PASSWORD: '/reset-password',
   PROFILE: '/profil',
+  CALENDAR: '/calendrier',
   ELEVE_GESTION: '/gestion-eleves',
   CLASSES: '/classes',
   MESSAGERIE: '/messagerie',
@@ -37,6 +39,11 @@ const routes = [
   {
     path: ROUTES.HOME,
     component: HomePage,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: ROUTES.CALENDAR,
+    component: CalendarPage,
     meta: { requiresAuth: true },
   },
   {
