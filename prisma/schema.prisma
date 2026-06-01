@@ -266,17 +266,13 @@ model piece_jointe_rendu {
 
 model piece_jointe_devoir {
   id_piece_jointe_devoir BigInt   @id @default(autoincrement())
-
   nom_fichier     String
   chemin_fichier  String
   type_fichier    String
   taille_octets   BigInt
-
   id_devoir BigInt
   devoir    devoir @relation(fields: [id_devoir], references: [id_devoir], onDelete: Cascade)
-
   created_at DateTime @default(now())
-
   @@index([id_devoir])
 }
 

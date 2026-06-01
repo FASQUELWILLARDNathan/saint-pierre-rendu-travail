@@ -16,6 +16,7 @@ import rendusRoutes from './routes/rendus.ts'
 import importRoutes from './routes/import.ts'
 import { cleanupRendusFolder } from './services/cleanup-rendus.ts'
 import { cleanupDevoirsFolder } from './services/cleanup-devoirs.ts'
+import { cleanupCoursFolder } from './services/cleanup-cours.ts'
 import path from 'path'
 
 const app = express()
@@ -74,6 +75,7 @@ const server = app.listen(PORT, () => {
   startCronJobs()
   cleanupRendusFolder()
   cleanupDevoirsFolder()
+  cleanupCoursFolder()
 })
 
 // Shutdown

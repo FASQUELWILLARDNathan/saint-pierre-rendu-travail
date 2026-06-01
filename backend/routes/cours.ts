@@ -11,7 +11,7 @@ const uploadDir = '/app/public/cours'
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true })
 
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, uploadDir),
+  destination: (req, file, cb) => cb(null, uploadDir),  
   filename: (req, file, cb) => {
     const unique = `${Date.now()}-${Math.round(Math.random() * 1e9)}`
     cb(null, `${unique}-${file.originalname}`)
@@ -181,8 +181,8 @@ router.post('/', authenticateToken, upload.array('fichiers', 10), async (req, re
       await prisma.ressource_cours.createMany({
         data: files.map((f) => ({
           id_cours: cours.id_cours,
-          nom_fichier: f.originalname,
-          chemin_fichier: `/cours/${f.filename}`,
+          nom_fichier: f.originalname.slice(0, 254),
+          chemin_fichier: `/cours/${f.filename}`.slice(0, 255),
           type_fichier: f.mimetype,
           taille_octets: BigInt(f.size),
         })),

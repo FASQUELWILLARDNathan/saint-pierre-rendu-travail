@@ -66,8 +66,8 @@ router.post('/', authenticateToken, upload.array('fichiers', 10), async (req, re
       await prisma.piece_jointe_rendu.createMany({
         data: files.map((f) => ({
           id_rendu: rendu.id_rendu,
-          nom_fichier: f.originalname,
-          chemin_fichier: `/rendus/${f.filename}`,
+          nom_fichier: f.originalname.slice(0, 254),
+          chemin_fichier: `/rendus/${f.filename}`.slice(0, 255),
           type_fichier: f.mimetype,
           taille_octets: BigInt(f.size),
         })),
