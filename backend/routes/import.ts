@@ -7,7 +7,7 @@ import bcrypt from 'bcrypt'
 import fs from 'fs'
 
 const router = Router()
-const upload = multer({ dest: '/tmp/imports/' })
+const upload = multer({ storage: multer.memoryStorage() })
 
 // Colonnes selon le niveau
 // 2de  : LVA(3) LVB(4) opt(5..10) Int1(11) Int2(12)
@@ -71,7 +71,12 @@ router.post('/eleves', authenticateToken, upload.single('fichier'), async (req, 
       return res.status(400).json({ error: 'Fichier manquant' })
     }
 
-    const workbook = XLSX.readFile(req.file.path)
+    if (!req.file.buffer) {
+      return res.status(400).json({ error: 'Le contenu du fichier est vide ou corrompu' })
+    }
+    // Convertir le Buffer en Uint8Array pour XLSX
+    const bufferUint8 = new Uint8Array(req.file.buffer)
+    const workbook = XLSX.read(bufferUint8, { type: 'array' })
     const results: any[] = []
     const errors: any[] = []
 
@@ -139,7 +144,6 @@ router.post('/eleves', authenticateToken, upload.single('fichier'), async (req, 
       }
     }
 
-    fs.unlinkSync(req.file.path)
     const download =
       String(req.query.download ?? '') === '1' || String(req.query.download ?? '') === 'true'
 
