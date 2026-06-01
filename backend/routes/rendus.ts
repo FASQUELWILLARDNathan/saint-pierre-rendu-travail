@@ -219,15 +219,11 @@ router.get('/mes-notes', authenticateToken, async (req, res) => {
                 specialite: {
                   select: {
                     nom_specialite: true,
-                    couleur: true,
-                    icon_url: true,
                   },
                 },
                 option: {
                   select: {
                     nom_option: true,
-                    couleur: true,
-                    icon_url: true,
                   },
                 },
               },
