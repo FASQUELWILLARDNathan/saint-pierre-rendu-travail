@@ -1,72 +1,75 @@
 import express from 'express'
 import { prisma } from '../config.ts'
 import bcrypt from 'bcrypt'
+import { authenticateToken } from '../middleware/auth.ts'
+import { authorizeRole } from '../middleware/role.ts'
 
 const router = express.Router()
 
 // GET /api/users/eleves/list - Get all eleves with their data (MUST BE BEFORE /:id)
-router.get('/eleves/list', async (req: express.Request, res: express.Response) => {
-  try {
-    const users = await prisma.utilisateur.findMany({
-      where: { role: 'eleve' },
-      select: {
-        id_user: true,
-        nom: true,
-        prenom: true,
-        email: true,
-        eleve: {
-          select: {
-            id_classe: true,
-            annee: true,
-            specialites: {
-              select: {
-                specialite: {
-                  select: {
-                    id_specialite: true,
-                    nom_specialite: true,
+router.get('/eleves/list', authenticateToken, authorizeRole('administrateur', 'professeur'), async (req: express.Request, res: express.Response) => {
+    try {
+      const users = await prisma.utilisateur.findMany({
+        where: { role: 'eleve' },
+        select: {
+          id_user: true,
+          nom: true,
+          prenom: true,
+          email: true,
+          eleve: {
+            select: {
+              id_classe: true,
+              annee: true,
+              specialites: {
+                select: {
+                  specialite: {
+                    select: {
+                      id_specialite: true,
+                      nom_specialite: true,
+                    },
                   },
                 },
               },
-            },
-            options: {
-              select: {
-                option: {
-                  select: {
-                    id_option: true,
-                    nom_option: true,
+              options: {
+                select: {
+                  option: {
+                    select: {
+                      id_option: true,
+                      nom_option: true,
+                    },
                   },
                 },
               },
             },
           },
         },
-      },
-      orderBy: {
-        nom: 'asc',
-      },
-    })
+        orderBy: {
+          nom: 'asc',
+        },
+      })
 
-    // Format the response
-    const formattedUsers = users.map((user) => ({
-      id_user: user.id_user.toString(),
-      nom: user.nom,
-      prenom: user.prenom,
-      email: user.email,
-      id_classe: user.eleve?.id_classe?.toString() || null,
-      annee: user.eleve?.annee || null,
-      specialites: user.eleve?.specialites.map((s) => s.specialite) || [],
-      options: user.eleve?.options.map((o) => o.option) || [],
-    }))
+      // Format the response
+      const formattedUsers = users.map((user) => ({
+        id_user: user.id_user.toString(),
+        nom: user.nom,
+        prenom: user.prenom,
+        email: user.email,
+        id_classe: user.eleve?.id_classe?.toString() || null,
+        annee: user.eleve?.annee || null,
+        specialites: user.eleve?.specialites.map((s) => s.specialite) || [],
+        options: user.eleve?.options.map((o) => o.option) || [],
+      }))
 
-    res.json(formattedUsers)
-  } catch (error) {
-    console.error('Erreur lors de la récupération des élèves:', error)
-    res.status(500).json({ error: 'Erreur serveur' })
-  }
-})
+      res.json(formattedUsers)
+    } catch (error) {
+      console.error('Erreur lors de la récupération des élèves:', error)
+      res.status(500).json({ error: 'Erreur serveur' })
+    }
+  },
+)
 
 // Recupere tous les utilisateurs
-router.get('/', async (req: express.Request, res: express.Response) => {
+router.get('/', authenticateToken, authorizeRole('administrateur'), async (req: express.Request, res: express.Response) => {
   try {
     const users = await prisma.utilisateur.findMany({
       select: {
@@ -108,53 +111,54 @@ router.get('/', async (req: express.Request, res: express.Response) => {
 })
 
 // Recupere l'utilisateur par son ID
-router.get('/:id', async (req: express.Request, res: express.Response) => {
-  try {
-    const { id } = req.params
+router.get('/:id', authenticateToken, authorizeRole('administrateur'), async (req: express.Request, res: express.Response) => {
+    try {
+      const { id } = req.params
 
-    const user = await prisma.utilisateur.findUnique({
-      where: { id_user: BigInt(id) },
-      select: {
-        id_user: true,
-        nom: true,
-        prenom: true,
-        login: true,
-        email: true,
-        role: true,
+      const user = await prisma.utilisateur.findUnique({
+        where: { id_user: BigInt(id) },
+        select: {
+          id_user: true,
+          nom: true,
+          prenom: true,
+          login: true,
+          email: true,
+          role: true,
 
-        eleve: {
-          select: {
-            id_user: true,
-            classe: true,
-            annee: true,
+          eleve: {
+            select: {
+              id_user: true,
+              classe: true,
+              annee: true,
+            },
+          },
+
+          professeur: {
+            select: {
+              id_user: true,
+              matiere: true,
+            },
           },
         },
+      })
 
-        professeur: {
-          select: {
-            id_user: true,
-            matiere: true,
-          },
-        },
-      },
-    })
+      if (!user) {
+        return res.status(404).json({ error: 'Utilisateur non trouvé' })
+      }
 
-    if (!user) {
-      return res.status(404).json({ error: 'Utilisateur non trouvé' })
+      res.json({
+        ...user,
+        id_user: user.id_user.toString(),
+      })
+    } catch (error) {
+      console.error('Erreur lors de la recherche d utilisateur:', error)
+      res.status(500).json({ error: 'Echec lors de la recherche d utilisateur' })
     }
-
-    res.json({
-      ...user,
-      id_user: user.id_user.toString(),
-    })
-  } catch (error) {
-    console.error('Erreur lors de la recherche d utilisateur:', error)
-    res.status(500).json({ error: 'Echec lors de la recherche d utilisateur' })
-  }
-})
+  },
+)
 
 // PUT /api/users/:id - Update a user (for admins/profs to update eleves)
-router.put('/:id', async (req: express.Request, res: express.Response) => {
+router.put('/:id', authenticateToken, authorizeRole('administrateur'), async (req: express.Request, res: express.Response) => {
   try {
     const { id } = req.params
     const { nom, prenom, email, password, id_classe, annee, specialites, options } = req.body
@@ -221,7 +225,7 @@ router.put('/:id', async (req: express.Request, res: express.Response) => {
 })
 
 // POST /api/users - Create a new eleve (for admins/profs)
-router.post('/', async (req: express.Request, res: express.Response) => {
+router.post('/', authenticateToken, authorizeRole('administrateur'), async (req: express.Request, res: express.Response) => {
   try {
     const {
       nom,
@@ -346,12 +350,6 @@ router.post('/', async (req: express.Request, res: express.Response) => {
         where: { id_user: result.user?.id_user as any },
         select: { id_user: true, hashed_password: true },
       })
-      console.log(
-        '[DEBUG] stored hashed_password in DB for user',
-        created?.id_user,
-        ':',
-        created?.hashed_password,
-      )
     } catch (dbgErr) {
       console.error('[DEBUG] erreur en vérifiant le hash stocké:', dbgErr)
     }
@@ -367,7 +365,7 @@ router.post('/', async (req: express.Request, res: express.Response) => {
 })
 
 // DELETE /api/users/:id - Delete a user (for admins/profs)
-router.delete('/:id', async (req: express.Request, res: express.Response) => {
+router.delete('/:id', authenticateToken, authorizeRole('administrateur'), async (req: express.Request, res: express.Response) => {
   try {
     const { id } = req.params
 

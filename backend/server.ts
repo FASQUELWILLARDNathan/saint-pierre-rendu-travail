@@ -18,6 +18,7 @@ import { cleanupRendusFolder } from './services/cleanup-rendus.ts'
 import { cleanupDevoirsFolder } from './services/cleanup-devoirs.ts'
 import { cleanupCoursFolder } from './services/cleanup-cours.ts'
 import path from 'path'
+import cookieParser from 'cookie-parser'
 
 const app = express()
 
@@ -26,15 +27,10 @@ app.set('trust proxy', 1)
 
 // Middleware
 // Skip JSON parsing for multipart/form-data (used for file uploads with multer)
-app.use((req, res, next) => {
-  const contentType = req.headers['content-type']
-  if (contentType && contentType.includes('multipart/form-data')) {
-    return next()
-  }
-  return express.json()(req, res, next)
-})
+app.use(express.json())
 app.use(corsMiddleware)
 app.use(bigintMiddleware)
+app.use(cookieParser())
 
 // Health check
 app.get('/api/health', (req, res) => {

@@ -216,6 +216,7 @@ router.post('/sign-up', authLimiter, async (req: express.Request, res: express.R
     const token = signToken({
       id_user: result.createdUser.id_user.toString(),
       login: result.createdUser.login,
+      role: result.createdUser.role,
     })
 
     const user = await prisma.utilisateur.findUnique({
@@ -264,6 +265,7 @@ router.post('/sign-in', signInLimiter, async (req: express.Request, res: express
     const token = signToken({
       id_user: user.id_user.toString(),
       login: user.login,
+      role: user.role,
     })
 
     // Supprime le mot de passe hashé avant de renvoyer l'utilisateur

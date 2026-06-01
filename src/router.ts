@@ -126,12 +126,10 @@ const router = createRouter({
 router.beforeEach((to) => {
   const authStore = useAuthStore()
 
-  // pas connecté
   if (to.meta.requiresAuth && !authStore.isAuth) {
     return ROUTES.LOGIN
   }
 
-  // déjà connecté → empêcher login/register
   if (authStore.isAuth && (to.path === ROUTES.LOGIN || to.path === ROUTES.REGISTER)) {
     return ROUTES.HOME
   }
@@ -146,5 +144,6 @@ router.beforeEach((to) => {
 
   return true
 })
+
 
 export default router

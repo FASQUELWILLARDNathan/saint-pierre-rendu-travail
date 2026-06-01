@@ -1,5 +1,6 @@
 import type { AuthResponse, SignInPayload, SignUpPayload } from '../types/index.ts'
 import { useStorage } from './useStorage.ts'
+import { useAuthStore } from '@/stores/auth.store'
 
 const BASE_URL = import.meta.env.VITE_API_URL
 const storage = useStorage()
@@ -26,10 +27,28 @@ const request = async <T>(path: string, options: RequestInit = {}) => {
   if (!res.ok) {
     const data = await res.json().catch(() => ({}))
 
-    console.log('API ERROR RESPONSE:', data)
+    if (res.status === 403) {
+      throw {
+        status: 403,
+        message: data.error || data.message || 'Accès refusé',
+      }
+    }
 
-    throw new Error((data as any).error || (data as any).message || `Erreur ${res.status}`)
+    if (res.status === 401) {
+      const authStore = useAuthStore()
+      authStore.logout()
+      throw {
+        status: 401,
+        message: 'Session expirée',
+      }
+    }
+
+    throw {
+      status: res.status,
+      message: data.error || data.message || `Erreur ${res.status}`,
+    }
   }
+
 
   return res.json() as Promise<T>
 }
