@@ -14,6 +14,8 @@ import matieresRoutes from './routes/matieres.ts'
 import coursRoutes from './routes/cours.ts'
 import rendusRoutes from './routes/rendus.ts'
 import importRoutes from './routes/import.ts'
+import { cleanupRendusFolder } from './services/cleanup-rendus.ts'
+import { cleanupDevoirsFolder } from './services/cleanup-devoirs.ts'
 import path from 'path'
 
 const app = express()
@@ -70,6 +72,8 @@ const server = app.listen(PORT, () => {
 
   // Démarrer les tâches cron
   startCronJobs()
+  cleanupRendusFolder()
+  cleanupDevoirsFolder()
 })
 
 // Shutdown
