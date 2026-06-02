@@ -22,7 +22,7 @@ export async function cleanupCoursFolder() {
         fs.unlinkSync(fullPath)
       }
     }
-    console.log('✔️ Nettoyage des devoirs terminé')
+    console.log('✔️ Nettoyage des cours terminé')
   } catch (error) {
     console.error('Erreur nettoyage cours:', error)
   }
