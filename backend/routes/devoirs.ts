@@ -2,6 +2,8 @@ import { Router } from 'express'
 import { prisma } from '../config.ts'
 import { authenticateToken } from '../middleware/auth.ts'
 import { uploadDevoir } from '../middleware/uploadDevoir.ts'
+import { authorizeRole } from '../middleware/role.ts'
+import { toBigIntOrNull } from '../utils.ts'
 
 const router = Router()
 
@@ -212,47 +214,66 @@ function formatDevoirWithMatiere(devoir: any) {
   }
 }
 
-router.post('/', authenticateToken, uploadDevoir.array('fichiers', 10), async (req, res) => {
-  try {
-    const { nom_devoir, description_devoir, id_cours, date_limite, coefficient } = req.body
+/**
+ * POST /api/devoirs - Créer un devoir (Professeur uniquement)
+ * @body {string} id_cours - ID du cours
+ * @body {string} nom_devoir - Nom du devoir
+ * @body {string} [description_devoir] - Description optionnelle
+ * @body {string} [date_limite] - Date limite optionnelle
+ * @body {number} [coefficient] - Coefficient optionnel
+ * @body {File[]} [fichiers] - Fichiers à joindre
+ */
+router.post(
+  '/',
+  authenticateToken,
+  authorizeRole('professeur', 'administrateur'),
+  uploadDevoir.array('fichiers', 10),
+  async (req, res) => {
+    try {
+      const { nom_devoir, description_devoir, id_cours, date_limite, coefficient } = req.body
 
-    if (!nom_devoir || !id_cours) {
-      return res.status(400).json({ error: 'Champs manquants' })
-    }
+      if (!nom_devoir || !id_cours) {
+        return res.status(400).json({ error: 'Champs manquants' })
+      }
 
-    const devoir = await prisma.devoir.create({
-      data: {
-        nom_devoir,
-        description_devoir: description_devoir || null,
-        date_limite: date_limite ? new Date(date_limite) : null,
-        coefficient: coefficient ? Number(coefficient) : 1,
-        cours: {
-          connect: { id_cours: BigInt(id_cours) },
+      const idCoursBigInt = toBigIntOrNull(id_cours)
+      if (!idCoursBigInt) {
+        return res.status(400).json({ error: 'ID cours invalide' })
+      }
+
+      const devoir = await prisma.devoir.create({
+        data: {
+          nom_devoir,
+          description_devoir: description_devoir || null,
+          date_limite: date_limite ? new Date(date_limite) : null,
+          coefficient: coefficient ? Number(coefficient) : 1,
+          cours: {
+            connect: { id_cours: idCoursBigInt },
+          },
         },
-      },
-    })
-
-    const files = req.files as Express.Multer.File[]
-
-    if (files?.length) {
-      console.log('PIECES MODELS:', Object.keys(prisma))
-      await prisma.piece_jointe_devoir.createMany({
-        data: files.map((f) => ({
-          id_devoir: devoir.id_devoir,
-          nom_fichier: f.originalname.slice(0, 254),
-          chemin_fichier: `/devoirs/${f.filename}`.slice(0, 499),
-          type_fichier: f.mimetype,
-          taille_octets: BigInt(f.size),
-        })),
       })
-    }
 
-    res.json(devoir)
-  } catch (e) {
-    console.error(e)
-    res.status(500).json({ error: 'Erreur serveur' })
-  }
-})
+      const files = req.files as Express.Multer.File[]
+
+      if (files?.length) {
+        await prisma.piece_jointe_devoir.createMany({
+          data: files.map((f) => ({
+            id_devoir: devoir.id_devoir,
+            nom_fichier: f.originalname.slice(0, 254),
+            chemin_fichier: `/devoirs/${f.filename}`.slice(0, 499),
+            type_fichier: f.mimetype,
+            taille_octets: toBigIntOrNull(f.size) || BigInt(0),
+          })),
+        })
+      }
+
+      res.json(devoir)
+    } catch (e) {
+      console.error(e)
+      res.status(500).json({ error: 'Erreur serveur' })
+    }
+  },
+)
 
 // Get tous les devoirs (travaux à rendre) pour un élève
 // Triés par date limite en ordre croissant
@@ -264,12 +285,17 @@ router.get('/travaux-a-rendre', authenticateToken, async (req, res) => {
       return res.status(401).json({ error: 'Non authentifié' })
     }
 
+    const userIdBigInt = toBigIntOrNull(userId)
+    if (!userIdBigInt) {
+      return res.status(400).json({ error: 'ID utilisateur invalide' })
+    }
+
     // Récupérer tous les devoirs qui n'ont pas été rendus par cet élève
     const devoirs = await prisma.devoir.findMany({
       where: {
         rendus: {
           none: {
-            id_user: BigInt(userId),
+            id_user: userIdBigInt,
           },
         },
       },
@@ -316,8 +342,13 @@ router.get('/mes-devoirs', authenticateToken, async (req, res) => {
       return res.status(401).json({ error: 'Non authentifié' })
     }
 
+    const userIdBigInt = toBigIntOrNull(userId)
+    if (!userIdBigInt) {
+      return res.status(400).json({ error: 'ID utilisateur invalide' })
+    }
+
     const user = await prisma.utilisateur.findUnique({
-      where: { id_user: BigInt(userId) },
+      where: { id_user: userIdBigInt },
       select: { role: true },
     })
 
@@ -330,7 +361,7 @@ router.get('/mes-devoirs', authenticateToken, async (req, res) => {
         where: {
           cours: {
             is: {
-              id_user: BigInt(userId),
+              id_user: userIdBigInt,
             },
           },
         },
@@ -381,7 +412,7 @@ router.get('/mes-devoirs', authenticateToken, async (req, res) => {
     }
 
     const eleve = await prisma.eleve.findUnique({
-      where: { id_user: BigInt(userId) },
+      where: { id_user: userIdBigInt },
       include: { classe: true },
     })
 

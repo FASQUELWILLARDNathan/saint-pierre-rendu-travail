@@ -4,6 +4,8 @@ import { authenticateToken } from '../middleware/auth.ts'
 import multer from 'multer'
 import fs from 'fs'
 import path from 'path'
+import { authorizeRole } from '../middleware/role.ts'
+import { toBigIntOrNull } from '../utils.ts'
 
 const router = Router()
 
@@ -20,6 +22,10 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage })
 
+/**
+ * Supprime un fichier s'il existe
+ * @param {string} filePath - Chemin du fichier à supprimer
+ */
 function removeFileIfExists(filePath: string) {
   try {
     if (fs.existsSync(filePath)) {
@@ -30,61 +36,78 @@ function removeFileIfExists(filePath: string) {
   }
 }
 
-// Rendre un devoir
-router.post('/', authenticateToken, upload.array('fichiers', 10), async (req, res) => {
-  try {
-    const userId = req.user?.id_user
-    const { id_devoir } = req.body
+/**
+ * POST /api/rendus - Rendre un devoir (avec fichiers)
+ * @body {string} id_devoir - ID du devoir
+ * @body {File[]} fichiers - Fichiers à joindre
+ */
+router.post(
+  '/',
+  authenticateToken,
+  authorizeRole('eleve'),
+  upload.array('fichiers', 10),
+  async (req, res) => {
+    try {
+      const userId = req.user?.id_user
+      const { id_devoir } = req.body
 
-    if (!id_devoir) return res.status(400).json({ error: 'id_devoir obligatoire' })
+      if (!id_devoir) return res.status(400).json({ error: 'id_devoir obligatoire' })
 
-    // Vérifie si déjà rendu
-    const existing = await prisma.rendu.findUnique({
-      where: { id_devoir_id_user: { id_devoir: BigInt(id_devoir), id_user: BigInt(userId) } },
-    })
+      const userIdBigInt = toBigIntOrNull(userId)
+      const idDevoirBigInt = toBigIntOrNull(id_devoir)
 
-    let rendu
-    if (existing) {
-      // Met à jour la date
-      rendu = await prisma.rendu.update({
-        where: { id_rendu: existing.id_rendu },
-        data: { date_rendu: new Date() },
+      if (!userIdBigInt || !idDevoirBigInt) {
+        return res.status(400).json({ error: 'IDs utilisateur ou devoir invalides' })
+      }
+
+      // Vérifie si déjà rendu
+      const existing = await prisma.rendu.findUnique({
+        where: { id_devoir_id_user: { id_devoir: idDevoirBigInt, id_user: userIdBigInt } },
       })
-    } else {
-      rendu = await prisma.rendu.create({
-        data: {
-          id_devoir: BigInt(id_devoir),
-          id_user: BigInt(userId),
-          date_rendu: new Date(),
-        },
+
+      let rendu
+      if (existing) {
+        // Met à jour la date
+        rendu = await prisma.rendu.update({
+          where: { id_rendu: existing.id_rendu },
+          data: { date_rendu: new Date() },
+        })
+      } else {
+        rendu = await prisma.rendu.create({
+          data: {
+            id_devoir: idDevoirBigInt,
+            id_user: userIdBigInt,
+            date_rendu: new Date(),
+          },
+        })
+      }
+
+      // Sauvegarde les fichiers
+      const files = req.files as Express.Multer.File[]
+      if (files && files.length > 0) {
+        await prisma.piece_jointe_rendu.createMany({
+          data: files.map((f) => ({
+            id_rendu: rendu.id_rendu,
+            nom_fichier: f.originalname.slice(0, 254),
+            chemin_fichier: `/rendus/${f.filename}`.slice(0, 499),
+            type_fichier: f.mimetype,
+            taille_octets: toBigIntOrNull(f.size) || BigInt(0),
+          })),
+        })
+      }
+
+      const renduComplet = await prisma.rendu.findUnique({
+        where: { id_rendu: rendu.id_rendu },
+        include: { pieces_jointes: true },
       })
+
+      res.json(renduComplet)
+    } catch (error) {
+      console.error('Erreur rendu:', error)
+      res.status(500).json({ error: 'Erreur serveur' })
     }
-
-    // Sauvegarde les fichiers
-    const files = req.files as Express.Multer.File[]
-    if (files && files.length > 0) {
-      await prisma.piece_jointe_rendu.createMany({
-        data: files.map((f) => ({
-          id_rendu: rendu.id_rendu,
-          nom_fichier: f.originalname.slice(0, 254),
-          chemin_fichier: `/rendus/${f.filename}`.slice(0, 499),
-          type_fichier: f.mimetype,
-          taille_octets: BigInt(f.size),
-        })),
-      })
-    }
-
-    const renduComplet = await prisma.rendu.findUnique({
-      where: { id_rendu: rendu.id_rendu },
-      include: { pieces_jointes: true },
-    })
-
-    res.json(renduComplet)
-  } catch (error) {
-    console.error('Erreur rendu:', error)
-    res.status(500).json({ error: 'Erreur serveur' })
-  }
-})
+  },
+)
 
 // Supprime le rendu courant de l'élève pour un devoir
 router.delete('/devoir/:idDevoir', authenticateToken, async (req, res) => {
@@ -92,8 +115,15 @@ router.delete('/devoir/:idDevoir', authenticateToken, async (req, res) => {
     const userId = req.user?.id_user
     const { idDevoir } = req.params
 
+    const userIdBigInt = toBigIntOrNull(userId)
+    const idDevoirBigInt = toBigIntOrNull(idDevoir)
+
+    if (!userIdBigInt || !idDevoirBigInt) {
+      return res.status(400).json({ error: 'IDs utilisateur ou devoir invalides' })
+    }
+
     const rendu = await prisma.rendu.findUnique({
-      where: { id_devoir_id_user: { id_devoir: BigInt(idDevoir), id_user: BigInt(userId) } },
+      where: { id_devoir_id_user: { id_devoir: idDevoirBigInt, id_user: userIdBigInt } },
       include: { pieces_jointes: true },
     })
 

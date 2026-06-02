@@ -26,12 +26,9 @@ export async function cleanupRendusFolder() {
     for (const file of filesOnDisk) {
       if (!validFiles.has(file)) {
         const fullPath = path.join(rendusDir, file)
-        console.log('Suppression fichier orphelin :', fullPath)
         fs.unlinkSync(fullPath)
       }
     }
-
-    console.log('Nettoyage des rendus terminé')
   } catch (error) {
     console.error('Erreur nettoyage rendus:', error)
   }

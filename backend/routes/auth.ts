@@ -45,9 +45,9 @@ export const safeUserSelect = {
       specialites: {
         select: {
           specialite: {
-            select: { 
+            select: {
               id_specialite: true,
-              nom_specialite: true 
+              nom_specialite: true,
             },
           },
         },
@@ -55,9 +55,9 @@ export const safeUserSelect = {
       options: {
         select: {
           option: {
-            select: { 
+            select: {
               id_option: true,
-              nom_option: true 
+              nom_option: true,
             },
           },
         },
@@ -281,12 +281,14 @@ router.post('/sign-in', signInLimiter, async (req: express.Request, res: express
   }
 })
 
+/**
+ * GET /me - Récupère le profil de l'utilisateur connecté
+ */
 router.get('/me', authenticateToken, async (req, res) => {
   const user = await prisma.utilisateur.findUnique({
     where: { id_user: BigInt(req.user.id_user) },
     select: safeUserSelect,
   })
-  console.log('professeur complet:', user?.professeur)
   res.json({ user })
 })
 

@@ -6,6 +6,7 @@ const MAX_STORAGE_PER_USER = 100 * 1024 * 1024 // 100 MB par utilisateur
 
 /**
  * Supprime tous les messages et pièces jointes d'un utilisateur
+ * @param {bigint} userId - L'identifiant de l'utilisateur
  */
 export async function deleteAllUserMessages(userId: bigint) {
   try {
@@ -35,8 +36,6 @@ export async function deleteAllUserMessages(userId: bigint) {
         OR: [{ id_expediteur: userId }, { id_destinataire: userId }],
       },
     })
-
-    console.log(`Nettoyage effectué pour l'utilisateur ${userId}`)
   } catch (error) {
     console.error(`Erreur lors du nettoyage pour l'utilisateur ${userId}:`, error)
   }
@@ -47,8 +46,6 @@ export async function deleteAllUserMessages(userId: bigint) {
  */
 export async function cleanupAllMessages() {
   try {
-    console.log('Début du nettoyage annuel des messages...')
-
     const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'messages')
 
     // Supprimer tous les messages
@@ -62,10 +59,7 @@ export async function cleanupAllMessages() {
           fs.unlinkSync(filePath)
         }
       })
-      console.log('Dossier uploads/messages vidé')
     }
-
-    console.log('Nettoyage annuel terminé avec succès')
   } catch (error) {
     console.error('Erreur lors du nettoyage annuel:', error)
   }
@@ -77,8 +71,6 @@ export async function cleanupAllMessages() {
  */
 export async function cleanupDevirsAndRendus() {
   try {
-    console.log('Début du nettoyage annuel des devoirs et rendus...')
-
     // Récupérer tous les devoirs non archivés
     const rendusNonArchives = await prisma.rendu.findMany({
       where: { archive: false },
@@ -107,10 +99,6 @@ export async function cleanupDevirsAndRendus() {
 
     // Supprimer tous les devoirs
     const deletedDevoirs = await prisma.devoir.deleteMany({})
-
-    console.log(`✓ ${deletedRendus.count} rendus supprimés`)
-    console.log(`✓ ${deletedDevoirs.count} devoirs supprimés`)
-    console.log('Nettoyage annuel des devoirs et rendus terminé')
   } catch (error) {
     console.error('Erreur lors du nettoyage des devoirs et rendus:', error)
   }
@@ -189,7 +177,6 @@ export async function cleanupAllOrphanedAttachments(): Promise<number> {
           },
         },
       })
-      console.log(`✓ Nettoyage: ${cleanedCount} pièces jointes orphelines supprimées`)
     }
 
     return cleanedCount
@@ -233,9 +220,6 @@ export async function cleanupUserOrphanedAttachments(userId: bigint): Promise<nu
           },
         },
       })
-      console.log(
-        `✓ Nettoyage utilisateur ${userId}: ${cleanedCount} pièces jointes orphelines supprimées`,
-      )
     }
 
     return cleanedCount

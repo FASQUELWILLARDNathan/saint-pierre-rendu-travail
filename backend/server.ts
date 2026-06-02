@@ -26,8 +26,11 @@ import { requestSizeLimit } from './middleware/request-size-limit.ts'
 import { sanitizeInputs } from './middleware/xss-protection.ts'
 import { generateCsrfToken, verifyCsrfToken } from './middleware/csrf-protection.ts'
 import { corsMiddleware } from './middleware/cors.ts'
+import swaggerUi from 'swagger-ui-express'
+import YAML from 'yamljs'
 
 const app = express()
+const swaggerDocument = YAML.load('./swagger.yaml')
 
 // Trust proxy pour récupérer l'IP réelle derrière un proxy/load balancer
 app.set('trust proxy', 1)
@@ -71,6 +74,7 @@ app.use('/api/import', importRoutes)
 app.use('/cours', express.static('/app/public/cours'))
 app.use('/public', express.static('/app/public'))
 app.use('/api/rendus', rendusRoutes)
+app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
 
 // Gestion des erreurs
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {

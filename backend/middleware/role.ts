@@ -1,5 +1,10 @@
 import type { Request, Response, NextFunction } from 'express'
 
+/**
+ * Middleware d'autorisation basée sur les rôles
+ * @param {...string} allowedRoles - Les rôles autorisés à accéder à la route
+ * @returns {Function} Middleware Express
+ */
 export function authorizeRole(...allowedRoles: string[]) {
   return (req: Request, res: Response, next: NextFunction) => {
     if (!req.user) {

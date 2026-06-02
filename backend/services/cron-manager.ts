@@ -3,27 +3,23 @@ import { prisma } from '../config.ts'
 import cron from 'node-cron'
 
 /**
- * Démarre les tâches cron
+ * Démarre les tâches cron (20 août : promotion des élèves et nettoyage)
  */
 export function startCronJobs() {
   cron.schedule('0 0 20 8 *', async () => {
     try {
-      console.log('🧹 Nettoyage annuel...')
       await cleanupAllMessages()
       await cleanupDevirsAndRendus()
-
-      console.log('🎓 Promotion élèves...')
       await promoteStudents()
-
-      console.log('✅ Promotion terminée')
     } catch (error) {
       console.error('❌ Erreur cron promotion:', error)
     }
   })
-
-  console.log('✓ Cron 20 août actif')
 }
 
+/**
+ * Promeut les élèves à la classe suivante le 20 août
+ */
 export async function promoteStudents() {
   const classes = await prisma.classe.findMany()
 
@@ -106,8 +102,6 @@ export async function promoteStudents() {
           },
         },
       })
-
-      console.log(`🗑 ${classe.nom_classe}: ${ids.length} supprimés`)
     }
   }
 
@@ -145,7 +139,6 @@ export async function promoteStudents() {
       })
 
       if (!nextClass) {
-        console.log(`❌ Pas de classe cible pour ${classe.nom_classe}`)
         continue
       }
 
@@ -159,7 +152,6 @@ export async function promoteStudents() {
       })
 
       if (updated.count > 0) {
-        console.log(`✔ ${classe.nom_classe} -> ${nextClass.nom_classe} (${updated.count})`)
       }
     }
   }

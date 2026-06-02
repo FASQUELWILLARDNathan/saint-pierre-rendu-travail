@@ -7,6 +7,7 @@ import {
   formatStorageSize,
 } from '../services/cleanup-service.ts'
 import { formatMessage } from '../utils.ts'
+import { toBigIntOrNull } from '../utils.ts'
 import multer from 'multer'
 import path from 'path'
 import fsPromises from 'fs/promises'
@@ -53,10 +54,15 @@ const upload = multer({
 // Apply auth middleware to all routes
 router.use(authenticateToken)
 
-// GET /api/messages/received - Get all received messages for current user
+/**
+ * GET /api/messages/received - Récupérer tous les messages reçus par l'utilisateur courant
+ */
 router.get('/received', async (req: express.Request, res: express.Response) => {
   try {
-    const userId = BigInt((req as any).user.id_user)
+    const userId = toBigIntOrNull((req as any).user.id_user)
+    if (!userId) {
+      return res.status(400).json({ error: 'ID utilisateur invalide' })
+    }
 
     const messages = await prisma.message.findMany({
       where: { id_destinataire: userId },
@@ -88,7 +94,10 @@ router.get('/received', async (req: express.Request, res: express.Response) => {
 // GET /api/messages/sent - Get all sent messages for current user
 router.get('/sent', async (req: express.Request, res: express.Response) => {
   try {
-    const userId = BigInt((req as any).user.id_user)
+    const userId = toBigIntOrNull((req as any).user.id_user)
+    if (!userId) {
+      return res.status(400).json({ error: 'ID utilisateur invalide' })
+    }
 
     const messages = await prisma.message.findMany({
       where: { id_expediteur: userId },
@@ -158,10 +167,11 @@ router.get('/conversation/:id', async (req: express.Request, res: express.Respon
 // POST /api/messages - Send a new message with file uploads
 router.post(
   '/',
+  authenticateToken,
   upload.array('pieces_jointes', 5),
   async (req: express.Request, res: express.Response) => {
     try {
-      const userId = BigInt((req as any).user.id_user)
+      const userId = toBigIntOrNull((req as any).user.id_user)
       const { id_destinataire, sujet, contenu } = req.body
       const files = req.files as Express.Multer.File[]
 
@@ -170,14 +180,23 @@ router.post(
         return res.status(400).json({ error: 'Destinataire, sujet et contenu sont requis' })
       }
 
+      if (!userId) {
+        return res.status(400).json({ error: 'ID utilisateur invalide' })
+      }
+
       // Validate content length
       if (contenu.length > 5000) {
         return res.status(400).json({ error: 'Le message ne peut pas dépasser 5000 caractères' })
       }
 
+      const idDestinaireBigInt = toBigIntOrNull(id_destinataire)
+      if (!idDestinaireBigInt) {
+        return res.status(400).json({ error: 'ID destinataire invalide' })
+      }
+
       // Check if recipient exists
       const recipient = await prisma.utilisateur.findUnique({
-        where: { id_user: BigInt(id_destinataire) },
+        where: { id_user: idDestinaireBigInt },
       })
 
       if (!recipient) {
@@ -205,7 +224,7 @@ router.post(
       const message = await prisma.message.create({
         data: {
           id_expediteur: userId,
-          id_destinataire: BigInt(id_destinataire),
+          id_destinataire: idDestinaireBigInt,
           sujet,
           contenu,
         },
@@ -218,7 +237,7 @@ router.post(
           nom_fichier: file.originalname || file.filename,
           chemin_fichier: `/uploads/messages/${file.filename}`,
           type_fichier: file.mimetype,
-          taille_octets: BigInt(file.size),
+          taille_octets: toBigIntOrNull(file.size) || BigInt(0),
         }))
 
         await prisma.piece_jointe.createMany({
@@ -241,12 +260,20 @@ router.post(
 router.put('/:id/read', async (req: express.Request, res: express.Response) => {
   try {
     const { id } = req.params
-    const userId = BigInt((req as any).user.id_user)
+    const userId = toBigIntOrNull((req as any).user.id_user)
+    if (!userId) {
+      return res.status(400).json({ error: 'ID utilisateur invalide' })
+    }
+
+    const idMessageBigInt = toBigIntOrNull(id)
+    if (!idMessageBigInt) {
+      return res.status(400).json({ error: 'ID message invalide' })
+    }
 
     // Vérifier que le message appartient au destinataire connecté
     const message = await prisma.message.findFirst({
       where: {
-        id_message: BigInt(id),
+        id_message: idMessageBigInt,
         id_destinataire: userId,
       },
     })

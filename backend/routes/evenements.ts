@@ -4,8 +4,9 @@ import { authenticateToken } from '../middleware/auth.ts'
 
 const router = Router()
 
-// Get tous les événements à venir
-// Triés par date en ordre croissant
+/**
+ * GET /api/evenements/a-venir - Récupérer les 10 prochains événements
+ */
 router.get('/a-venir', authenticateToken, async (req, res) => {
   try {
     const maintenant = new Date()

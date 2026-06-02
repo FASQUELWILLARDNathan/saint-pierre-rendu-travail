@@ -16,7 +16,7 @@ export function formatMessage(msg: any): Message {
     id_expediteur: msg.id_expediteur.toString(),
     id_destinataire: msg.id_destinataire.toString(),
     sujet: msg.sujet,
-    contenu: msg.contenu,
+    contenu: msg.contenu,   
     date_envoi: msg.date_envoi,
     lu: msg.lu,
     expediteur: msg.expediteur
@@ -44,5 +44,21 @@ export function formatMessage(msg: any): Message {
       type_fichier: pj.type_fichier,
       taille_octets: pj.taille_octets.toString(),
     })),
+  }
+}
+
+
+export function toBigIntOrNull(value: any): bigint | null {
+  if (value === null || value === undefined || value === '') {
+    return null
+  }
+
+  try {
+    const num = Number(value)
+    if (isNaN(num)) return null
+    const bigintValue = BigInt(value)
+    return bigintValue
+  } catch {
+    return null
   }
 }

@@ -26,12 +26,9 @@ export async function cleanupDevoirsFolder() {
     for (const file of filesOnDisk) {
       if (!validFiles.has(file)) {
         const fullPath = path.join(devoirsDir, file)
-        console.log('Suppression fichier orphelin (devoir) :', fullPath)
         fs.unlinkSync(fullPath)
       }
     }
-
-    console.log('Nettoyage des devoirs terminé')
   } catch (error) {
     console.error('Erreur nettoyage devoirs:', error)
   }

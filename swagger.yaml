@@ -1,0 +1,2123 @@
+openapi: 3.0.0
+info:
+  title: Saint-Pierre API
+  version: 1.0.0
+  description: API complète pour la gestion des devoirs, cours et messagerie scolaire
+  contact:
+    name: Support
+  x-logo:
+    url: https://your-api-logo.png
+
+servers:
+  - url: http://localhost:3000
+    description: Serveur de développement
+  - url: https://api.saint-pierre.com
+    description: Serveur de production
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token from /auth/sign-in
+
+  schemas:
+    # ========== UTILISATEUR ==========
+    Utilisateur:
+      type: object
+      properties:
+        id_user:
+          type: string
+          pattern: '^[0-9]+$'
+          example: '1'
+        nom:
+          type: string
+          maxLength: 50
+        prenom:
+          type: string
+          maxLength: 50
+        login:
+          type: string
+          maxLength: 50
+        email:
+          type: string
+          format: email
+        role:
+          $ref: '#/components/schemas/Role'
+        created_at:
+          type: string
+          format: date-time
+        eleve:
+          $ref: '#/components/schemas/Eleve'
+        professeur:
+          $ref: '#/components/schemas/Professeur'
+
+    Role:
+      type: string
+      enum: [eleve, professeur, administrateur]
+
+    Eleve:
+      type: object
+      properties:
+        id_user:
+          type: string
+          pattern: '^[0-9]+$'
+        id_classe:
+          type: string
+          pattern: '^[0-9]+$'
+          nullable: true
+        annee:
+          type: string
+          nullable: true
+        classe:
+          $ref: '#/components/schemas/Classe'
+        specialites:
+          type: array
+          items:
+            $ref: '#/components/schemas/Specialite'
+        options:
+          type: array
+          items:
+            $ref: '#/components/schemas/Option'
+
+    Professeur:
+      type: object
+      properties:
+        id_user:
+          type: string
+          pattern: '^[0-9]+$'
+        matiere:
+          type: string
+          maxLength: 50
+          nullable: true
+        classes_enseignees:
+          type: array
+          items:
+            $ref: '#/components/schemas/Classe'
+        specialites_enseignees:
+          type: array
+          items:
+            $ref: '#/components/schemas/Specialite'
+        options_enseignees:
+          type: array
+          items:
+            $ref: '#/components/schemas/Option'
+
+    # ========== CLASSE & STRUCTURES SCOLAIRES ==========
+    Classe:
+      type: object
+      properties:
+        id_classe:
+          type: string
+          pattern: '^[0-9]+$'
+          example: '1'
+        nom_classe:
+          type: string
+          maxLength: 50
+          example: 'Terminale A'
+        niveau:
+          type: string
+          maxLength: 20
+          example: 'Terminale'
+        lettre:
+          type: string
+          maxLength: 1
+          example: 'A'
+        created_at:
+          type: string
+          format: date-time
+
+    Matiere:
+      type: object
+      properties:
+        id_matiere:
+          type: string
+          pattern: '^[0-9]+$'
+          example: '1'
+        nom_matiere:
+          type: string
+          maxLength: 50
+          example: 'Mathématiques'
+        description:
+          type: string
+          nullable: true
+        couleur:
+          type: string
+          format: color
+          example: '#FF5733'
+          nullable: true
+        icon_url:
+          type: string
+          nullable: true
+        devoir_icon_url:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+
+    Specialite:
+      type: object
+      properties:
+        id_specialite:
+          type: string
+          pattern: '^[0-9]+$'
+        nom_specialite:
+          type: string
+          maxLength: 50
+          example: 'NSI'
+        created_at:
+          type: string
+          format: date-time
+
+    Option:
+      type: object
+      properties:
+        id_option:
+          type: string
+          pattern: '^[0-9]+$'
+        nom_option:
+          type: string
+          maxLength: 50
+          example: 'Latin'
+        created_at:
+          type: string
+          format: date-time
+
+    # ========== COURS ==========
+    Cours:
+      type: object
+      properties:
+        id_cours:
+          type: string
+          pattern: '^[0-9]+$'
+        nom_cours:
+          type: string
+          maxLength: 50
+        description_cours:
+          type: string
+          nullable: true
+        id_user:
+          type: string
+          pattern: '^[0-9]+$'
+        id_matiere:
+          type: string
+          pattern: '^[0-9]+$'
+          nullable: true
+        id_classe:
+          type: string
+          pattern: '^[0-9]+$'
+          nullable: true
+        id_specialite:
+          type: string
+          pattern: '^[0-9]+$'
+          nullable: true
+        id_option:
+          type: string
+          pattern: '^[0-9]+$'
+          nullable: true
+        matiere:
+          $ref: '#/components/schemas/Matiere'
+        ressources:
+          type: array
+          items:
+            $ref: '#/components/schemas/RessourceCours'
+
+    RessourceCours:
+      type: object
+      properties:
+        id_ressource:
+          type: string
+          pattern: '^[0-9]+$'
+        nom_fichier:
+          type: string
+        chemin_fichier:
+          type: string
+        type_fichier:
+          type: string
+        taille_octets:
+          type: string
+          pattern: '^[0-9]+$'
+        date_ajout:
+          type: string
+          format: date-time
+
+    # ========== DEVOIR ==========
+    Devoir:
+      type: object
+      properties:
+        id_devoir:
+          type: string
+          pattern: '^[0-9]+$'
+          example: '1'
+        id_cours:
+          type: string
+          pattern: '^[0-9]+$'
+        nom_devoir:
+          type: string
+          maxLength: 255
+          example: 'Exercices chapitre 3'
+        description_devoir:
+          type: string
+          nullable: true
+        date_limite:
+          type: string
+          format: date-time
+          nullable: true
+        coefficient:
+          type: number
+          format: decimal
+          example: 1.5
+          nullable: true
+        cours:
+          $ref: '#/components/schemas/Cours'
+        pieces_jointes:
+          type: array
+          items:
+            $ref: '#/components/schemas/PieceJointeDevoir'
+
+    PieceJointeDevoir:
+      type: object
+      properties:
+        id_piece_jointe_devoir:
+          type: string
+          pattern: '^[0-9]+$'
+        nom_fichier:
+          type: string
+        chemin_fichier:
+          type: string
+        type_fichier:
+          type: string
+        taille_octets:
+          type: string
+          pattern: '^[0-9]+$'
+        created_at:
+          type: string
+          format: date-time
+
+    # ========== RENDU ==========
+    Rendu:
+      type: object
+      properties:
+        id_rendu:
+          type: string
+          pattern: '^[0-9]+$'
+          example: '1'
+        id_devoir:
+          type: string
+          pattern: '^[0-9]+$'
+        id_user:
+          type: string
+          pattern: '^[0-9]+$'
+        date_rendu:
+          type: string
+          format: date-time
+          nullable: true
+        note:
+          type: number
+          format: decimal
+          nullable: true
+          example: 18.5
+        retour:
+          type: string
+          maxLength: 255
+          nullable: true
+        archive:
+          type: boolean
+          default: false
+        pieces_jointes:
+          type: array
+          items:
+            $ref: '#/components/schemas/PieceJointeRendu'
+
+    PieceJointeRendu:
+      type: object
+      properties:
+        id_piece_jointe:
+          type: string
+          pattern: '^[0-9]+$'
+        nom_fichier:
+          type: string
+          maxLength: 255
+        chemin_fichier:
+          type: string
+        type_fichier:
+          type: string
+        taille_octets:
+          type: string
+          pattern: '^[0-9]+$'
+        date_ajout:
+          type: string
+          format: date-time
+
+    # ========== ÉVÉNEMENT ==========
+    Evenement:
+      type: object
+      properties:
+        id_evenement:
+          type: string
+          pattern: '^[0-9]+$'
+        nom_evenement:
+          type: string
+          maxLength: 255
+          example: 'Interrogation Maths'
+        description:
+          type: string
+          nullable: true
+        type_evenement:
+          type: string
+          maxLength: 50
+          example: 'interrogation'
+        date_evenement:
+          type: string
+          format: date-time
+        duree_minutes:
+          type: integer
+          nullable: true
+        icon_url:
+          type: string
+          nullable: true
+        id_matiere:
+          type: string
+          pattern: '^[0-9]+$'
+          nullable: true
+        id_specialite:
+          type: string
+          pattern: '^[0-9]+$'
+          nullable: true
+        id_option:
+          type: string
+          pattern: '^[0-9]+$'
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+
+    # ========== MESSAGE ==========
+    Message:
+      type: object
+      properties:
+        id_message:
+          type: string
+          pattern: '^[0-9]+$'
+        id_expediteur:
+          type: string
+          pattern: '^[0-9]+$'
+        id_destinataire:
+          type: string
+          pattern: '^[0-9]+$'
+        sujet:
+          type: string
+          maxLength: 255
+        contenu:
+          type: string
+        date_envoi:
+          type: string
+          format: date-time
+        lu:
+          type: boolean
+          default: false
+        expediteur:
+          type: object
+          properties:
+            id_user:
+              type: string
+              pattern: '^[0-9]+$'
+            nom:
+              type: string
+            prenom:
+              type: string
+            email:
+              type: string
+              format: email
+        destinataire:
+          type: object
+          properties:
+            id_user:
+              type: string
+              pattern: '^[0-9]+$'
+            nom:
+              type: string
+            prenom:
+              type: string
+            email:
+              type: string
+              format: email
+        pieces_jointes:
+          type: array
+          items:
+            $ref: '#/components/schemas/PieceJointe'
+
+    PieceJointe:
+      type: object
+      properties:
+        id_piece_jointe:
+          type: string
+          pattern: '^[0-9]+$'
+        nom_fichier:
+          type: string
+        chemin_fichier:
+          type: string
+        type_fichier:
+          type: string
+        taille_octets:
+          type: string
+          pattern: '^[0-9]+$'
+        date_ajout:
+          type: string
+          format: date-time
+
+    # ========== ERREURS ==========
+    Error400:
+      type: object
+      properties:
+        error:
+          type: string
+          example: 'Paramètres invalides'
+
+    Error401:
+      type: object
+      properties:
+        error:
+          type: string
+          example: 'Accès refusé: token manquant'
+
+    Error403:
+      type: object
+      properties:
+        error:
+          type: string
+          example: 'Accès refusé: rôle insuffisant'
+
+    Error404:
+      type: object
+      properties:
+        error:
+          type: string
+          example: 'Ressource non trouvée'
+
+    Error500:
+      type: object
+      properties:
+        error:
+          type: string
+          example: 'Erreur serveur interne'
+
+    SuccessResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: 'Opération réussie'
+
+    BigIntString:
+      type: string
+      pattern: '^[0-9]+$'
+      example: '123'
+
+security:
+  - BearerAuth: []
+
+paths:
+  # ========== HEALTH ==========
+  /api/health:
+    get:
+      summary: Vérifier l'état du serveur
+      tags: [Health]
+      security: []
+      operationId: health
+      responses:
+        '200':
+          description: Serveur en ligne
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: 'ok'
+                  timestamp:
+                    type: string
+                    format: date-time
+
+  # ========== AUTH ==========
+  /auth/sign-up:
+    post:
+      summary: Créer un nouveau compte
+      tags: [Auth]
+      security: []
+      operationId: signUp
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nom:
+                  type: string
+                  minLength: 1
+                  maxLength: 50
+                prenom:
+                  type: string
+                  minLength: 1
+                  maxLength: 50
+                login:
+                  type: string
+                  minLength: 1
+                  maxLength: 50
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  minLength: 6
+                classe:
+                  type: string
+                  pattern: '^[0-9]+$'
+                annee:
+                  type: string
+                role:
+                  $ref: '#/components/schemas/Role'
+              required: [nom, prenom, login, email, password, classe, annee]
+      responses:
+        '201':
+          description: Compte créé avec succès
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id_user:
+                    type: string
+                  message:
+                    type: string
+        '400':
+          description: Données manquantes ou invalides
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error400'
+        '500':
+          description: Erreur serveur
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error500'
+
+  /auth/sign-in:
+    post:
+      summary: Se connecter
+      tags: [Auth]
+      security: []
+      operationId: signIn
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                login:
+                  type: string
+                password:
+                  type: string
+              required: [login, password]
+      responses:
+        '200':
+          description: Connexion réussie
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    example: 'eyJhbGciOiJIUzI1NiIs...'
+                  id_user:
+                    type: string
+                  role:
+                    $ref: '#/components/schemas/Role'
+        '401':
+          description: Identifiants invalides
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error401'
+        '500':
+          description: Erreur serveur
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error500'
+
+  /auth/me:
+    get:
+      summary: Récupérer le profil actuel
+      tags: [Auth]
+      operationId: getCurrentUser
+      responses:
+        '200':
+          description: Profil utilisateur
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Utilisateur'
+        '401':
+          description: Non authentifié
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error401'
+        '403':
+          description: Token expiré
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error403'
+
+  /auth/forgot-password:
+    post:
+      summary: Demander une réinitialisation de mot de passe
+      tags: [Auth]
+      security: []
+      operationId: forgotPassword
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+              required: [email]
+      responses:
+        '200':
+          description: Email de réinitialisation envoyé
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '404':
+          description: Utilisateur non trouvé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error404'
+
+  /auth/reset-password:
+    post:
+      summary: Réinitialiser le mot de passe
+      tags: [Auth]
+      security: []
+      operationId: resetPassword
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reset_token:
+                  type: string
+                new_password:
+                  type: string
+                  minLength: 6
+              required: [reset_token, new_password]
+      responses:
+        '200':
+          description: Mot de passe réinitialisé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '400':
+          description: Token invalide ou expiré
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error400'
+
+  /auth/logout:
+    post:
+      summary: Se déconnecter
+      tags: [Auth]
+      operationId: logout
+      responses:
+        '200':
+          description: Déconnexion réussie
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  # ========== USERS ==========
+  /api/users:
+    get:
+      summary: Lister tous les utilisateurs (Admin uniquement)
+      tags: [Users]
+      operationId: getAllUsers
+      x-roles: [administrateur]
+      responses:
+        '200':
+          description: Liste des utilisateurs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Utilisateur'
+        '401':
+          description: Non authentifié
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error401'
+        '403':
+          description: Rôle insuffisant
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error403'
+
+    post:
+      summary: Créer un nouvel utilisateur (Admin uniquement)
+      tags: [Users]
+      operationId: createUser
+      x-roles: [administrateur]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nom:
+                  type: string
+                  maxLength: 50
+                prenom:
+                  type: string
+                  maxLength: 50
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  minLength: 6
+                role:
+                  $ref: '#/components/schemas/Role'
+                id_classe:
+                  type: string
+                  pattern: '^[0-9+$'
+                  nullable: true
+                annee:
+                  type: string
+                  nullable: true
+                specialites:
+                  type: array
+                  items:
+                    type: string
+                    pattern: '^[0-9+$'
+                options:
+                  type: array
+                  items:
+                    type: string
+                    pattern: '^[0-9]+$'
+              required: [nom, prenom, email, password]
+      responses:
+        '201':
+          description: Utilisateur créé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Utilisateur'
+        '400':
+          description: Données invalides
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error400'
+        '403':
+          description: Rôle insuffisant
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error403'
+
+  /api/users/{id}:
+    get:
+      summary: Récupérer un utilisateur par ID (Admin uniquement)
+      tags: [Users]
+      operationId: getUser
+      x-roles: [administrateur]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID de l'utilisateur
+          schema:
+            type: string
+            pattern: '^[0-9]+$'
+      responses:
+        '200':
+          description: Utilisateur trouvé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Utilisateur'
+        '404':
+          description: Utilisateur non trouvé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error404'
+        '403':
+          description: Rôle insuffisant
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error403'
+
+    put:
+      summary: Mettre à jour un utilisateur (Admin uniquement)
+      tags: [Users]
+      operationId: updateUser
+      x-roles: [administrateur]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^[0-9]+$'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nom:
+                  type: string
+                prenom:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                id_classe:
+                  type: string
+                  pattern: '^[0-9]+$'
+                  nullable: true
+                annee:
+                  type: string
+                specialites:
+                  type: array
+                  items:
+                    type: string
+                    pattern: '^[0-9]+$'
+                options:
+                  type: array
+                  items:
+                    type: string
+                    pattern: '^[0-9]+$'
+      responses:
+        '200':
+          description: Utilisateur mis à jour
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '404':
+          description: Utilisateur non trouvé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error404'
+        '403':
+          description: Rôle insuffisant
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error403'
+
+    delete:
+      summary: Supprimer un utilisateur (Admin uniquement)
+      tags: [Users]
+      operationId: deleteUser
+      x-roles: [administrateur]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^[0-9]+$'
+      responses:
+        '200':
+          description: Utilisateur supprimé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '404':
+          description: Utilisateur non trouvé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error404'
+        '403':
+          description: Rôle insuffisant
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error403'
+
+  /api/users/eleves/list:
+    get:
+      summary: Lister tous les élèves (Admin & Professeur)
+      tags: [Users]
+      operationId: getStudentsList
+      x-roles: [administrateur, professeur]
+      responses:
+        '200':
+          description: Liste des élèves
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id_user:
+                      type: string
+                    nom:
+                      type: string
+                    prenom:
+                      type: string
+                    email:
+                      type: string
+                    id_classe:
+                      type: string
+                      nullable: true
+                    annee:
+                      type: string
+                      nullable: true
+                    specialites:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/Specialite'
+                    options:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/Option'
+        '403':
+          description: Rôle insuffisant
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error403'
+
+  # ========== MATIERES ==========
+  /api/matieres:
+    get:
+      summary: Lister toutes les matières
+      tags: [Matieres]
+      operationId: getMatieres
+      responses:
+        '200':
+          description: Liste des matières
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Matiere'
+        '401':
+          description: Non authentifié
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error401'
+
+  # ========== PROFIL ==========
+  /api/profile:
+    get:
+      summary: Récupérer le profil de l'utilisateur connecté
+      tags: [Profile]
+      operationId: getProfile
+      responses:
+        '200':
+          description: Profil utilisateur
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Utilisateur'
+        '401':
+          description: Non authentifié
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error401'
+
+    put:
+      summary: Mettre à jour le profil de l'utilisateur connecté
+      tags: [Profile]
+      operationId: updateProfile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nom:
+                  type: string
+                prenom:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                old_password:
+                  type: string
+                new_password:
+                  type: string
+      responses:
+        '200':
+          description: Profil mis à jour
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '400':
+          description: Mot de passe actuel incorrect
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error400'
+        '401':
+          description: Non authentifié
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error401'
+
+  /api/profile/matieres:
+    get:
+      summary: Lister toutes les matières disponibles
+      tags: [Profile]
+      security: []
+      operationId: getProfileMatieres
+      responses:
+        '200':
+          description: Liste des matières
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Matiere'
+
+  /api/profile/classes:
+    get:
+      summary: Lister toutes les classes disponibles
+      tags: [Profile]
+      security: []
+      operationId: getClasses
+      responses:
+        '200':
+          description: Liste des classes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Classe'
+
+  /api/profile/specialites:
+    get:
+      summary: Lister toutes les spécialités disponibles
+      tags: [Profile]
+      security: []
+      operationId: getSpecialites
+      responses:
+        '200':
+          description: Liste des spécialités
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Specialite'
+
+  /api/profile/options:
+    get:
+      summary: Lister toutes les options disponibles
+      tags: [Profile]
+      security: []
+      operationId: getOptions
+      responses:
+        '200':
+          description: Liste des options
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Option'
+
+  # ========== COURS ==========
+  /api/cours:
+    get:
+      summary: Lister les cours (filtrables par matière, classe, spécialité ou option)
+      tags: [Cours]
+      operationId: getCours
+      parameters:
+        - name: kind
+          in: query
+          description: Type de filtre (specialite, option)
+          schema:
+            type: string
+        - name: id
+          in: query
+          description: ID pour le filtre
+          schema:
+            type: string
+        - name: id_matiere
+          in: query
+          description: ID de la matière
+          schema:
+            type: string
+        - name: id_specialite
+          in: query
+          description: ID de la spécialité
+          schema:
+            type: string
+        - name: id_option
+          in: query
+          description: ID de l'option
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Liste des cours
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Cours'
+        '401':
+          description: Non authentifié
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error401'
+
+    post:
+      summary: Créer un nouveau cours (Professeur uniquement)
+      tags: [Cours]
+      operationId: createCours
+      x-roles: [professeur]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                nom_cours:
+                  type: string
+                  maxLength: 50
+                description_cours:
+                  type: string
+                id_matiere:
+                  type: string
+                  pattern: '^[0-9]+$'
+                id_classe:
+                  type: string
+                  pattern: '^[0-9]+$'
+                  nullable: true
+                id_specialite:
+                  type: string
+                  pattern: '^[0-9]+$'
+                  nullable: true
+                id_option:
+                  type: string
+                  pattern: '^[0-9]+$'
+                  nullable: true
+                fichiers:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+              required: [nom_cours, id_matiere]
+              oneOf:
+                - required: [id_matiere]
+                - required: [id_specialite]
+                - required: [id_option]
+      responses:
+        '201':
+          description: Cours créé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cours'
+        '400':
+          description: Données invalides
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error400'
+
+  /api/cours/{id}:
+    get:
+      summary: Récupérer un cours par ID
+      tags: [Cours]
+      operationId: getCoursById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^[0-9]+$'
+      responses:
+        '200':
+          description: Cours trouvé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cours'
+        '404':
+          description: Cours non trouvé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error404'
+
+    delete:
+      summary: Supprimer un cours (Professeur propriétaire)
+      tags: [Cours]
+      operationId: deleteCours
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^[0-9]+$'
+      responses:
+        '200':
+          description: Cours supprimé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '404':
+          description: Cours non trouvé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error404'
+        '403':
+          description: Accès refusé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error403'
+
+  /api/cours/matiere/{matiereId}:
+    get:
+      summary: Lister les cours d'une matière
+      tags: [Cours]
+      operationId: getCoursByMatiere
+      parameters:
+        - name: matiereId
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^[0-9]+$'
+      responses:
+        '200':
+          description: Liste des cours
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Cours'
+
+  /api/cours/specialite/{specialiteId}:
+    get:
+      summary: Lister les cours d'une spécialité
+      tags: [Cours]
+      operationId: getCoursBySpecialite
+      parameters:
+        - name: specialiteId
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^[0-9]+$'
+      responses:
+        '200':
+          description: Liste des cours
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Cours'
+
+  /api/cours/option/{optionId}:
+    get:
+      summary: Lister les cours d'une option
+      tags: [Cours]
+      operationId: getCoursByOption
+      parameters:
+        - name: optionId
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^[0-9]+$'
+      responses:
+        '200':
+          description: Liste des cours
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Cours'
+
+  # ========== DEVOIRS ==========
+  /api/devoirs:
+    get:
+      summary: Lister tous les devoirs
+      tags: [Devoirs]
+      operationId: getDevoirs
+      responses:
+        '200':
+          description: Liste des devoirs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Devoir'
+        '401':
+          description: Non authentifié
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error401'
+
+    post:
+      summary: Créer un devoir (Professeur uniquement)
+      tags: [Devoirs]
+      operationId: createDevoir
+      x-roles: [professeur]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                id_cours:
+                  type: string
+                  pattern: '^[0-9]+$'
+                nom_devoir:
+                  type: string
+                  maxLength: 255
+                description_devoir:
+                  type: string
+                date_limite:
+                  type: string
+                  format: date-time
+                coefficient:
+                  type: number
+                  format: decimal
+                fichiers:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+              required: [id_cours, nom_devoir]
+      responses:
+        '201':
+          description: Devoir créé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Devoir'
+        '400':
+          description: Données invalides
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error400'
+
+  /api/devoirs/travaux-a-rendre:
+    get:
+      summary: Lister les devoirs à rendre pour l'élève connecté
+      tags: [Devoirs]
+      operationId: getWorkToSubmit
+      x-roles: [eleve]
+      responses:
+        '200':
+          description: Liste des devoirs à rendre
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Devoir'
+        '401':
+          description: Non authentifié
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error401'
+
+  /api/devoirs/mes-devoirs:
+    get:
+      summary: Lister les devoirs de l'utilisateur connecté
+      tags: [Devoirs]
+      operationId: getMyDevoirs
+      responses:
+        '200':
+          description: Liste des devoirs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Devoir'
+        '401':
+          description: Non authentifié
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error401'
+
+  /api/devoirs/{id}:
+    delete:
+      summary: Supprimer un devoir
+      tags: [Devoirs]
+      operationId: deleteDevoir
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^[0-9]+$'
+      responses:
+        '200':
+          description: Devoir supprimé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '404':
+          description: Devoir non trouvé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error404'
+
+  /api/devoirs/matiere/{matiereId}:
+    get:
+      summary: Lister les devoirs d'une matière
+      tags: [Devoirs]
+      operationId: getDevoirsByMatiere
+      parameters:
+        - name: matiereId
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^[0-9]+$'
+      responses:
+        '200':
+          description: Liste des devoirs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Devoir'
+
+  /api/devoirs/categorie:
+    get:
+      summary: Lister les devoirs par catégorie (matière/spécialité/option)
+      tags: [Devoirs]
+      operationId: getDevoirsByCategory
+      responses:
+        '200':
+          description: Devoirs groupés par catégorie
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  # ========== RENDUS ==========
+  /api/rendus:
+    post:
+      summary: Rendre un devoir (avec fichiers)
+      tags: [Rendus]
+      operationId: submitDevoir
+      x-roles: [eleve]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                id_devoir:
+                  type: string
+                  pattern: '^[0-9]+$'
+                id_user:
+                  type: string
+                  pattern: '^[0-9]+$'
+                fichiers:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+              required: [id_devoir, id_user]
+      responses:
+        '201':
+          description: Devoir rendu
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rendu'
+        '400':
+          description: Données invalides
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error400'
+
+  /api/rendus/devoir/{idDevoir}:
+    delete:
+      summary: Supprimer le rendu d'un devoir
+      tags: [Rendus]
+      operationId: deleteRendu
+      parameters:
+        - name: idDevoir
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^[0-9]+$'
+      responses:
+        '200':
+          description: Rendu supprimé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '404':
+          description: Rendu non trouvé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error404'
+
+  /api/rendus/{idRendu}:
+    put:
+      summary: Mettre à jour le rendu (note et retour - Professeur)
+      tags: [Rendus]
+      operationId: updateRendu
+      x-roles: [professeur, administrateur]
+      parameters:
+        - name: idRendu
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^[0-9]+$'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                note:
+                  type: number
+                  format: decimal
+                retour:
+                  type: string
+      responses:
+        '200':
+          description: Rendu mis à jour
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rendu'
+        '404':
+          description: Rendu non trouvé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error404'
+
+  /api/rendus/mes-notes:
+    get:
+      summary: Récupérer toutes les notes de l'élève connecté
+      tags: [Rendus]
+      operationId: getMyGrades
+      x-roles: [eleve]
+      responses:
+        '200':
+          description: Liste des notes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Rendu'
+
+  /api/rendus/{idRendu}/archive:
+    post:
+      summary: Archiver un rendu
+      tags: [Rendus]
+      operationId: archiveRendu
+      parameters:
+        - name: idRendu
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^[0-9]+$'
+      responses:
+        '200':
+          description: Rendu archivé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rendu'
+        '404':
+          description: Rendu non trouvé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error404'
+
+  # ========== ÉVÉNEMENTS ==========
+  /api/evenements:
+    get:
+      summary: Lister tous les événements
+      tags: [Evenements]
+      operationId: getEvenements
+      responses:
+        '200':
+          description: Liste des événements
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Evenement'
+        '401':
+          description: Non authentifié
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error401'
+
+    post:
+      summary: Créer un événement (Professeur/Admin)
+      tags: [Evenements]
+      operationId: createEvenement
+      x-roles: [professeur, administrateur]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nom_evenement:
+                  type: string
+                  maxLength: 255
+                description:
+                  type: string
+                type_evenement:
+                  type: string
+                date_evenement:
+                  type: string
+                  format: date-time
+                duree_minutes:
+                  type: integer
+                id_matiere:
+                  type: string
+                  pattern: '^[0-9]+$'
+                  nullable: true
+                id_specialite:
+                  type: string
+                  pattern: '^[0-9]+$'
+                  nullable: true
+                id_option:
+                  type: string
+                  pattern: '^[0-9]+$'
+                  nullable: true
+              required: [nom_evenement, type_evenement, date_evenement]
+      responses:
+        '201':
+          description: Événement créé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Evenement'
+        '400':
+          description: Données invalides
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error400'
+
+  /api/evenements/a-venir:
+    get:
+      summary: Lister les événements à venir (10 premiers)
+      tags: [Evenements]
+      operationId: getUpcomingEvents
+      responses:
+        '200':
+          description: Liste des événements à venir
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /api/evenements/matiere/{matiereId}:
+    get:
+      summary: Lister les événements d'une matière
+      tags: [Evenements]
+      operationId: getEventsByMatiere
+      parameters:
+        - name: matiereId
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^[0-9]+$'
+      responses:
+        '200':
+          description: Liste des événements
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Evenement'
+
+  /api/evenements/categorie:
+    get:
+      summary: Lister les événements par catégorie
+      tags: [Evenements]
+      operationId: getEventsByCategory
+      responses:
+        '200':
+          description: Événements groupés par catégorie
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /api/evenements/{id}:
+    delete:
+      summary: Supprimer un événement
+      tags: [Evenements]
+      operationId: deleteEvenement
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^[0-9]+$'
+      responses:
+        '200':
+          description: Événement supprimé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '404':
+          description: Événement non trouvé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error404'
+
+  # ========== MESSAGES ==========
+  /api/messages/received:
+    get:
+      summary: Lister les messages reçus
+      tags: [Messages]
+      operationId: getReceivedMessages
+      responses:
+        '200':
+          description: Liste des messages reçus
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Message'
+        '401':
+          description: Non authentifié
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error401'
+
+  /api/messages/sent:
+    get:
+      summary: Lister les messages envoyés
+      tags: [Messages]
+      operationId: getSentMessages
+      responses:
+        '200':
+          description: Liste des messages envoyés
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Message'
+        '401':
+          description: Non authentifié
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error401'
+
+  /api/messages:
+    post:
+      summary: Envoyer un message
+      tags: [Messages]
+      operationId: sendMessage
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                id_destinataire:
+                  type: string
+                  pattern: '^[0-9]+$'
+                sujet:
+                  type: string
+                  maxLength: 255
+                contenu:
+                  type: string
+                fichiers:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+              required: [id_destinataire, sujet, contenu]
+      responses:
+        '201':
+          description: Message envoyé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+        '400':
+          description: Données invalides
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error400'
+
+  /api/messages/{id}:
+    get:
+      summary: Récupérer un message par ID
+      tags: [Messages]
+      operationId: getMessage
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^[0-9]+$'
+      responses:
+        '200':
+          description: Message trouvé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+        '404':
+          description: Message non trouvé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error404'
+
+    delete:
+      summary: Supprimer un message
+      tags: [Messages]
+      operationId: deleteMessage
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^[0-9]+$'
+      responses:
+        '200':
+          description: Message supprimé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '404':
+          description: Message non trouvé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error404'
+
+  /api/messages/{id}/read:
+    put:
+      summary: Marquer un message comme lu
+      tags: [Messages]
+      operationId: markMessageAsRead
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^[0-9]+$'
+      responses:
+        '200':
+          description: Message marqué comme lu
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '404':
+          description: Message non trouvé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error404'
+
+  # ========== IMPORT/EXPORT ==========
+  /api/import/eleves:
+    post:
+      summary: Importer des élèves via fichier Excel (Admin)
+      tags: [Import]
+      operationId: importStudents
+      x-roles: [administrateur]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                fichier:
+                  type: string
+                  format: binary
+              required: [fichier]
+      responses:
+        '200':
+          description: Élèves importés avec succès
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  count:
+                    type: integer
+        '400':
+          description: Format de fichier invalide
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error400'
+
+  /api/import/export-results:
+    post:
+      summary: Exporter les résultats (Admin)
+      tags: [Import]
+      operationId: exportResults
+      x-roles: [administrateur]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                classe_id:
+                  type: string
+                  pattern: '^[0-9]+$'
+      responses:
+        '200':
+          description: Fichier d'export généré
+          content:
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet: {}
+        '404':
+          description: Classe non trouvée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error404'
+
+tags:
+  - name: Health
+    description: Vérification de l'état du serveur
+  - name: Auth
+    description: Authentification et gestion des sessions
+  - name: Users
+    description: Gestion des utilisateurs (admin)
+  - name: Matieres
+    description: Gestion des matières
+  - name: Profile
+    description: Gestion du profil utilisateur
+  - name: Cours
+    description: Gestion des cours
+  - name: Devoirs
+    description: Gestion des devoirs
+  - name: Rendus
+    description: Gestion des rendus de devoirs
+  - name: Evenements
+    description: Gestion des événements (interrogations, examens, etc.)
+  - name: Messages
+    description: Système de messagerie
+  - name: Import
+    description: Import/Export de données

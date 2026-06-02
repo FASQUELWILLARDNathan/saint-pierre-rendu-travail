@@ -51,7 +51,6 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       const useAPI = useApi()
       const data = await useAPI.request<{ user: User }>('/auth/me')
-      console.log('fetchMe response:', data)
       user.value = data.user
       set('user', data.user)
     } catch (error) {
