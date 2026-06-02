@@ -1,7 +1,6 @@
 import 'dotenv/config'
 import express from 'express'
 import { prisma, PORT } from './config.ts'
-import { corsMiddleware } from './middleware/cors.ts'
 import { bigintMiddleware } from './middleware/bigint.ts'
 import { startCronJobs } from './services/cron-manager.ts'
 import authRoutes from './routes/auth.ts'
@@ -19,26 +18,48 @@ import { cleanupDevoirsFolder } from './services/cleanup-devoirs.ts'
 import { cleanupCoursFolder } from './services/cleanup-cours.ts'
 import path from 'path'
 import cookieParser from 'cookie-parser'
+import helmet from 'helmet'
+import { authenticateToken } from './middleware/auth.ts'
+import { securityHeaders } from './middleware/security-headers.ts'
+import { auditAdminActions } from './middleware/admin-audit.ts'
+import { requestSizeLimit } from './middleware/request-size-limit.ts'
+import { sanitizeInputs } from './middleware/xss-protection.ts'
+import { generateCsrfToken, verifyCsrfToken } from './middleware/csrf-protection.ts'
+import { corsMiddleware } from './middleware/cors.ts'
 
 const app = express()
 
 // Trust proxy pour récupérer l'IP réelle derrière un proxy/load balancer
 app.set('trust proxy', 1)
 
-// Middleware
-// Skip JSON parsing for multipart/form-data (used for file uploads with multer)
-app.use(express.json())
 app.use(corsMiddleware)
-app.use(bigintMiddleware)
+
+// Parser les données
+app.use(express.json({ limit: '50mb' }))
+app.use(express.urlencoded({ limit: '50mb', extended: true }))
 app.use(cookieParser())
 
-// Health check
+// Middlewares de sécurité (APRÈS CORS)
+app.use(securityHeaders) // Helmet
+app.use(sanitizeInputs) // Protection XSS
+app.use(bigintMiddleware)
+
+// BigInt middleware
+app.use(bigintMiddleware)
+
+// Health check (SANS authentification)
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() })
 })
 
+app.use('/auth', authRoutes) // Routes d'auth (pas d'authenticateToken ici)
+app.use(authenticateToken)
+
+// Middlewares d'authentification/audit (SEULEMENT après les routes publiques)
+app.use(generateCsrfToken) // Générer token CSRF pour les admins
+app.use(auditAdminActions) // Audit logging
+
 // Routes
-app.use('/auth', authRoutes)
 app.use('/api/users', usersRoutes)
 app.use('/api/devoirs', devoirsRoutes)
 app.use('/api/evenements', evenementsRoutes)
@@ -51,15 +72,15 @@ app.use('/cours', express.static('/app/public/cours'))
 app.use('/public', express.static('/app/public'))
 app.use('/api/rendus', rendusRoutes)
 
-// Error de gestion
+// Gestion des erreurs
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error('Condition d erreur non pris en charge:', err)
+  console.error('Erreur non prise en charge:', err)
   res.status(500).json({ error: 'Erreur serveur interne' })
 })
 
-// Gestion 404
+// 404
 app.use((req, res) => {
-  res.status(404).json({ error: 'Route non trouvé' })
+  res.status(404).json({ error: 'Route non trouvée' })
 })
 
 // Lancement du serveur

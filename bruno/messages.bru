@@ -1,0 +1,28 @@
+meta {
+  name: messages
+  type: http
+  seq: 4
+}
+
+post {
+  url: http://localhost:3000/api/messages
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZF91c2VyIjoiNyIsImxvZ2luIjoiYmVybmFyZC5zb3BoaWUiLCJyb2xlIjoiZWxldmUiLCJpYXQiOjE3ODAzODUwMjh9.wXIoFer-PwmzI0z6BRd_ERUtYOCDM49-mzSSRSWMTO4
+}
+
+body:json {
+  {
+    "destinataire": "test@example.com",
+    "sujet": "Test sécurité",
+    "contenu": "Ceci est un test"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

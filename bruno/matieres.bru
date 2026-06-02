@@ -1,0 +1,24 @@
+meta {
+  name: matieres
+  type: http
+  seq: 2
+}
+
+get {
+  url: http://localhost:3000/api/matieres
+  body: none
+  auth: bearer
+}
+
+headers {
+  fasquel.nathan: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZF91c2VyIjoiNCIsImxvZ2luIjoiZmFzcXVlbC5uYXRoYW4iLCJyb2xlIjoicHJvZmVzc2V1ciIsImlhdCI6MTc4MDM4MDg1NX0.7WlOiusqmx3QnCj9D5fpHTGvcipP9v3PNf6GpT9P9V4
+}
+
+auth:bearer {
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZF91c2VyIjoiNSIsImxvZ2luIjoiYWRtaW4uc2VydmV1ciIsInJvbGUiOiJhZG1pbmlzdHJhdGV1ciIsImlhdCI6MTc4MDM4NTU4MH0._u-ndau_5sG1EBRMcSm9cKL18nbMWM2XPyGNz5pt4Rs
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
