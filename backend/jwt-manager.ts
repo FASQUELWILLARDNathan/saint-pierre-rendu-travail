@@ -20,6 +20,10 @@ export function signToken(payload: object): string {
   return jwt.sign(payload, keyStore.current)
 }
 
+type RotateResponse = {
+  key: string
+}
+
 // Verification du token
 export function verifyToken(token: string): any {
   try {
@@ -41,10 +45,11 @@ export function startKeyRotation(): void {
     async () => {
       try {
         const response = await fetch('https://api.jwtsecrets.com/rotate?length=64&type=HS256')
-        const { key } = await response.json()
+
+        const data = (await response.json()) as RotateResponse
 
         keyStore.previous = keyStore.current
-        keyStore.current = key
+        keyStore.current = data.key
         keyStore.rotatedAt = new Date()
 
         console.log('🔄 JWT key rotated at', new Date().toISOString())

@@ -5,80 +5,97 @@
       <img src="/saintpierre_logo_white.svg" alt="Saint-Pierre" class="logo" />
     </div>
 
-    <!-- Contenu principale -->
+    <!-- Carte principale -->
     <div class="register-card auth-card">
       <h1 class="title">Inscription</h1>
-
       <p class="subtitle">Créez votre compte pour accéder à la plateforme</p>
 
       <!-- Formulaire -->
       <form @submit.prevent="handleSignUp" class="register-form auth-form">
-        <div class="form-row">
-          <div class="form-group">
+
+        <!-- Identité -->
+        <div class="form-section">
+          <h3 class="section-title">Identité</h3>
+          <div class="form-row">
             <input v-model="nom" type="text" placeholder="Nom" class="form-input" required />
-          </div>
-          <div class="form-group">
             <input v-model="prenom" type="text" placeholder="Prénom" class="form-input" required />
           </div>
         </div>
 
-        <!-- Role classe/email -->
-        <div class="form-row">
-          <div class="form-group">
-            <select v-model="role" class="form-input form-select" required>
-              <option value="" disabled>Sélectionnez un rôle</option>
-              <option value="eleve">Élève</option>
-              <option value="professeur">Professeur</option>
-            </select>
-          </div>
-          <div v-if="role === 'eleve'" class="form-group">
-            <select v-model="classe" class="form-input form-select">
-              <option value="" disabled>Sélectionnez une classe</option>
-              <option value="sixieme">Sixième</option>
-              <option value="cinquieme">Cinquième</option>
-              <option value="quatrieme">Quatrième</option>
-              <option value="troisieme">Troisième</option>
-              <option value="seconde">Seconde</option>
-              <option value="premiere">Première</option>
-              <option value="terminale">Terminale</option>
-              <option value="autre">Autre</option>
-            </select>
-          </div>
-          <div v-else-if="role === 'professeur'" class="form-group">
-            <input v-model="email" type="email" placeholder="Email" class="form-input" required />
+        <!-- Rôle -->
+        <div class="form-section">
+          <h3 class="section-title">Rôle</h3>
+          <select v-model="role" class="form-input form-select" required>
+            <option value="" disabled>Sélectionnez un rôle</option>
+            <option value="eleve">Élève</option>
+            <option value="professeur">Professeur</option>
+          </select>
+        </div>
+
+        <!-- Élève -->
+        <div v-if="role === 'eleve'" class="form-section">
+          <h3 class="section-title">Classe</h3>
+          <select v-model="classe" class="form-input form-select" required>
+            <option value="" disabled>Choisissez votre classe</option>
+            <option v-for="c in classes" :key="c.id_classe" :value="c.id_classe">
+              {{ c.nom_classe }}
+            </option>
+          </select>
+        </div>
+
+        <!-- Spécialités -->
+        <div v-if="role === 'eleve'" class="form-section">
+          <h3 class="section-title">Spécialités</h3>
+          <div class="checkbox-grid">
+            <label
+              v-for="s in specialitesList"
+              :key="s.id_specialite"
+              class="checkbox-item"
+            >
+              <input type="checkbox" :value="s.id_specialite" v-model="specialites" />
+              {{ s.nom_specialite }}
+            </label>
           </div>
         </div>
 
-        <!-- Mail pour les etudiants -->
-        <div v-if="role === 'eleve'" class="form-group">
-          <input
-            :value="emailDisplay"
-            type="text"
-            placeholder="Email (généré automatiquement)"
-            class="form-input"
-            disabled
-          />
-          <small style="color: #656262; margin-top: 4px; display: block"
-            >Email généré: nom.prenom@cs-saintpierrecalais.fr</small
-          >
+        <!-- Options -->
+        <div v-if="role === 'eleve'" class="form-section">
+          <h3 class="section-title">Options</h3>
+          <div class="checkbox-grid">
+            <label
+              v-for="o in optionsList"
+              :key="o.id_option"
+              class="checkbox-item"
+            >
+              <input type="checkbox" :value="o.id_option" v-model="options" />
+              {{ o.nom_option }}
+            </label>
+          </div>
+        </div>
+
+        <!-- Email professeur -->
+        <div v-if="role === 'professeur'" class="form-section">
+          <h3 class="section-title">Email</h3>
+          <input v-model="email" type="email" placeholder="Email" class="form-input" required />
+        </div>
+
+        <!-- Email élève -->
+        <div v-if="role === 'eleve'" class="form-section">
+          <h3 class="section-title">Email généré</h3>
+          <input :value="emailDisplay" type="text" class="form-input" disabled />
+          <small class="hint">Email généré automatiquement</small>
         </div>
 
         <!-- Année scolaire -->
-        <div class="form-group">
-          <input
-            :value="anneeDisplay"
-            type="text"
-            placeholder="Année scolaire"
-            class="form-input"
-            disabled
-          />
-          <small style="color: #656262; margin-top: 4px; display: block"
-            >Années scolaires (par défaut: présent)</small
-          >
+        <div class="form-section">
+          <h3 class="section-title">Année scolaire</h3>
+          <input :value="anneeDisplay" type="text" class="form-input" disabled />
+          <small class="hint">Année scolaire actuelle</small>
         </div>
 
-        <!-- Champ mot de passe -->
-        <div class="form-group password-group">
+        <!-- Mot de passe -->
+        <div class="form-section">
+          <h3 class="section-title">Mot de passe</h3>
           <div class="password-input-wrapper">
             <input
               v-model="password"
@@ -92,7 +109,6 @@
               type="button"
               class="password-toggle"
               @click="showPassword = !showPassword"
-              :aria-label="showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'"
             >
               <img
                 v-if="!showPassword"
@@ -110,13 +126,15 @@
           </div>
         </div>
 
-        <!-- Bouton envoie -->
-        <button type="submit" class="submit-btn" :disabled="isLoading">S'inscrire</button>
+        <!-- Bouton -->
+        <button type="submit" class="submit-btn" :disabled="isLoading">
+          S'inscrire
+        </button>
       </form>
 
-      <!-- Lien de connexion -->
+      <!-- Lien connexion -->
       <div class="sign-in-section">
-        <span>Déjà inscrit ? </span>
+        <span>Déjà inscrit ?</span>
         <router-link to="/login" class="sign-in-link auth-link">Se connecter</router-link>
       </div>
     </div>
@@ -126,39 +144,56 @@
       <p>Copyright © 2026, Tous droits réservés.</p>
     </div>
 
-    <!-- Composant pour afficher le login -->
+    <!-- Modal -->
     <div v-if="showLoginModal" class="modal-overlay" @click.self="closeModal">
       <div class="modal-content">
         <h2>Compte créé avec succès!</h2>
-        <p style="margin: 20px 0; font-size: 16px; color: #656262">Votre identifiant est:</p>
+        <p class="modal-text">Votre identifiant est :</p>
+
         <div class="login-display">
           <span class="login-value">{{ generatedLogin }}</span>
           <div class="login-actions">
-            <button type="button" class="copy-btn" @click="copyToClipboard" title="Copier">
+            <button type="button" class="copy-btn" @click="copyToClipboard">
               <img src="/copy-icon.svg" alt="Copier" />
             </button>
           </div>
         </div>
-        <p style="margin-top: 16px; font-size: 14px; color: #656262">
-          Conservez cet identifiant pour vos connexions ultérieures.
-        </p>
+
         <button type="button" class="modal-btn" @click="closeModal">Valider</button>
       </div>
     </div>
   </div>
 </template>
 
+
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useMessage } from 'naive-ui'
+import { useApi } from '@/composables/useApi'
 
 import { ROUTES } from '@/router'
 import { useAuthStore } from '@/stores/auth.store'
 
+onMounted(async () => {
+  const c = await api.getClasses()
+  const s = await api.getSpecialites()
+  const o = await api.getOptions()
+
+  console.log("CLASSES =", c)
+  console.log("SPECIALITES =", s)
+  console.log("OPTIONS =", o)
+
+  classes.value = c as any
+  specialitesList.value = s as any
+  optionsList.value = o as any
+})
+
 const router = useRouter()
 const authStore = useAuthStore()
 const message = useMessage()
+
+const api = useApi()
 
 const nom = ref('')
 const prenom = ref('')
@@ -172,7 +207,13 @@ const now = Date.now()
 const oneYearAgo = new Date().setFullYear(new Date().getFullYear() - 1)
 const annee = ref<[number, number]>([oneYearAgo, now])
 const role = ref<'eleve' | 'professeur'>('eleve')
-const classe = ref<string | null>(null)
+const classe = ref<string | number | null>(null)
+const specialites = ref<string[]>([])
+const options = ref<string[]>([])
+
+const classes = ref<Array<{ id_classe: number | string; nom_classe: string }>>([])
+const specialitesList = ref<Array<{ id_specialite: number | string; nom_specialite: string }>>([])
+const optionsList = ref<Array<{ id_option: number | string; nom_option: string }>>([])
 
 const model = ref({
   selectValue: null,
@@ -258,14 +299,19 @@ const handleSignUp = async () => {
   const finalEmail = role.value === 'eleve' ? emailDisplay.value : email.value
 
   isLoading.value = true
+  console.log('SPECIALITES FRONT:', specialites.value)
+  console.log('OPTIONS FRONT:', options.value)
   try {
     await authStore.signUp({
       nom: nom.value,
       prenom: prenom.value,
-      login: login,
+      login,
       password: password.value,
       role: role.value,
-      classe: role.value === 'eleve' ? (classe.value ?? '') : '',
+      classe: role.value === 'eleve' ? String(classe.value) : '',
+      id_classe: role.value === 'eleve' ? String(classe.value) : undefined,
+      specialites: specialites.value.map(String),
+      options: options.value.map(String),
       annee: `${year1}-${year2}`,
       email: finalEmail,
     })
@@ -309,6 +355,14 @@ const handleSignUp = async () => {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
+}
+
+.form-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #205781;
+  margin-bottom: 6px;
+  display: block;
 }
 
 .logo {
@@ -468,6 +522,14 @@ const handleSignUp = async () => {
   width: 16px;
   height: 16px;
 }
+
+.checkbox-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 10px 16px;
+  margin-top: 10px;
+}
+
 
 .modal-btn {
   width: 100%;

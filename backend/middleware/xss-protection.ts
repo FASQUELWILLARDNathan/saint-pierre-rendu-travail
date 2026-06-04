@@ -1,7 +1,6 @@
 import type { Request, Response, NextFunction } from 'express'
 
 export function sanitizeInputs(req: Request, res: Response, next: NextFunction) {
-  // Fonction pour nettoyer les chaînes XSS
   const sanitize = (str: string | any): any => {
     if (typeof str !== 'string') return str
 
@@ -14,20 +13,23 @@ export function sanitizeInputs(req: Request, res: Response, next: NextFunction) 
       .replace(/\//g, '&#x2F;')
   }
 
-  // Nettoyer le body
-  if (req.body && typeof req.body === 'object') {
-    const sanitizeObj = (obj: any): any => {
-      for (const key in obj) {
-        if (typeof obj[key] === 'string') {
-          obj[key] = sanitize(obj[key])
-        } else if (typeof obj[key] === 'object' && obj[key] !== null) {
-          sanitizeObj(obj[key])
-        }
+  const sanitizeObj = (obj: any): any => {
+    for (const key in obj) {
+      if (Array.isArray(obj[key])) continue
+
+      if (typeof obj[key] === 'string') {
+        obj[key] = sanitize(obj[key])
+      } else if (typeof obj[key] === 'object' && obj[key] !== null) {
+        sanitizeObj(obj[key])
       }
-      return obj
     }
+    return obj
+  }
+
+  if (req.body && typeof req.body === 'object') {
     req.body = sanitizeObj(req.body)
   }
 
   next()
 }
+

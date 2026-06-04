@@ -21,6 +21,7 @@ import { corsMiddleware } from './middleware/cors.ts'
 import swaggerUi from 'swagger-ui-express'
 import YAML from 'yamljs'
 import type { Request, Response, NextFunction } from 'express'
+import publicRoutes from './routes/public.routes.ts'
 
 const app = express()
 const swaggerDocument = YAML.load('./swagger.yaml')
@@ -38,7 +39,6 @@ app.use(cookieParser())
 
 // Security
 app.use(securityHeaders)
-app.use(sanitizeInputs)
 app.use(bigintMiddleware)
 
 // Health check (public)
@@ -48,6 +48,7 @@ app.get('/api/health', (req, res) => {
 
 // Public routes
 app.use('/auth', authRoutes)
+app.use('/api', publicRoutes)
 
 // Auth middleware
 app.use(authenticateToken)
@@ -55,6 +56,7 @@ app.use(authenticateToken)
 // Admin CSRF + audit
 app.use(generateCsrfToken)
 app.use(auditAdminActions)
+app.use(sanitizeInputs)
 
 // Protected routes
 app.use('/api/users', usersRoutes)

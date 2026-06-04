@@ -72,7 +72,7 @@ export function useApi() {
     })
 
   /** Crée un nouveau compte. Retourne le token JWT et les infos utilisateur. */
-  const signUp = ({ nom, prenom, login, password, role, classe, annee, email }: SignUpPayload) =>
+  const signUp = ({ nom, prenom, login, password, role, classe, annee, email, specialites, options }: SignUpPayload) =>
     request<AuthResponse>('/auth/sign-up', {
       method: 'POST',
       body: JSON.stringify({
@@ -84,6 +84,8 @@ export function useApi() {
         classe,
         annee,
         email,
+        specialites,
+        options,
       }),
     })
 
@@ -118,16 +120,16 @@ export function useApi() {
   const getEvenementsAVenir = () => request('/api/evenements/a-venir')
 
   /** Récupère la liste de toutes les classes */
-  const getClasses = () => request('/api/profile/classes')
+  const getClasses = () => request('/api/classes')
 
   /** Récupère la liste de toutes les matières */
   const getMatieres = () => request('/api/profile/matieres')
 
   /** Récupère la liste de toutes les spécialités */
-  const getSpecialites = () => request('/api/profile/specialites')
+  const getSpecialites = () => request('/api/specialites')
 
   /** Récupère la liste de toutes les options */
-  const getOptions = () => request('/api/profile/options')
+  const getOptions = () => request('/api/options')
 
   /** Récupère le profil de l'utilisateur connecté */
   const getProfil = () => request('/api/profile')

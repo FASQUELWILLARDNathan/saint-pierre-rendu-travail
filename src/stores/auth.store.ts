@@ -40,6 +40,8 @@ export const useAuthStore = defineStore('auth', () => {
       classe: classe,
       annee: annee,
       email: email,
+      specialites: payload.specialites,
+      options: payload.options,
     })
     set('token', response.token)
     set('user', response.user)

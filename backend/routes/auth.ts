@@ -122,7 +122,7 @@ function generateStudentEmail(nom: string, prenom: string): string {
 // Crée un compte élève ou professeur, vérifie les doublons et envoie un email de bienvenue.
 router.post('/sign-up', authLimiter, async (req: express.Request, res: express.Response) => {
   try {
-    const { nom, prenom, login, password, role, classe, annee, email: professeurEmail } = req.body
+    const { nom, prenom, login, password, role, classe, annee, email: professeurEmail, specialites, options } = req.body
 
     if (!nom || !prenom || !login || !password || !role) {
       return res.status(400).json({ error: 'Des champs sont manquants' })
@@ -175,20 +175,21 @@ router.post('/sign-up', authLimiter, async (req: express.Request, res: express.R
         },
       })
 
+      console.log('SPECIALITES BACK:', specialites)
+      console.log('OPTIONS BACK:', options)
+
       let eleve = null
       let professeur = null
 
       if (role === 'eleve') {
-        // Find classe by niveau name
-        const classeRecord = await tx.classe.findFirst({
+        // Trouver la classe par ID
+        const classeRecord = await tx.classe.findUnique({
           where: {
-            niveau: {
-              mode: 'insensitive',
-              equals: req.body.classe,
-            },
+            id_classe: Number(req.body.classe),
           },
         })
 
+        // Créer l'élève
         eleve = await tx.eleve.create({
           data: {
             id_user: createdUser.id_user,
@@ -196,7 +197,32 @@ router.post('/sign-up', authLimiter, async (req: express.Request, res: express.R
             id_classe: classeRecord?.id_classe ?? null,
           },
         })
+
+        // Enregistrer les spécialités
+        if (Array.isArray(specialites)) {
+          for (const id_specialite of specialites) {
+            await tx.eleveSpecialite.create({
+              data: {
+                id_eleve: createdUser.id_user,
+                id_specialite: Number(id_specialite),
+              },
+            })
+          }
+        }
+
+        // Enregistrer les options
+        if (Array.isArray(options)) {
+          for (const id_option of options) {
+            await tx.eleveOption.create({
+              data: {
+                id_eleve: createdUser.id_user,
+                id_option: Number(id_option),
+              },
+            })
+          }
+        }
       }
+
 
       if (role === 'professeur') {
         professeur = await tx.professeur.create({
