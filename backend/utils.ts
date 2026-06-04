@@ -16,7 +16,7 @@ export function formatMessage(msg: any): Message {
     id_expediteur: msg.id_expediteur.toString(),
     id_destinataire: msg.id_destinataire.toString(),
     sujet: msg.sujet,
-    contenu: msg.contenu,   
+    contenu: msg.contenu,
     date_envoi: msg.date_envoi,
     lu: msg.lu,
     expediteur: msg.expediteur
@@ -47,7 +47,6 @@ export function formatMessage(msg: any): Message {
   }
 }
 
-
 export function toBigIntOrNull(value: any): bigint | null {
   if (value === null || value === undefined || value === '') {
     return null
@@ -60,5 +59,36 @@ export function toBigIntOrNull(value: any): bigint | null {
     return bigintValue
   } catch {
     return null
+  }
+}
+
+export function resolveMathsVisibility(eleve: any, niveau: string) {
+  const hasSpeMaths = eleve.specialites?.some((s: any) => s.nom_specialite === 'Mathématiques')
+
+  const hasMathExpert = eleve.options?.some((o: any) => o.nom_option === 'Mathématiques expertes')
+
+  const hasMathComp = eleve.options?.some(
+    (o: any) => o.nom_option === 'Mathématiques complémentaires',
+  )
+
+  if (niveau === '1ère') {
+    return {
+      showTroncCommunMaths: !hasSpeMaths,
+      hasSpeMaths,
+    }
+  }
+
+  if (niveau === 'Terminale') {
+    return {
+      hasSpeMaths,
+      hasMathExpert,
+      hasMathComp,
+      showTroncCommunMaths: false,
+    }
+  }
+
+  return {
+    showTroncCommunMaths: true,
+    hasSpeMaths: false,
   }
 }

@@ -142,6 +142,9 @@
             <span class="rendu-label">Rendus des élèves</span>
             <span class="rendu-date">{{ selectedDevoir.rendus?.length ?? 0 }} rendu(s)</span>
           </div>
+          <n-button type="primary" @click="downloadAllRendus">
+            📦 Télécharger tous les rendus
+          </n-button>
 
           <div v-if="selectedDevoir.eleves_non_rendus?.length > 0" class="non-rendus-block">
             <h4>Élèves non rendus</h4>
@@ -644,6 +647,15 @@ async function supprimerRendu() {
   } finally {
     isDeleting.value = false
   }
+}
+
+async function downloadAllRendus() {
+  if (!selectedDevoir.value) return
+
+  window.open(
+    `${apiBase}/api/devoirs/${selectedDevoir.value.id_devoir}/download-all-rendus`,
+    '_blank'
+  )
 }
 
 async function saveReview(rendu: any) {

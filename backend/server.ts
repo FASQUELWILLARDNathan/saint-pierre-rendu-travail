@@ -1,5 +1,5 @@
 import 'dotenv/config'
-import app from './app'
+import app from './app.ts'
 import { prisma, PORT } from './config.ts'
 import { startCronJobs } from './services/cron-manager.ts'
 import { cleanupRendusFolder } from './services/cleanup-rendus.ts'

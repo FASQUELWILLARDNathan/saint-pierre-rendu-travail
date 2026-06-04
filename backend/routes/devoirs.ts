@@ -3,7 +3,10 @@ import { prisma } from '../config.ts'
 import { authenticateToken } from '../middleware/auth.ts'
 import { uploadDevoir } from '../middleware/uploadDevoir.ts'
 import { authorizeRole } from '../middleware/role.ts'
-import { toBigIntOrNull } from '../utils.ts'
+import { toBigIntOrNull, resolveMathsVisibility } from '../utils.ts'
+import { ZipArchive } from 'archiver'
+import path from 'path'
+import fs from 'fs'
 
 const router = Router()
 
@@ -357,7 +360,7 @@ router.get('/mes-devoirs', authenticateToken, async (req, res) => {
     }
 
     if (user.role === 'professeur') {
-      const devoirsProf = await prisma.devoir.findMany({
+      const devoirs = await prisma.devoir.findMany({
         where: {
           cours: {
             is: {
@@ -389,13 +392,13 @@ router.get('/mes-devoirs', authenticateToken, async (req, res) => {
         orderBy: { date_limite: 'asc' },
       })
 
-      const devoirsProfAvecAbsents = await Promise.all(
-        devoirsProf.map(async (devoir) => {
+      const enriched = await Promise.all(
+        devoirs.map(async (devoir) => {
           const expectedEleves = await getExpectedElevesForCours(devoir.cours)
-          const renduIds = new Set((devoir.rendus ?? []).map((rendu: any) => String(rendu.id_user)))
-          const elevesNonRendus = expectedEleves.filter(
-            (eleve) => !renduIds.has(String(eleve.id_user)),
-          )
+
+          const renduIds = new Set((devoir.rendus ?? []).map((r: any) => String(r.id_user)))
+
+          const elevesNonRendus = expectedEleves.filter((e) => !renduIds.has(String(e.id_user)))
 
           return {
             ...formatDevoirWithMatiere(devoir),
@@ -404,7 +407,7 @@ router.get('/mes-devoirs', authenticateToken, async (req, res) => {
         }),
       )
 
-      return res.json(devoirsProfAvecAbsents)
+      return res.json(enriched)
     }
 
     if (user.role !== 'eleve') {
@@ -413,23 +416,36 @@ router.get('/mes-devoirs', authenticateToken, async (req, res) => {
 
     const eleve = await prisma.eleve.findUnique({
       where: { id_user: userIdBigInt },
-      include: { classe: true },
+      include: {
+        specialites: true,
+        options: true,
+        classe: {
+          include: {
+            matieres: true,
+          },
+        },
+      },
     })
 
-    if (!eleve) return res.status(403).json({ error: 'Non autorisé' })
+    if (!eleve) {
+      return res.status(403).json({ error: 'Non autorisé' })
+    }
 
-    // Récupère les profs de la classe
-    const profsDeClasse = await prisma.classeProfesseur.findMany({
-      where: { id_classe: eleve.id_classe! },
-      select: { id_professeur: true },
-    })
-    const profIds = profsDeClasse.map((p) => p.id_professeur)
+    const specialiteIds = eleve.specialites.map((s) => s.id_specialite)
+    const optionIds = eleve.options.map((o) => o.id_option)
+    const matiereIds = (eleve.classe?.matieres ?? []).map((m) => m.id_matiere)
 
     const devoirs = await prisma.devoir.findMany({
       where: {
         cours: {
           is: {
-            id_user: { in: profIds },
+            OR: [
+              ...(specialiteIds.length ? [{ id_specialite: { in: specialiteIds } }] : []),
+
+              ...(optionIds.length ? [{ id_option: { in: optionIds } }] : []),
+
+              ...(matiereIds.length ? [{ id_matiere: { in: matiereIds } }] : []),
+            ],
           },
         },
       },
@@ -437,14 +453,14 @@ router.get('/mes-devoirs', authenticateToken, async (req, res) => {
         cours: coursSelect,
         pieceJointeDevoirs: true,
         rendus: {
-          where: { id_user: BigInt(userId) },
+          where: { id_user: userIdBigInt },
           include: { pieces_jointes: true },
         },
       },
       orderBy: { date_limite: 'asc' },
     })
 
-    res.json(devoirs.map(formatDevoirWithMatiere))
+    return res.json(devoirs.map(formatDevoirWithMatiere))
   } catch (error) {
     console.error('Erreur mes-devoirs:', error)
     res.status(500).json({ error: 'Erreur serveur' })
@@ -556,5 +572,65 @@ router.delete('/:id', async (req, res) => {
 
   res.json({ success: true })
 })
+
+router.get(
+  '/:id/download-all-rendus',
+  authenticateToken,
+  authorizeRole('professeur', 'administrateur'),
+  async (req, res) => {
+    try {
+      const id = toBigIntOrNull(req.params.id)
+      if (!id) return res.status(400).json({ error: 'ID invalide' })
+
+      const devoir = await prisma.devoir.findUnique({
+        where: { id_devoir: id },
+        include: {
+          cours: true,
+          rendus: {
+            include: {
+              eleve: {
+                include: {
+                  user: true,
+                },
+              },
+              pieces_jointes: true,
+            },
+          },
+        },
+      })
+
+      if (!devoir) {
+        return res.status(404).json({ error: 'Devoir introuvable' })
+      }
+
+      res.setHeader('Content-Type', 'application/zip')
+      res.setHeader('Content-Disposition', `attachment; filename="${devoir.nom_devoir}.zip"`)
+
+      const archive = new ZipArchive({
+        zlib: { level: 9 },
+      })
+      archive.pipe(res)
+
+      for (const rendu of devoir.rendus) {
+        const studentName = `${rendu.eleve.user.prenom} ${rendu.eleve.user.nom}`
+
+        for (const file of rendu.pieces_jointes) {
+          const filePath = path.join(process.cwd(), 'public', file.chemin_fichier)
+
+          if (fs.existsSync(filePath)) {
+            archive.file(filePath, {
+              name: `${studentName}/${file.nom_fichier}`,
+            })
+          }
+        }
+      }
+
+      await archive.finalize()
+    } catch (err) {
+      console.error(err)
+      res.status(500).json({ error: 'Erreur serveur ZIP' })
+    }
+  },
+)
 
 export default router

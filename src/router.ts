@@ -15,6 +15,10 @@ import MatierePage from './pages/MatierePage.vue'
 import CoursPage from './pages/CoursPage.vue'
 import DevoirsPage from './pages/DevoirsPage.vue'
 import NotesPage from './pages/NotesPage.vue'
+import MentionLegalesPage from './pages/MentionLegalesPage.vue'
+import CguPage from './pages/CguPage.vue'
+import PolitiquedeConfidentialite from './pages/PolitiquedeConfidentialite.vue'
+import RgpdPage from './pages/RgpdPage.vue'
 
 export const ROUTES = {
   HOME: '/',
@@ -33,6 +37,10 @@ export const ROUTES = {
   COURS: '/cours',
   DEVOIRS: '/devoirs',
   NOTES: '/notes',
+  MENTIONS_LEGALES: '/mentions-legales',
+  CGU: '/cgu',
+  POLITIQUE_DE_CONFIDENTIALITE: '/politique-de-confidentialite',
+  RGPD: '/rgpd'
 } as const
 
 const routes = [
@@ -105,6 +113,26 @@ const routes = [
   {
     path: '/notes',
     component: NotesPage,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: ROUTES.MENTIONS_LEGALES,
+    component: MentionLegalesPage,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: ROUTES.CGU,
+    component: CguPage,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: ROUTES.POLITIQUE_DE_CONFIDENTIALITE,
+    component: PolitiquedeConfidentialite,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: ROUTES.RGPD,
+    component: RgpdPage,
     meta: { requiresAuth: true },
   },
   {

@@ -105,6 +105,27 @@
         <img src="/settings-icon.svg" alt="Gestion des élèves" class="menu-icon" />
         <span class="menu-text">Gestion élèves</span>
       </router-link>
+
+      <!-- Informations légales -->
+      <router-link class="menu-item" to="/mentions-legales">
+        <img class="menu-icon" src="/info-icon.svg" alt="" />
+        <span class="menu-text">Mentions légales</span>
+      </router-link>
+
+      <router-link class="menu-item" to="/cgu">
+        <img class="menu-icon" src="/book-icon.svg" alt="" />
+        <span class="menu-text">CGU</span>
+      </router-link>
+
+      <router-link class="menu-item" to="/politique-de-confidentialite">
+        <img class="menu-icon" src="/lock-icon.svg" alt="" />
+        <span class="menu-text">Confidentialité</span>
+      </router-link>
+
+      <router-link class="menu-item" to="/rgpd">
+        <img class="menu-icon" src="/shield-icon.svg" alt="" />
+        <span class="menu-text">RGPD</span>
+      </router-link>
     </div>
 
     <!-- Logout -->
