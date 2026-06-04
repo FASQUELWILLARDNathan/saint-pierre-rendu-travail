@@ -299,8 +299,6 @@ const handleSignUp = async () => {
   const finalEmail = role.value === 'eleve' ? emailDisplay.value : email.value
 
   isLoading.value = true
-  console.log('SPECIALITES FRONT:', specialites.value)
-  console.log('OPTIONS FRONT:', options.value)
   try {
     await authStore.signUp({
       nom: nom.value,

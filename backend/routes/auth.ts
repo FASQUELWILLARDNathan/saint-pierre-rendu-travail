@@ -175,9 +175,6 @@ router.post('/sign-up', authLimiter, async (req: express.Request, res: express.R
         },
       })
 
-      console.log('SPECIALITES BACK:', specialites)
-      console.log('OPTIONS BACK:', options)
-
       let eleve = null
       let professeur = null
 
