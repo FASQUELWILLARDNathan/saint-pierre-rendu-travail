@@ -1,10 +1,10 @@
-import { Client } from 'node-mailjet'
+import Mailjet from 'node-mailjet'
 
 // Configuration du client Mailjet
-const mailjetClient = Client.apiConnect(
-  process.env.MAILJET_API_KEY || '',
-  process.env.MAILJET_API_SECRET || '',
-)
+const mailjetClient = new Mailjet.Client({
+  apiKey: process.env.MAILJET_API_KEY || '',
+  apiSecret: process.env.MAILJET_API_SECRET || '',
+})
 
 export async function sendResetPasswordEmail(email: string, resetToken: string) {
   const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/reset-password?token=${resetToken}`
