@@ -1,4 +1,5 @@
 import { Router } from 'express'
+import type { File } from 'multer'
 import { prisma } from '../config.ts'
 import { authenticateToken } from '../middleware/auth.ts'
 import { uploadDevoir } from '../middleware/uploadDevoir.ts'
@@ -256,7 +257,7 @@ router.post(
         },
       })
 
-      const files = req.files as Express.Multer.File[]
+      const files = req.files as File[]
 
       if (files?.length) {
         await prisma.piece_jointe_devoir.createMany({

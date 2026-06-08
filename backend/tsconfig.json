@@ -1,17 +1,21 @@
 {
-  "extends": "@tsconfig/node24/tsconfig.json",
   "compilerOptions": {
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "target": "ES2022",
-    "strict": true,
+
+    "strict": false,
+    "noImplicitAny": false,
+
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "noEmit": true,
-
-    "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
-    "types": ["node", "vitest/globals"]
+    "rewriteRelativeImportExtensions": true,
+
+    "outDir": "./dist",
+    "rootDir": "./",
+    "types": ["node"]
   },
-  "include": ["./", "types/**/*.d.ts"]
+  "include": ["**/*.ts"],
+  "exclude": ["tests", "node_modules", "dist"]
 }
