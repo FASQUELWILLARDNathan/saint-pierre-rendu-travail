@@ -1,4 +1,4 @@
-import type { Message } from './types/messages'
+import type { Message } from './types/messages.ts'
 
 // Vérifie si une chaîne de caractères représente un BigInt valide et strictement positif.
 export function isValidBigInt(value: string): boolean {

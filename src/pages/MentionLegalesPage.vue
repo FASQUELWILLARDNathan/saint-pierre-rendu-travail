@@ -12,8 +12,7 @@
           <p>
             Le site <strong>Saint Pierre Plateforme</strong> est édité par
             <strong>ASSOCIATION DE GESTION DE L'INSTITUTION SAINT-PIERRE CALAIS</strong>,
-            association déclarée auprès de la
-            <strong>62 – Sous-préfecture de Calais</strong>.
+            association déclarée auprès de la <strong>62 – Sous-préfecture de Calais</strong>.
           </p>
 
           <p>
@@ -63,19 +62,18 @@
         <div class="section">
           <h2>Données personnelles</h2>
           <p>
-            Le site collecte des données personnelles dans le cadre de son fonctionnement
-            (gestion des comptes, devoirs, communications internes).
+            Le site collecte des données personnelles dans le cadre de son fonctionnement (gestion
+            des comptes, devoirs, communications internes).
           </p>
 
           <p>
-            Conformément au Règlement Général sur la Protection des Données (RGPD), vous
-            disposez d’un droit d’accès, de rectification, de suppression et d’opposition
-            concernant vos données.
+            Conformément au Règlement Général sur la Protection des Données (RGPD), vous disposez
+            d’un droit d’accès, de rectification, de suppression et d’opposition concernant vos
+            données.
           </p>
 
           <p>
-            <strong>Délégué à la Protection des Données (DPO) :</strong> Aucun DPO n’a été
-            désigné.
+            <strong>Délégué à la Protection des Données (DPO) :</strong> Aucun DPO n’a été désigné.
           </p>
         </div>
 
@@ -83,8 +81,8 @@
         <div class="section">
           <h2>Cookies</h2>
           <p>
-            Le site utilise des cookies techniques nécessaires à son fonctionnement. Aucun
-            cookie publicitaire ou de suivi externe n’est utilisé.
+            Le site utilise des cookies techniques nécessaires à son fonctionnement. Aucun cookie
+            publicitaire ou de suivi externe n’est utilisé.
           </p>
         </div>
 
@@ -92,9 +90,8 @@
         <div class="section">
           <h2>Propriété intellectuelle</h2>
           <p>
-            L’ensemble des contenus présents sur le site (textes, images, logos, documents)
-            sont la propriété exclusive de l’Association Saint-Pierre Calais ou de leurs
-            auteurs respectifs.
+            L’ensemble des contenus présents sur le site (textes, images, logos, documents) sont la
+            propriété exclusive de l’Association Saint-Pierre Calais ou de leurs auteurs respectifs.
           </p>
         </div>
 

@@ -49,7 +49,6 @@ const request = async <T>(path: string, options: RequestInit = {}) => {
     }
   }
 
-
   return res.json() as Promise<T>
 }
 
@@ -72,7 +71,18 @@ export function useApi() {
     })
 
   /** Crée un nouveau compte. Retourne le token JWT et les infos utilisateur. */
-  const signUp = ({ nom, prenom, login, password, role, classe, annee, email, specialites, options }: SignUpPayload) =>
+  const signUp = ({
+    nom,
+    prenom,
+    login,
+    password,
+    role,
+    classe,
+    annee,
+    email,
+    specialites,
+    options,
+  }: SignUpPayload) =>
     request<AuthResponse>('/auth/sign-up', {
       method: 'POST',
       body: JSON.stringify({

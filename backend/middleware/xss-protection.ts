@@ -32,4 +32,3 @@ export function sanitizeInputs(req: Request, res: Response, next: NextFunction) 
 
   next()
 }
-

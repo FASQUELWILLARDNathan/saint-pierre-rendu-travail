@@ -10,7 +10,8 @@
           <h2>1. Objet</h2>
           <p>
             Les présentes Conditions Générales d’Utilisation (CGU) ont pour objet de définir les
-            modalités d’accès et d’utilisation de la plateforme <strong>Saint Pierre Plateforme</strong>.
+            modalités d’accès et d’utilisation de la plateforme
+            <strong>Saint Pierre Plateforme</strong>.
           </p>
           <p>
             L’accès au site est réservé aux membres de la communauté éducative de l’Institution
@@ -22,7 +23,8 @@
           <h2>2. Accès au service</h2>
           <p>
             L’accès à la plateforme nécessite la création d’un compte utilisateur fourni par
-            l’établissement. L’utilisateur est responsable de la confidentialité de ses identifiants.
+            l’établissement. L’utilisateur est responsable de la confidentialité de ses
+            identifiants.
           </p>
           <p>
             Toute connexion ou action réalisée avec ses identifiants est réputée effectuée par lui.
@@ -31,9 +33,7 @@
 
         <div class="section">
           <h2>3. Utilisation conforme</h2>
-          <p>
-            L’utilisateur s’engage à utiliser la plateforme dans le respect :
-          </p>
+          <p>L’utilisateur s’engage à utiliser la plateforme dans le respect :</p>
           <ul>
             <li>des lois et règlements en vigueur ;</li>
             <li>du règlement intérieur de l’établissement ;</li>
@@ -51,9 +51,7 @@
             Les contenus pédagogiques, documents, devoirs et informations mis à disposition sur la
             plateforme sont destinés exclusivement à un usage scolaire interne.
           </p>
-          <p>
-            Toute reproduction, diffusion ou partage non autorisé est interdit.
-          </p>
+          <p>Toute reproduction, diffusion ou partage non autorisé est interdit.</p>
         </div>
 
         <div class="section">

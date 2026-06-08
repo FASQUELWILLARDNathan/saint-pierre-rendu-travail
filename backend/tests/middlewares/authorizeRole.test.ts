@@ -5,7 +5,7 @@ import express from 'express'
 import request from 'supertest'
 import { authorizeRole } from '../../middleware/role.ts'
 import { authenticateToken } from '../../middleware/auth.ts'
-import { generateTestToken } from '../utils/jwt'
+import { generateTestToken } from '../utils/jwt.ts'
 
 // Mini-app Express isolée
 const app = express()

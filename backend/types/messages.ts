@@ -1,4 +1,4 @@
-import type { User } from '../../src/types/auth'
+import type { User } from '../../src/types/auth.ts'
 
 export interface PieceJointe {
   id_piece_jointe: string

@@ -388,7 +388,7 @@ export function generateSecurePassword(): string {
   const allChars = lowercase + uppercase + digits + specialChars
 
   // Détection automatique de l'environnement (Navigateur ou Node.js) pour la sécurité
-  const cryptoObj = typeof window !== 'undefined' ? window.crypto : (globalThis as any).crypto
+  const cryptoObj = (globalThis as any).crypto
 
   const getRandomChar = (pool: string): string => {
     if (cryptoObj?.getRandomValues) {

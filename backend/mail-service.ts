@@ -1,7 +1,7 @@
-import mailjet from 'node-mailjet'
+import { Client } from 'node-mailjet'
 
 // Configuration du client Mailjet
-const mailjetClient = mailjet.apiConnect(
+const mailjetClient = Client.apiConnect(
   process.env.MAILJET_API_KEY || '',
   process.env.MAILJET_API_SECRET || '',
 )

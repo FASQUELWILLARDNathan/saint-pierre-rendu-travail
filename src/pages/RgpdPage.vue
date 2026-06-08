@@ -22,8 +22,8 @@
           <h2>2. Responsable du traitement</h2>
           <p>
             Le responsable du traitement est
-            <strong>ASSOCIATION DE GESTION DE L'INSTITUTION SAINT-PIERRE CALAIS</strong>, située
-            au 26 RUE DU FOUR A CHAUX, 62100 CALAIS, FRANCE.
+            <strong>ASSOCIATION DE GESTION DE L'INSTITUTION SAINT-PIERRE CALAIS</strong>, située au
+            26 RUE DU FOUR A CHAUX, 62100 CALAIS, FRANCE.
           </p>
         </div>
 
@@ -38,9 +38,7 @@
 
         <div class="section">
           <h2>4. Registre des traitements</h2>
-          <p>
-            Les principaux traitements concernent :
-          </p>
+          <p>Les principaux traitements concernent :</p>
           <ul>
             <li>la gestion des comptes utilisateurs ;</li>
             <li>la gestion des devoirs, rendus et notes ;</li>

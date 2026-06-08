@@ -122,7 +122,18 @@ function generateStudentEmail(nom: string, prenom: string): string {
 // Crée un compte élève ou professeur, vérifie les doublons et envoie un email de bienvenue.
 router.post('/sign-up', authLimiter, async (req: express.Request, res: express.Response) => {
   try {
-    const { nom, prenom, login, password, role, classe, annee, email: professeurEmail, specialites, options } = req.body
+    const {
+      nom,
+      prenom,
+      login,
+      password,
+      role,
+      classe,
+      annee,
+      email: professeurEmail,
+      specialites,
+      options,
+    } = req.body
 
     if (!nom || !prenom || !login || !password || !role) {
       return res.status(400).json({ error: 'Des champs sont manquants' })
@@ -219,7 +230,6 @@ router.post('/sign-up', authLimiter, async (req: express.Request, res: express.R
           }
         }
       }
-
 
       if (role === 'professeur') {
         professeur = await tx.professeur.create({

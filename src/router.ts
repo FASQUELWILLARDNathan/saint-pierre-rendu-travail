@@ -40,7 +40,7 @@ export const ROUTES = {
   MENTIONS_LEGALES: '/mentions-legales',
   CGU: '/cgu',
   POLITIQUE_DE_CONFIDENTIALITE: '/politique-de-confidentialite',
-  RGPD: '/rgpd'
+  RGPD: '/rgpd',
 } as const
 
 const routes = [
@@ -172,6 +172,5 @@ router.beforeEach((to) => {
 
   return true
 })
-
 
 export default router

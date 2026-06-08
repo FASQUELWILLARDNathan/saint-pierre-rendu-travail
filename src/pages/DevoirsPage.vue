@@ -654,7 +654,7 @@ async function downloadAllRendus() {
 
   window.open(
     `${apiBase}/api/devoirs/${selectedDevoir.value.id_devoir}/download-all-rendus`,
-    '_blank'
+    '_blank',
   )
 }
 

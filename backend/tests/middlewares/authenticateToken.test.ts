@@ -4,7 +4,7 @@ vi.mock('../../jwt-manager.ts', () => require('../mocks/jwt-manager.ts'))
 import express from 'express'
 import request from 'supertest'
 import { authenticateToken } from '../../middleware/auth.ts'
-import { generateTestToken } from '../utils/jwt'
+import { generateTestToken } from '../utils/jwt.ts'
 
 // Mini-app Express isolée
 const app = express()

@@ -12,7 +12,6 @@
 
       <!-- Formulaire -->
       <form @submit.prevent="handleSignUp" class="register-form auth-form">
-
         <!-- Identité -->
         <div class="form-section">
           <h3 class="section-title">Identité</h3>
@@ -47,11 +46,7 @@
         <div v-if="role === 'eleve'" class="form-section">
           <h3 class="section-title">Spécialités</h3>
           <div class="checkbox-grid">
-            <label
-              v-for="s in specialitesList"
-              :key="s.id_specialite"
-              class="checkbox-item"
-            >
+            <label v-for="s in specialitesList" :key="s.id_specialite" class="checkbox-item">
               <input type="checkbox" :value="s.id_specialite" v-model="specialites" />
               {{ s.nom_specialite }}
             </label>
@@ -62,11 +57,7 @@
         <div v-if="role === 'eleve'" class="form-section">
           <h3 class="section-title">Options</h3>
           <div class="checkbox-grid">
-            <label
-              v-for="o in optionsList"
-              :key="o.id_option"
-              class="checkbox-item"
-            >
+            <label v-for="o in optionsList" :key="o.id_option" class="checkbox-item">
               <input type="checkbox" :value="o.id_option" v-model="options" />
               {{ o.nom_option }}
             </label>
@@ -105,11 +96,7 @@
               autocomplete="new-password"
               required
             />
-            <button
-              type="button"
-              class="password-toggle"
-              @click="showPassword = !showPassword"
-            >
+            <button type="button" class="password-toggle" @click="showPassword = !showPassword">
               <img
                 v-if="!showPassword"
                 src="/eye-password-show-svgrepo-com.svg"
@@ -127,9 +114,7 @@
         </div>
 
         <!-- Bouton -->
-        <button type="submit" class="submit-btn" :disabled="isLoading">
-          S'inscrire
-        </button>
+        <button type="submit" class="submit-btn" :disabled="isLoading">S'inscrire</button>
       </form>
 
       <!-- Lien connexion -->
@@ -165,7 +150,6 @@
   </div>
 </template>
 
-
 <script setup lang="ts">
 import { computed, ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
@@ -180,9 +164,9 @@ onMounted(async () => {
   const s = await api.getSpecialites()
   const o = await api.getOptions()
 
-  console.log("CLASSES =", c)
-  console.log("SPECIALITES =", s)
-  console.log("OPTIONS =", o)
+  console.log('CLASSES =', c)
+  console.log('SPECIALITES =', s)
+  console.log('OPTIONS =', o)
 
   classes.value = c as any
   specialitesList.value = s as any
@@ -527,7 +511,6 @@ const handleSignUp = async () => {
   gap: 10px 16px;
   margin-top: 10px;
 }
-
 
 .modal-btn {
   width: 100%;
