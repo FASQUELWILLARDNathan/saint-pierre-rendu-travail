@@ -22,9 +22,14 @@ import swaggerUi from 'swagger-ui-express'
 import YAML from 'yamljs'
 import type { Request, Response, NextFunction } from 'express'
 import publicRoutes from './routes/public.routes.ts'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const swaggerPath = path.join(__dirname, '../swagger.yaml')
 
 const app = express()
-const swaggerDocument = YAML.load('./swagger.yaml')
+const swaggerDocument = YAML.load(swaggerPath)
 
 // Trust proxy
 app.set('trust proxy', 1)

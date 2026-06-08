@@ -1,4 +1,5 @@
 import { Router } from 'express'
+import type { File } from 'multer'
 import { prisma } from '../config.ts'
 import { authenticateToken } from '../middleware/auth.ts'
 import multer from 'multer'
@@ -83,7 +84,7 @@ router.post(
       }
 
       // Sauvegarde les fichiers
-      const files = req.files as Express.Multer.File[]
+      const files = req.files as File[]
       if (files && files.length > 0) {
         await prisma.piece_jointe_rendu.createMany({
           data: files.map((f) => ({
