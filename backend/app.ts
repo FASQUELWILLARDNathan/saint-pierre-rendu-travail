@@ -13,7 +13,6 @@ import importRoutes from './routes/import.ts'
 import cookieParser from 'cookie-parser'
 import { authenticateToken } from './middleware/auth.ts'
 import { securityHeaders } from './middleware/security-headers.ts'
-import { auditAdminActions } from './middleware/admin-audit.ts'
 import { requestSizeLimit } from './middleware/request-size-limit.ts'
 import { sanitizeInputs } from './middleware/xss-protection.ts'
 import { generateCsrfToken } from './middleware/csrf-protection.ts'
@@ -58,9 +57,8 @@ app.use('/api', publicRoutes)
 // Auth middleware
 app.use(authenticateToken)
 
-// Admin CSRF + audit
+// CSRF + XSS pour tout le monde
 app.use(generateCsrfToken)
-app.use(auditAdminActions)
 app.use(sanitizeInputs)
 
 // Protected routes
@@ -71,8 +69,8 @@ app.use('/api/profile', profilRoutes)
 app.use('/api/messages', messagesRoutes)
 app.use('/api/matieres', matieresRoutes)
 app.use('/api/cours', coursRoutes)
-app.use('/api/import', importRoutes)
 app.use('/api/rendus', rendusRoutes)
+app.use('/api/import', importRoutes)
 
 // Static
 app.use('/cours', express.static('/app/public/cours'))

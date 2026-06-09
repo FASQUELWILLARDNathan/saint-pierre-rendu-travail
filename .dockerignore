@@ -9,6 +9,7 @@ dist
 .gitignore
 
 .env
+.env.production
 
 .vscode
 .vscode-test

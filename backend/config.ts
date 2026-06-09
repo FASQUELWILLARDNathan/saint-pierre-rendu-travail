@@ -19,9 +19,10 @@ export const PORT = process.env.PORT
 export const NODE_ENV = process.env.NODE_ENV
 
 // Configuration du CORS
-export const ALLOWED_ORIGINS = (
-  process.env.ALLOWED_ORIGINS || 'http://localhost:5173,http://localhost:3000'
-).split(',')
+export const ALLOWED_ORIGINS = [
+  "http://neyznn.fr:8079",
+  "http://localhost:5173"
+]
 
 // Initialisation des services
 startKeyRotation()

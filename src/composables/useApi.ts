@@ -121,7 +121,7 @@ export function useApi() {
   const getProfesseurs = () => request('/api/professeurs')
 
   /** Récupère la liste de tous les utilisateurs */
-  const getUsers = () => request('/api/users')
+  const getUsers = () => request('/api/users/list/public')
 
   /** Récupère les travaux à rendre (devoirs non rendus) */
   const getTravauxARendreRecents = () => request('/api/devoirs/travaux-a-rendre')

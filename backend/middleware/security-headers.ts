@@ -17,7 +17,8 @@ export const securityHeaders = helmet({
       defaultSrc: ["'self'"],
       connectSrc: [
         "'self'",
-        ...frontendOrigins, // Autoriser les requêtes vers les domaines frontend
+        "http://neyznn.fr:8079",
+        "http://localhost:5173",
       ],
       styleSrc: ["'self'", "'unsafe-inline'"], // Pour Vue/Vite en dev
       scriptSrc: ["'self'"],
@@ -31,7 +32,7 @@ export const securityHeaders = helmet({
   noSniff: true,
   xssFilter: true,
   // Désactiver COOP/CORP en dev pour éviter les blocages cross-origin
-  crossOriginOpenerPolicy: NODE_ENV === 'production' ? { policy: 'same-origin' } : false,
-  crossOriginResourcePolicy: NODE_ENV === 'production' ? { policy: 'same-origin' } : false,
+  crossOriginOpenerPolicy: false,
+  crossOriginResourcePolicy: false,
   referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
 })

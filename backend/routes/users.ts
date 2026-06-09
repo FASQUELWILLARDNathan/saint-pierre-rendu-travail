@@ -3,6 +3,7 @@ import { prisma } from '../config.ts'
 import bcrypt from 'bcrypt'
 import { authenticateToken } from '../middleware/auth.ts'
 import { authorizeRole } from '../middleware/role.ts'
+import { auditAdminActions } from '../middleware/admin-audit.ts'
 
 const router = express.Router()
 
@@ -10,7 +11,7 @@ const router = express.Router()
 router.get(
   '/eleves/list',
   authenticateToken,
-  authorizeRole('administrateur', 'professeur'),
+  authorizeRole('administrateur', 'professeur', 'eleve'),
   async (req: express.Request, res: express.Response) => {
     try {
       const users = await prisma.utilisateur.findMany({
@@ -72,7 +73,43 @@ router.get(
   },
 )
 
-// Recupere tous les utilisateurs
+// GET /api/users/list/public - Get all users (basic info for messaging/UI)
+router.get(
+  '/list/public',
+  authenticateToken,
+  async (req: express.Request, res: express.Response) => {
+    try {
+      const users = await prisma.utilisateur.findMany({
+        select: {
+          id_user: true,
+          nom: true,
+          prenom: true,
+          email: true,
+          role: true,
+        },
+        orderBy: {
+          nom: 'asc',
+        },
+      })
+
+      // Format the response
+      const formattedUsers = users.map((user) => ({
+        id_user: user.id_user.toString(),
+        nom: user.nom,
+        prenom: user.prenom,
+        email: user.email,
+        role: user.role,
+      }))
+
+      res.json(formattedUsers)
+    } catch (error) {
+      console.error('Erreur lors de la récupération des utilisateurs:', error)
+      res.status(500).json({ error: 'Erreur serveur' })
+    }
+  },
+)
+
+// Recupere tous les utilisateurs (Admin only)
 router.get(
   '/',
   authenticateToken,
@@ -175,6 +212,7 @@ router.put(
   '/:id',
   authenticateToken,
   authorizeRole('administrateur'),
+  auditAdminActions,
   async (req: express.Request, res: express.Response) => {
     try {
       const { id } = req.params
@@ -247,6 +285,7 @@ router.post(
   '/',
   authenticateToken,
   authorizeRole('administrateur'),
+  auditAdminActions,
   async (req: express.Request, res: express.Response) => {
     try {
       const {
@@ -390,6 +429,7 @@ router.delete(
   '/:id',
   authenticateToken,
   authorizeRole('administrateur'),
+  auditAdminActions,
   async (req: express.Request, res: express.Response) => {
     try {
       const { id } = req.params
