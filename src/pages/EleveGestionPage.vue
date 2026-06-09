@@ -1123,4 +1123,30 @@ async function deleteEleve() {
 .gestion-link {
   text-decoration: none;
 }
+
+/* Réduire la taille du modal d'importation */
+:deep(.n-modal-mask) {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+}
+
+:deep(.n-modal) {
+  max-width: 700px !important;
+  width: 90% !important;
+}
+
+:deep(.n-modal-body) {
+  max-height: 500px !important;
+  overflow-y: auto;
+}
+
+:deep(.n-card) {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.import-result {
+  max-height: 400px;
+  overflow-y: auto;
+}
 </style>
