@@ -70,6 +70,7 @@ CREATE TABLE "eleve" (
 CREATE TABLE "professeur" (
     "id_user" BIGINT PRIMARY KEY,
     "matiere" VARCHAR(50),
+    "already_connected" BOOLEAN NOT NULL DEFAULT FALSE,
     CONSTRAINT "fk_professeur_user"
         FOREIGN KEY ("id_user") REFERENCES "utilisateur"("id_user") ON DELETE CASCADE
 );
