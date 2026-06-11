@@ -8,104 +8,104 @@ datasource db {
 
 // Represente une matière (Mathématiques, Français, etc.)
 model matiere {
-  id_matiere      BigInt          @id @default(autoincrement())
-  nom_matiere     String          @unique @db.VarChar(50)
-  description     String?
-  couleur         String?         @db.VarChar(7)
-  icon_url        String?
-  devoir_icon_url String?
-  cours           cours[]
-  evenements      evenement[]
-  created_at      DateTime        @default(now())
-  classes         ClasseMatiere[]
+  id_matiere                BigInt                  @id @default(autoincrement())
+  nom_matiere               String                  @unique @db.VarChar(50)
+  description               String?
+  couleur                   String?                 @db.VarChar(7)
+  icon_url                  String?
+  devoir_icon_url           String?
+  cours                     cours[]
+  evenements                evenement[]
+  created_at                DateTime                @default(now())
+  classes                   ClasseMatiere[]
 }
 
 // Represente un utilisateur du systeme
 // Il peut etre eleve ou professeur ou administrateur mais a inserer dans la base de donnees pour une question de securité
 model utilisateur {
-  id_user            BigInt      @id @default(autoincrement())
-  nom                String      @db.VarChar(50)
-  prenom             String      @db.VarChar(50)
-  login              String      @unique @db.VarChar(50)
-  email              String      @unique @db.VarChar(255)
-  hashed_password    String      @db.VarChar(255)
-  role               Role
-  created_at         DateTime    @default(now())
-  reset_token        String?
-  reset_token_expiry DateTime?
-  eleve              eleve?
-  professeur         professeur?
-  messages_envoyes   message[]   @relation("MessageEnvoye")
-  messages_recus     message[]   @relation("MessageRecu")
+  id_user                   BigInt                  @id @default(autoincrement())
+  nom                       String                  @db.VarChar(50)
+  prenom                    String                  @db.VarChar(50)
+  login                     String                  @unique @db.VarChar(50)
+  email                     String                  @unique @db.VarChar(255)
+  hashed_password           String                  @db.VarChar(255)
+  role                      Role
+  created_at                DateTime                @default(now())
+  reset_token               String?
+  reset_token_expiry        DateTime?
+  eleve                     eleve?
+  professeur                professeur?
+  messages_envoyes          message[]               @relation("MessageEnvoye")
+  messages_recus            message[]               @relation("MessageRecu")
 }
 
 // Extension de utilisateur pour eleve
 model eleve {
-  id_user     BigInt            @id
-  id_classe   BigInt?
-  annee       String?           @db.VarChar(50)
-  user        utilisateur       @relation(fields: [id_user], references: [id_user], onDelete: Cascade)
-  classe      classe?           @relation(fields: [id_classe], references: [id_classe], onDelete: SetNull)
-  specialites EleveSpecialite[]
-  options     EleveOption[]
-  rendus      rendu[]
+  id_user                   BigInt                  @id
+  id_classe                 BigInt?
+  annee                     String?                 @db.VarChar(50)
+  user                      utilisateur             @relation(fields: [id_user], references: [id_user], onDelete: Cascade)
+  classe                    classe?                 @relation(fields: [id_classe], references: [id_classe], onDelete: SetNull)
+  specialites               EleveSpecialite[]
+  options                   EleveOption[]
+  rendus                    rendu[]
 }
 
 // Extension de utilisateur pour professeur
 model professeur {
-  id_user                 BigInt                 @id
-  matiere                 String?                @db.VarChar(50)
-  asso_professeur_devoirs assprofdevoir[]
-  cours                   cours[]
-  classes_enseignees      ClasseProfesseur[]
-  specialites_enseignees  ProfesseurSpecialite[]
-  options_enseignees      ProfesseurOption[]
-  user                    utilisateur            @relation(fields: [id_user], references: [id_user], onDelete: Cascade)
+  id_user                   BigInt                  @id
+  matiere                   String?                 @db.VarChar(50)
+  asso_professeur_devoirs   assprofdevoir[]
+  cours                     cours[]
+  classes_enseignees        ClasseProfesseur[]
+  specialites_enseignees    ProfesseurSpecialite[]
+  options_enseignees        ProfesseurOption[]
+  user                      utilisateur             @relation(fields: [id_user], references: [id_user], onDelete: Cascade)
 }
 
 // Représente une classe (Terminale A, 1ère B, etc.)
 model classe {
-  id_classe   BigInt             @id @default(autoincrement())
-  niveau      String             @db.VarChar(20)
-  lettre      String             @db.VarChar(1)
-  nom_classe  String             @unique @db.VarChar(50)
-  eleves      eleve[]
-  professeurs ClasseProfesseur[]
-  created_at  DateTime           @default(now())
-  matieres    ClasseMatiere[]
-  cours       cours[]            @relation("ClasseCours")
+  id_classe                 BigInt                  @id @default(autoincrement())
+  niveau                    String                  @db.VarChar(20)
+  lettre                    String                  @db.VarChar(1)
+  nom_classe                String                  @unique @db.VarChar(50)
+  eleves                    eleve[]
+  professeurs               ClasseProfesseur[]
+  created_at                DateTime                @default(now())
+  matieres                  ClasseMatiere[]
+  cours                     cours[]                 @relation("ClasseCours")
 
   @@unique([niveau, lettre])
 }
 
 // Représente une spécialité (NSI, SVT, Maths, etc.)
 model specialite {
-  id_specialite  BigInt                 @id @default(autoincrement())
-  nom_specialite String                 @unique @db.VarChar(50)
-  eleves         EleveSpecialite[]
-  professeurs    ProfesseurSpecialite[]
-  created_at     DateTime               @default(now())
-  cours          cours[]
-  evenements     evenement[]
+  id_specialite             BigInt                  @id @default(autoincrement())
+  nom_specialite            String                  @unique @db.VarChar(50)
+  eleves                    EleveSpecialite[]
+  professeurs               ProfesseurSpecialite[]
+  created_at                DateTime                @default(now())
+  cours                     cours[]
+  evenements                evenement[]
 }
 
 // Représente une option (Sport, Latin, etc.)
 model option {
-  id_option   BigInt             @id @default(autoincrement())
-  nom_option  String             @unique @db.VarChar(50)
-  eleves      EleveOption[]
-  professeurs ProfesseurOption[]
-  created_at  DateTime           @default(now())
-  cours       cours[]
-  evenements  evenement[]
+  id_option                 BigInt                  @id @default(autoincrement())
+  nom_option                String                  @unique @db.VarChar(50)
+  eleves                    EleveOption[]
+  professeurs               ProfesseurOption[]
+  created_at                DateTime                @default(now())
+  cours                     cours[]
+  evenements                evenement[]
 }
 
 // Table de liaison explicite: Eleve - Specialite
 model EleveSpecialite {
-  id_eleve      BigInt     @map("A")
-  id_specialite BigInt     @map("B")
-  eleve         eleve      @relation(fields: [id_eleve], references: [id_user], onDelete: Cascade)
-  specialite    specialite @relation(fields: [id_specialite], references: [id_specialite], onDelete: Cascade)
+  id_eleve                  BigInt                  @map("A")
+  id_specialite             BigInt                  @map("B")
+  eleve                     eleve                   @relation(fields: [id_eleve], references: [id_user], onDelete: Cascade)
+  specialite                specialite              @relation(fields: [id_specialite], references: [id_specialite], onDelete: Cascade)
 
   @@id([id_eleve, id_specialite])
   @@map("_eleveTospecialite")
@@ -113,10 +113,10 @@ model EleveSpecialite {
 
 // Table de liaison explicite: Eleve - Option
 model EleveOption {
-  id_eleve  BigInt @map("A")
-  id_option BigInt @map("B")
-  eleve     eleve  @relation(fields: [id_eleve], references: [id_user], onDelete: Cascade)
-  option    option @relation(fields: [id_option], references: [id_option], onDelete: Cascade)
+  id_eleve                  BigInt                  @map("A")
+  id_option                 BigInt                  @map("B")
+  eleve                     eleve                   @relation(fields: [id_eleve], references: [id_user], onDelete: Cascade)
+  option                    option                  @relation(fields: [id_option], references: [id_option], onDelete: Cascade)
 
   @@id([id_eleve, id_option])
   @@map("_eleveTooption")
@@ -124,10 +124,10 @@ model EleveOption {
 
 // Table de liaison explicite: Professeur - Specialite
 model ProfesseurSpecialite {
-  id_professeur BigInt     @map("A")
-  id_specialite BigInt     @map("B")
-  professeur    professeur @relation(fields: [id_professeur], references: [id_user], onDelete: Cascade)
-  specialite    specialite @relation(fields: [id_specialite], references: [id_specialite], onDelete: Cascade)
+  id_professeur             BigInt                  @map("A")
+  id_specialite             BigInt                  @map("B")
+  professeur                professeur              @relation(fields: [id_professeur], references: [id_user], onDelete: Cascade)
+  specialite                specialite              @relation(fields: [id_specialite], references: [id_specialite], onDelete: Cascade)
 
   @@id([id_professeur, id_specialite])
   @@map("_professeurTospecialite")
@@ -135,10 +135,10 @@ model ProfesseurSpecialite {
 
 // Table de liaison explicite: Professeur - Option
 model ProfesseurOption {
-  id_professeur BigInt     @map("A")
-  id_option     BigInt     @map("B")
-  professeur    professeur @relation(fields: [id_professeur], references: [id_user], onDelete: Cascade)
-  option        option     @relation(fields: [id_option], references: [id_option], onDelete: Cascade)
+  id_professeur             BigInt                  @map("A")
+  id_option                 BigInt                  @map("B")
+  professeur                professeur              @relation(fields: [id_professeur], references: [id_user], onDelete: Cascade)
+  option                    option                  @relation(fields: [id_option], references: [id_option], onDelete: Cascade)
 
   @@id([id_professeur, id_option])
   @@map("_optionToprofesseur")
@@ -146,10 +146,10 @@ model ProfesseurOption {
 
 // Table de liaison explicite: Classe - Professeur
 model ClasseProfesseur {
-  id_classe     BigInt     @map("A")
-  id_professeur BigInt     @map("B")
-  classe        classe     @relation(fields: [id_classe], references: [id_classe], onDelete: Cascade)
-  professeur    professeur @relation(fields: [id_professeur], references: [id_user], onDelete: Cascade)
+  id_classe                 BigInt                  @map("A")
+  id_professeur             BigInt                  @map("B")
+  classe                    classe                  @relation(fields: [id_classe], references: [id_classe], onDelete: Cascade)
+  professeur                professeur              @relation(fields: [id_professeur], references: [id_user], onDelete: Cascade)
 
   @@id([id_classe, id_professeur])
   @@map("_classeToprofesseur")
@@ -157,77 +157,76 @@ model ClasseProfesseur {
 
 // Un cours est créé par un professeur unique et appartient à une matière
 model cours {
-  id_cours          BigInt            @id @default(autoincrement())
-  id_user           BigInt
-  id_matiere        BigInt?
-  id_classe         BigInt?
-  id_specialite     BigInt?
-  id_option         BigInt?
-  nom_cours         String            @db.VarChar(50)
-  description_cours String?
-  professeur        professeur        @relation(fields: [id_user], references: [id_user])
-  matiere           matiere?          @relation(fields: [id_matiere], references: [id_matiere])
-  classe            classe?           @relation("ClasseCours", fields: [id_classe], references: [id_classe])
-  specialite        specialite?       @relation(fields: [id_specialite], references: [id_specialite])
-  option            option?           @relation(fields: [id_option], references: [id_option])
-  devoirs           devoir[]
-  ressources        ressource_cours[]
+  id_cours                  BigInt                  @id @default(autoincrement())
+  id_user                   BigInt
+  id_matiere                BigInt?
+  id_classe                 BigInt?
+  id_specialite             BigInt?
+  id_option                 BigInt?
+  nom_cours                 String                  @db.VarChar(50)
+  description_cours         String?
+  professeur                professeur              @relation(fields: [id_user], references: [id_user])
+  matiere                   matiere?                @relation(fields: [id_matiere], references: [id_matiere])
+  classe                    classe?                 @relation("ClasseCours", fields: [id_classe], references: [id_classe])
+  specialite                specialite?             @relation(fields: [id_specialite], references: [id_specialite])
+  option                    option?                 @relation(fields: [id_option], references: [id_option])
+  devoirs                   devoir[]
+  ressources                ressource_cours[]
 }
 
 model ressource_cours {
-  id_ressource   BigInt   @id @default(autoincrement())
-  id_cours       BigInt
-  nom_fichier    String   @db.VarChar(255)
-  chemin_fichier String   @db.VarChar(500)
-  type_fichier   String   @db.Text
-  taille_octets  BigInt
-  cours          cours    @relation(fields: [id_cours], references: [id_cours], onDelete: Cascade)
-  date_ajout     DateTime @default(now())
+  id_ressource              BigInt                  @id @default(autoincrement())
+  id_cours                  BigInt
+  nom_fichier               String                  @db.VarChar(255)
+  chemin_fichier            String                  @db.VarChar(500)
+  type_fichier              String                  @db.Text
+  taille_octets             BigInt
+  cours                     cours                   @relation(fields: [id_cours], references: [id_cours], onDelete: Cascade)
+  date_ajout                DateTime                @default(now())
 }
 
 // Un devoirs appartient a un seul cours et une matière
 model devoir {
-  id_devoir          BigInt                @id @default(autoincrement())
-  id_cours           BigInt
-  nom_devoir         String                @db.VarChar(255)
-  description_devoir String?
-  date_limite        DateTime?
-  coefficient        Decimal?              @db.Decimal(5, 2)
-  professeurs        assprofdevoir[]
-  cours              cours                 @relation(fields: [id_cours], references: [id_cours])
-  rendus             rendu[]
-  devoirFichiers     DevoirFichier[]
-  pieceJointeDevoirs piece_jointe_devoir[]
+  id_devoir                 BigInt                  @id @default(autoincrement())
+  id_cours                  BigInt
+  nom_devoir                String                  @db.VarChar(255)
+  description_devoir        String?
+  date_limite               DateTime?
+  coefficient               Decimal?                @db.Decimal(5, 2)
+  professeurs               assprofdevoir[]
+  cours                     cours                   @relation(fields: [id_cours], references: [id_cours])
+  rendus                    rendu[]
+  devoirFichiers            DevoirFichier[]
+  pieceJointeDevoirs        piece_jointe_devoir[]
 
   @@unique([id_cours, nom_devoir])
 }
 
 model DevoirFichier {
-  id          BigInt  @id @default(autoincrement())
-  nom_fichier String
-  chemin      String
-  type        String?
-  taille      Int?
-  id_devoir   BigInt
-  devoir      devoir  @relation(fields: [id_devoir], references: [id_devoir])
+  id                        BigInt                  @id @default(autoincrement())
+  nom_fichier               String
+  chemin                    String
+  type                      String?
+  taille                    Int?
+  id_devoir                 BigInt
+  devoir                    devoir                  @relation(fields: [id_devoir], references: [id_devoir])
 }
 
 // Table de liaison entre professeur et devoir (relation N:N)
 model assprofdevoir {
-  id_user    BigInt
-  id_devoir  BigInt
-  devoir     devoir     @relation(fields: [id_devoir], references: [id_devoir])
-  professeur professeur @relation(fields: [id_user], references: [id_user])
+  id_user                   BigInt
+  id_devoir                 BigInt
+  devoir                    devoir                  @relation(fields: [id_devoir], references: [id_devoir])
+  professeur                professeur              @relation(fields: [id_user], references: [id_user])
 
   @@id([id_user, id_devoir])
 }
 
 model ClasseMatiere {
-  id_classe  BigInt
-  id_matiere BigInt
-
-  classe  classe  @relation(fields: [id_classe], references: [id_classe], onDelete: Cascade)
-  matiere matiere @relation(fields: [id_matiere], references: [id_matiere], onDelete: Cascade)
+  id_classe                 BigInt
+  id_matiere                BigInt
+  classe                    classe                  @relation(fields: [id_classe], references: [id_classe], onDelete: Cascade)
+  matiere                   matiere                 @relation(fields: [id_matiere], references: [id_matiere], onDelete: Cascade)
 
   @@id([id_classe, id_matiere])
   @@map("_classeTomatiere")
@@ -237,86 +236,86 @@ model ClasseMatiere {
 // Un eleve ne peut rendre qu'une seul fois un devoir
 // Contient la note et le retour du professeur
 model rendu {
-  id_rendu       BigInt               @id @default(autoincrement())
-  id_devoir      BigInt
-  id_user        BigInt
-  date_rendu     DateTime?
-  note           Decimal?             @db.Decimal(5, 2)
-  retour         String?              @db.VarChar(255)
-  archive        Boolean              @default(false)
-  devoir         devoir               @relation(fields: [id_devoir], references: [id_devoir])
-  eleve          eleve                @relation(fields: [id_user], references: [id_user])
-  pieces_jointes piece_jointe_rendu[]
+  id_rendu                  BigInt                  @id @default(autoincrement())
+  id_devoir                 BigInt
+  id_user                   BigInt
+  date_rendu                DateTime?
+  note                      Decimal?                @db.Decimal(5, 2)
+  retour                    String?                 @db.VarChar(255)
+  archive                   Boolean                 @default(false)
+  devoir                    devoir                  @relation(fields: [id_devoir], references: [id_devoir])
+  eleve                     eleve                   @relation(fields: [id_user], references: [id_user])
+  pieces_jointes            piece_jointe_rendu[]
 
   @@unique([id_devoir, id_user])
 }
 
 model piece_jointe_rendu {
-  id_piece_jointe BigInt   @id @default(autoincrement())
-  id_rendu        BigInt
-  nom_fichier     String   @db.VarChar(255)
-  chemin_fichier  String   @db.VarChar(500)
-  type_fichier    String   @db.Text
-  taille_octets   BigInt
-  date_ajout      DateTime @default(now())
-  rendu           rendu    @relation(fields: [id_rendu], references: [id_rendu], onDelete: Cascade)
+  id_piece_jointe           BigInt                  @id @default(autoincrement())
+  id_rendu                  BigInt
+  nom_fichier               String                  @db.VarChar(255)
+  chemin_fichier            String                  @db.VarChar(500)
+  type_fichier              String                  @db.Text
+  taille_octets             BigInt
+  date_ajout                DateTime                @default(now())
+  rendu                     rendu                   @relation(fields: [id_rendu], references: [id_rendu], onDelete: Cascade)
 }
 
 model piece_jointe_devoir {
-  id_piece_jointe_devoir BigInt   @id @default(autoincrement())
-  nom_fichier            String
-  chemin_fichier         String
-  type_fichier           String
-  taille_octets          BigInt
-  id_devoir              BigInt
-  devoir                 devoir   @relation(fields: [id_devoir], references: [id_devoir], onDelete: Cascade)
-  created_at             DateTime @default(now())
+  id_piece_jointe_devoir    BigInt                  @id @default(autoincrement())
+  nom_fichier               String
+  chemin_fichier            String
+  type_fichier              String
+  taille_octets             BigInt
+  id_devoir                 BigInt
+  devoir                    devoir                  @relation(fields: [id_devoir], references: [id_devoir], onDelete: Cascade)
+  created_at                DateTime                @default(now())
 
   @@index([id_devoir])
 }
 
 // Représente un événement (interrogation, examen, etc.)
 model evenement {
-  id_evenement   BigInt      @id @default(autoincrement())
-  id_matiere     BigInt?
-  id_specialite  BigInt?
-  id_option      BigInt?
-  nom_evenement  String      @db.VarChar(255)
-  description    String?
-  type_evenement String      @db.VarChar(50)
-  date_evenement DateTime
-  duree_minutes  Int?
-  icon_url       String?
-  matiere        matiere?    @relation(fields: [id_matiere], references: [id_matiere])
-  specialite     specialite? @relation(fields: [id_specialite], references: [id_specialite])
-  option         option?     @relation(fields: [id_option], references: [id_option])
-  created_at     DateTime    @default(now())
+  id_evenement              BigInt                  @id @default(autoincrement())
+  id_matiere                BigInt?
+  id_specialite             BigInt?
+  id_option                 BigInt?
+  nom_evenement             String                  @db.VarChar(255)
+  description               String?
+  type_evenement            String                  @db.VarChar(50)
+  date_evenement            DateTime
+  duree_minutes             Int?
+  icon_url                  String?
+  matiere                   matiere?                @relation(fields: [id_matiere], references: [id_matiere])
+  specialite                specialite?             @relation(fields: [id_specialite], references: [id_specialite])
+  option                    option?                 @relation(fields: [id_option], references: [id_option])
+  created_at                DateTime                @default(now())
 }
 
 // Représente un message entre utilisateurs
 model message {
-  id_message      BigInt         @id @default(autoincrement())
-  id_expediteur   BigInt
-  id_destinataire BigInt
-  sujet           String         @db.VarChar(255)
-  contenu         String         @db.Text
-  date_envoi      DateTime       @default(now())
-  lu              Boolean        @default(false)
-  expediteur      utilisateur    @relation("MessageEnvoye", fields: [id_expediteur], references: [id_user], onDelete: Cascade)
-  destinataire    utilisateur    @relation("MessageRecu", fields: [id_destinataire], references: [id_user], onDelete: Cascade)
-  pieces_jointes  piece_jointe[]
+  id_message                BigInt                  @id @default(autoincrement())
+  id_expediteur             BigInt
+  id_destinataire           BigInt
+  sujet                     String                  @db.VarChar(255)
+  contenu                   String                  @db.Text
+  date_envoi                DateTime                @default(now())
+  lu                        Boolean                 @default(false)
+  expediteur                utilisateur             @relation("MessageEnvoye", fields: [id_expediteur], references: [id_user], onDelete: Cascade)
+  destinataire              utilisateur             @relation("MessageRecu", fields: [id_destinataire], references: [id_user], onDelete: Cascade)
+  pieces_jointes            piece_jointe[]
 }
 
 // Représente une pièce jointe d'un message
 model piece_jointe {
-  id_piece_jointe BigInt   @id @default(autoincrement())
-  id_message      BigInt
-  nom_fichier     String   @db.VarChar(255)
-  chemin_fichier  String   @db.VarChar(500)
-  type_fichier    String   @db.Text
-  taille_octets   BigInt
-  date_ajout      DateTime @default(now())
-  message         message  @relation(fields: [id_message], references: [id_message], onDelete: Cascade)
+  id_piece_jointe           BigInt                  @id @default(autoincrement())
+  id_message                BigInt
+  nom_fichier               String                  @db.VarChar(255)
+  chemin_fichier            String                  @db.VarChar(500)
+  type_fichier              String                  @db.Text
+  taille_octets             BigInt
+  date_ajout                DateTime                @default(now())
+  message                   message                 @relation(fields: [id_message], references: [id_message], onDelete: Cascade)
 }
 
 // Represente les roles qui peuvent etre donner à un utilisateur
