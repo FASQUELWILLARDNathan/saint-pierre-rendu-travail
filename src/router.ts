@@ -1,7 +1,6 @@
 import { createRouter, createWebHistory, type RouteLocationNormalized } from 'vue-router'
 
 import LoginPage from './pages/LoginPage.vue'
-import RegisterPage from './pages/RegisterPage.vue'
 import HomePage from './pages/HomePage.vue'
 import CalendarPage from './pages/CalendarPage.vue'
 import ForgotPasswordPage from './pages/ForgotPasswordPage.vue'
@@ -11,6 +10,7 @@ import EleveGestionPage from './pages/EleveGestionPage.vue'
 import ClassesPage from './pages/ClassesPage.vue'
 import MessageriePage from './pages/MessageriePage.vue'
 import { useAuthStore } from './stores/auth.store'
+import { useOnboardingStore } from './stores/onboarding.store'
 import MatierePage from './pages/MatierePage.vue'
 import CoursPage from './pages/CoursPage.vue'
 import DevoirsPage from './pages/DevoirsPage.vue'
@@ -19,11 +19,12 @@ import MentionLegalesPage from './pages/MentionLegalesPage.vue'
 import CguPage from './pages/CguPage.vue'
 import PolitiquedeConfidentialite from './pages/PolitiquedeConfidentialite.vue'
 import RgpdPage from './pages/RgpdPage.vue'
+import ProfGestionPage from './pages/ProfGestionPage.vue'
+import { useApi } from './composables/useApi.ts'
 
 export const ROUTES = {
   HOME: '/',
   LOGIN: '/login',
-  REGISTER: '/register',
   LOGOUT: '/logout',
   FORGOT_PASSWORD: '/forgot-password',
   RESET_PASSWORD: '/reset-password',
@@ -41,6 +42,7 @@ export const ROUTES = {
   CGU: '/cgu',
   POLITIQUE_DE_CONFIDENTIALITE: '/politique-de-confidentialite',
   RGPD: '/rgpd',
+  PROF_GESTION: '/gestion-prof',
 } as const
 
 const routes = [
@@ -57,11 +59,6 @@ const routes = [
   {
     path: ROUTES.LOGIN,
     component: LoginPage,
-    meta: { requiresAuth: false },
-  },
-  {
-    path: ROUTES.REGISTER,
-    component: RegisterPage,
     meta: { requiresAuth: false },
   },
   {
@@ -82,6 +79,11 @@ const routes = [
   {
     path: ROUTES.ELEVE_GESTION,
     component: EleveGestionPage,
+    meta: { requiresAuth: true, role: 'administrateur' },
+  },
+  {
+    path: ROUTES.PROF_GESTION,
+    component: ProfGestionPage,
     meta: { requiresAuth: true, role: 'administrateur' },
   },
   {
@@ -151,14 +153,15 @@ const router = createRouter({
   routes,
 })
 
-router.beforeEach((to) => {
+router.beforeEach(async (to) => {
   const authStore = useAuthStore()
+  const onboardingStore = useOnboardingStore()
 
   if (to.meta.requiresAuth && !authStore.isAuth) {
     return ROUTES.LOGIN
   }
 
-  if (authStore.isAuth && (to.path === ROUTES.LOGIN || to.path === ROUTES.REGISTER)) {
+  if (authStore.isAuth && to.path === ROUTES.LOGIN) {
     return ROUTES.HOME
   }
 
@@ -167,6 +170,22 @@ router.beforeEach((to) => {
   if (requiredRole) {
     if (authStore.user?.role !== requiredRole) {
       return ROUTES.HOME
+    }
+  }
+
+  // Only check onboarding if user is authenticated
+  if (authStore.isAuth) {
+    const api = useApi()
+    try {
+      const status = (await api.request('/api/profile/onboarding-status')) as any
+      if (status.needs_onboarding) {
+        onboardingStore.setShowModal(true)
+        if (to.path !== ROUTES.HOME) {
+          return ROUTES.HOME
+        }
+      }
+    } catch {
+      // silencieux
     }
   }
 

@@ -60,6 +60,7 @@ model professeur {
   classes_enseignees        ClasseProfesseur[]
   specialites_enseignees    ProfesseurSpecialite[]
   options_enseignees        ProfesseurOption[]
+  already_connected         Boolean                 @default(false)
   user                      utilisateur             @relation(fields: [id_user], references: [id_user], onDelete: Cascade)
 }
 

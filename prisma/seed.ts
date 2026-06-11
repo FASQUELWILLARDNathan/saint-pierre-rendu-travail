@@ -13,62 +13,7 @@ const prisma = new PrismaClient({
 async function main() {
   console.log('🌱 Seed...')
 
-  const passwordProf = await bcrypt.hash('prof123', 10)
-  const passwordEleve = await bcrypt.hash('eleve123', 10)
-
-  // Create users
-  const prof1 = await prisma.utilisateur.upsert({
-    where: { login: 'dupont.jean' },
-    update: {},
-    create: {
-      nom: 'Dupont',
-      prenom: 'Jean',
-      login: 'dupont.jean',
-      email: 'dupont.jean@gmail.com',
-      hashed_password: passwordProf,
-      role: 'professeur',
-    },
-  })
-
-  const prof2 = await prisma.utilisateur.upsert({
-    where: { login: 'martin.marie' },
-    update: {},
-    create: {
-      nom: 'Martin',
-      prenom: 'Marie',
-      login: 'martin.marie',
-      email: 'martin.marie@gmail.com',
-      hashed_password: passwordProf,
-      role: 'professeur',
-    },
-  })
-
-  const prof3 = await prisma.utilisateur.upsert({
-    where: { login: 'leclerc.paul' },
-    update: {},
-    create: {
-      nom: 'Leclerc',
-      prenom: 'Paul',
-      login: 'leclerc.paul',
-      email: 'leclerc.paul@gmail.com',
-      hashed_password: passwordProf,
-      role: 'professeur',
-    },
-  })
-
-  const prof4 = await prisma.utilisateur.upsert({
-    where: { login: 'fasquel.nathan' },
-    update: {},
-    create: {
-      nom: 'Fasquel',
-      prenom: 'Nathan',
-      login: 'fasquel.nathan',
-      email: 'neyznn.pro@gmail.com',
-      hashed_password: passwordProf,
-      role: 'professeur',
-    },
-  })
-
+  // ADMIN UNIQUEMENT
   const admin = await prisma.utilisateur.upsert({
     where: { email: process.env.DEFAULT_ADMIN_EMAIL! },
     update: {},
@@ -82,82 +27,7 @@ async function main() {
     },
   })
 
-  const eleve1 = await prisma.utilisateur.upsert({
-    where: { login: 'moreau.pierre' },
-    update: {},
-    create: {
-      nom: 'Moreau',
-      prenom: 'Pierre',
-      login: 'moreau.pierre',
-      email: 'moreau.pierre@cs-saintpierrecalais.fr',
-      hashed_password: passwordEleve,
-      role: 'eleve',
-    },
-  })
-
-  const eleve2 = await prisma.utilisateur.upsert({
-    where: { login: 'bernard.sophie' },
-    update: {},
-    create: {
-      nom: 'Bernard',
-      prenom: 'Sophie',
-      login: 'bernard.sophie',
-      email: 'bernard.sophie@cs-saintpierrecalais.fr',
-      hashed_password: passwordEleve,
-      role: 'eleve',
-    },
-  })
-
-  const eleve3 = await prisma.utilisateur.upsert({
-    where: { login: 'thomas.luc' },
-    update: {},
-    create: {
-      nom: 'Thomas',
-      prenom: 'Luc',
-      login: 'thomas.luc',
-      email: 'thomas.luc@cs-saintpierrecalais.fr',
-      hashed_password: passwordEleve,
-      role: 'eleve',
-    },
-  })
-
-  // Create professeurs
-  await prisma.professeur.upsert({
-    where: { id_user: prof1.id_user },
-    update: {},
-    create: {
-      id_user: prof1.id_user,
-      matiere: 'Mathématiques',
-    },
-  })
-
-  await prisma.professeur.upsert({
-    where: { id_user: prof2.id_user },
-    update: {},
-    create: {
-      id_user: prof2.id_user,
-      matiere: 'Français',
-    },
-  })
-
-  await prisma.professeur.upsert({
-    where: { id_user: prof4.id_user },
-    update: {},
-    create: {
-      id_user: prof4.id_user,
-      matiere: '',
-    },
-  })
-
-  await prisma.professeur.upsert({
-    where: { id_user: prof3.id_user },
-    update: {},
-    create: {
-      id_user: prof3.id_user,
-      matiere: 'Langues',
-    },
-  })
-
+  // CLASSES
   const classesConfig = [
     { niveau: '6ème', lettres: ['A', 'B', 'C', 'D', 'E'] },
     { niveau: '5ème', lettres: ['A', 'B', 'C', 'D'] },
@@ -171,9 +41,7 @@ async function main() {
   for (const config of classesConfig) {
     for (const lettre of config.lettres) {
       await prisma.classe.upsert({
-        where: {
-          nom_classe: `${config.niveau} ${lettre}`,
-        },
+        where: { nom_classe: `${config.niveau} ${lettre}` },
         update: {},
         create: {
           niveau: config.niveau,
@@ -184,6 +52,7 @@ async function main() {
     }
   }
 
+  // SPÉCIALITÉS LYCÉE
   const specialitesLycee = [
     'Mathématiques',
     'SES',
@@ -198,46 +67,29 @@ async function main() {
 
   for (const nom of specialitesLycee) {
     await prisma.specialite.upsert({
-      where: {
-        nom_specialite: nom,
-      },
+      where: { nom_specialite: nom },
       update: {},
-      create: {
-        nom_specialite: nom,
-      },
+      create: { nom_specialite: nom },
     })
   }
 
-  // Get specialites
-  const specNSI = await prisma.specialite.findUnique({
-    where: { nom_specialite: 'NSI' },
-  })
-  const specSVT = await prisma.specialite.findUnique({
-    where: { nom_specialite: 'SVT' },
-  })
-
-  // Create options
+  // OPTIONS
   const optionsList = [
-    // Langues
     'Anglais',
     'Espagnol',
     'Allemand',
     'Chinois',
     'Chinois option',
-    // Section européenne
     'Section Européenne',
-    // Options lycée
     'Mathématiques expertes',
     'Mathématiques complémentaires',
     'Latin',
     'DGEMC',
     'Management',
-    // EPS
     'Sport',
     'Handball',
     'Football',
     'Volleyball',
-    // Cambridge / FirstCa
     'ACCPE',
     'FirstCa',
     'FirstCa DNL',
@@ -252,46 +104,7 @@ async function main() {
     })
   }
 
-  // Get classes
-  const classeTerminaleA = await prisma.classe.findUnique({
-    where: { nom_classe: 'Terminale A' },
-  })
-  const classeTerminaleB = await prisma.classe.findUnique({
-    where: { nom_classe: 'Terminale B' },
-  })
-
-  // Create eleves with classes and specialites/options
-  for (const [index, eleve] of [eleve1, eleve2, eleve3].entries()) {
-    const classeId = index === 0 ? classeTerminaleA?.id_classe : classeTerminaleB?.id_classe
-    const specialiteIds =
-      index < 2
-        ? specNSI?.id_specialite
-          ? [specNSI.id_specialite]
-          : []
-        : specSVT?.id_specialite
-          ? [specSVT.id_specialite]
-          : []
-
-    await prisma.eleve.upsert({
-      where: { id_user: eleve.id_user },
-      update: {
-        specialites: {
-          deleteMany: {},
-          create: specialiteIds.filter(Boolean).map((id) => ({ id_specialite: id })),
-        },
-      },
-      create: {
-        id_user: eleve.id_user,
-        id_classe: classeId,
-        annee: '2025-2026',
-        specialites: {
-          create: specialiteIds.filter(Boolean).map((id) => ({ id_specialite: id })),
-        },
-      },
-    })
-  }
-
-  // Create matieres with colors and icons from the frontend config
+  // MATIÈRES
   const matieresData = [
     {
       nom_matiere: 'Mathématiques',
@@ -300,7 +113,6 @@ async function main() {
       icon_url: '/maths-icon.svg',
       devoir_icon_url: '/maths-devoir-icon.svg',
     },
-
     {
       nom_matiere: 'Français',
       description: "L'enseignement du français développe les compétences en lecture et écriture.",
@@ -308,7 +120,6 @@ async function main() {
       icon_url: '/francais-icon.svg',
       devoir_icon_url: '/francais-devoir-icon.svg',
     },
-
     {
       nom_matiere: 'Anglais',
       description: 'Apprentissage de la langue anglaise.',
@@ -316,7 +127,6 @@ async function main() {
       icon_url: '/langues-icon.svg',
       devoir_icon_url: '/langues-devoir-icon.svg',
     },
-
     {
       nom_matiere: 'Espagnol',
       description: 'Apprentissage de la langue espagnole.',
@@ -324,7 +134,6 @@ async function main() {
       icon_url: '/langues-icon.svg',
       devoir_icon_url: '/langues-devoir-icon.svg',
     },
-
     {
       nom_matiere: 'Allemand',
       description: 'Apprentissage de la langue allemande.',
@@ -332,7 +141,6 @@ async function main() {
       icon_url: '/langues-icon.svg',
       devoir_icon_url: '/langues-devoir-icon.svg',
     },
-
     {
       nom_matiere: 'Histoire-Géo',
       description: 'Histoire, géographie et EMC.',
@@ -340,7 +148,6 @@ async function main() {
       icon_url: '/histoire-geo-icon.svg',
       devoir_icon_url: '/histoire-geo-devoir-icon.svg',
     },
-
     {
       nom_matiere: 'EMC',
       description: 'Enseignement moral et civique.',
@@ -348,7 +155,6 @@ async function main() {
       icon_url: '/histoire-geo-icon.svg',
       devoir_icon_url: '/histoire-geo-devoir-icon.svg',
     },
-
     {
       nom_matiere: 'SVT',
       description: 'Sciences de la vie et de la Terre.',
@@ -356,7 +162,6 @@ async function main() {
       icon_url: '/sciences-icon.svg',
       devoir_icon_url: '/sciences-devoir-icon.svg',
     },
-
     {
       nom_matiere: 'Physique',
       description: 'Physique-Chimie.',
@@ -364,7 +169,6 @@ async function main() {
       icon_url: '/sciences-icon.svg',
       devoir_icon_url: '/sciences-devoir-icon.svg',
     },
-
     {
       nom_matiere: 'Technologie',
       description: 'Découverte des systèmes techniques.',
@@ -372,7 +176,6 @@ async function main() {
       icon_url: '/technologie-icon.svg',
       devoir_icon_url: '/other-devoir-icon.svg',
     },
-
     {
       nom_matiere: 'Sport',
       description: 'Education physique et sportive.',
@@ -380,7 +183,6 @@ async function main() {
       icon_url: '/sport-icon.svg',
       devoir_icon_url: '/other-devoir-icon.svg',
     },
-
     {
       nom_matiere: 'Arts Plastiques',
       description: 'Expression artistique et visuelle.',
@@ -388,7 +190,6 @@ async function main() {
       icon_url: '/arts-plastiques-icon.svg',
       devoir_icon_url: '/other-devoir-icon.svg',
     },
-
     {
       nom_matiere: 'Musique',
       description: 'Education musicale.',
@@ -396,7 +197,6 @@ async function main() {
       icon_url: '/musique-icon.svg',
       devoir_icon_url: '/other-devoir-icon.svg',
     },
-
     {
       nom_matiere: 'SES',
       description: 'Sciences économiques et sociales.',
@@ -404,7 +204,6 @@ async function main() {
       icon_url: '/ses-icon.svg',
       devoir_icon_url: '/other-devoir-icon.svg',
     },
-
     {
       nom_matiere: 'SNT',
       description: 'Sciences numériques et technologie.',
@@ -412,7 +211,6 @@ async function main() {
       icon_url: '/snt-icon.svg',
       devoir_icon_url: '/other-devoir-icon.svg',
     },
-
     {
       nom_matiere: 'Philosophie',
       description: 'Réflexion philosophique et dissertation.',
@@ -420,7 +218,6 @@ async function main() {
       icon_url: '/francais-icon.svg',
       devoir_icon_url: '/francais-devoir-icon.svg',
     },
-
     {
       nom_matiere: 'Enseignement Scientifique',
       description: 'Enseignement scientifique du lycée général.',
@@ -432,33 +229,13 @@ async function main() {
 
   for (const matiere of matieresData) {
     await prisma.matiere.upsert({
-      where: {
-        nom_matiere: matiere.nom_matiere,
-      },
+      where: { nom_matiere: matiere.nom_matiere },
       update: {},
       create: matiere,
     })
   }
 
-  // Get matieres
-  const matMath = await prisma.matiere.findUnique({
-    where: { nom_matiere: 'Mathématiques' },
-  })
-  const matFrancais = await prisma.matiere.findUnique({
-    where: { nom_matiere: 'Français' },
-  })
-  const matLangues = await prisma.matiere.findUnique({
-    where: { nom_matiere: 'Anglais' },
-  })
-  const matHistoire = await prisma.matiere.findUnique({
-    where: { nom_matiere: 'Histoire-Géo' },
-  })
-
-  if (!matMath || !matFrancais) {
-    throw new Error('Matieres not found')
-  }
-
-  // Matières par niveau
+  // MATIÈRES PAR NIVEAU
   const matieresByNiveau = {
     college: [
       'Mathématiques',
@@ -553,7 +330,7 @@ async function main() {
     }
   }
 
-  console.log('✅ Seed OK (idempotent propre)')
+  console.log('✅ Seed OK')
 }
 
 main()

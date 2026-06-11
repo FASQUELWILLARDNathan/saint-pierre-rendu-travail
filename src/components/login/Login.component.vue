@@ -66,12 +66,6 @@
         <!-- Bouton se connecter -->
         <button type="submit" class="submit-btn" :disabled="isLoading">Se connecter</button>
       </form>
-
-      <!-- Lien s'enregistrer -->
-      <div class="sign-up-section">
-        <span>Pas de compte ? </span>
-        <router-link to="/register" class="sign-up-link auth-link">Inscrivez vous!</router-link>
-      </div>
     </div>
 
     <!-- Footer -->

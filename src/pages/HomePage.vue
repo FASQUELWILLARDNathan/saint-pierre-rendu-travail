@@ -48,6 +48,9 @@
         </div>
       </main>
     </div>
+
+    <!-- Onboarding Modal -->
+    <ProfOnBoardingModal :is-visible="onboardingStore.showModal" @onboarded="handleOnboarded" />
   </div>
 </template>
 
@@ -56,12 +59,15 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { NDropdown } from 'naive-ui'
 import { useAuthStore } from '@/stores/auth.store'
+import { useOnboardingStore } from '@/stores/onboarding.store'
 import Sidebar from '../components/home/Sidebar.vue'
 import Matieres from '../components/home/Matieres.vue'
 import TravauxRecents from '../components/home/TravauxRecents.vue'
 import TravauxAVenir from '../components/home/TravauxAVenir.vue'
+import ProfOnBoardingModal from '../components/onboarding/ProfOnBoardingModal.component.vue'
 
 const authStore = useAuthStore()
+const onboardingStore = useOnboardingStore()
 const router = useRouter()
 onMounted(async () => {
   console.log('onMounted fetchMe start')
@@ -148,6 +154,10 @@ const handleUserMenuSelect = (key: string) => {
 const handleLogout = () => {
   authStore.logout()
   router.push('/login')
+}
+
+const handleOnboarded = () => {
+  onboardingStore.setShowModal(false)
 }
 </script>
 

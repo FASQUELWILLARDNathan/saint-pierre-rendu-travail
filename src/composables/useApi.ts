@@ -154,6 +154,16 @@ export function useApi() {
   /** Récupère tous les élèves */
   const getAllEleves = () => request('/api/users/eleves/list')
 
+  /** Récupère tous les professeurs (liste admin) */
+  const getAllProfs = () => request('/api/import/profs/list')
+
+  /** Importe des professeurs depuis un fichier XLSX */
+  const importProfs = (data: FormData) =>
+    request('/api/import/profs', {
+      method: 'POST',
+      body: data,
+    })
+
   /** Met à jour un utilisateur (élève) */
   const updateUser = (id: string | number, data: any) =>
     request(`/api/users/${id}`, {
@@ -488,5 +498,7 @@ export function useApi() {
     deleteCours,
     deleteDevoir,
     deleteEvenement,
+    getAllProfs,
+    importProfs
   }
 }

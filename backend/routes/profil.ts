@@ -51,6 +51,38 @@ router.get('/matieres', async (req: Request, res: Response) => {
   }
 })
 
+// GET /api/profile/onboarding-status - Check if user needs onboarding
+router.get('/onboarding-status', authenticateToken, async (req: Request, res: Response) => {
+  const userId = req.user?.id_user
+  const user = await prisma.utilisateur.findUnique({
+    where: { id_user: BigInt(userId) },
+    include: { professeur: true },
+  })
+
+  if (user?.role === 'professeur') {
+    if (user.professeur) {
+      await prisma.professeur.update({
+        where: { id_user: BigInt(userId) },
+        data: {
+          already_connected: true,
+        },
+      })
+      res.json({ needs_onboarding: !user.professeur.already_connected })
+    } else {
+      // Si le professeur n'existe pas, il faut créer l'entrée
+      await prisma.professeur.create({
+        data: {
+          id_user: BigInt(userId),
+          already_connected: false,
+        },
+      })
+      res.json({ needs_onboarding: true })
+    }
+  } else {
+    res.json({ needs_onboarding: false })
+  }
+})
+
 // GET /api/profil - Get current user profil
 router.get('/', authenticateToken, async (req: Request, res: Response) => {
   try {
@@ -224,125 +256,196 @@ router.put('/', authenticateToken, async (req: Request, res: Response) => {
 
     // Update eleve-specific data (only for eleves)
     if (user.role === 'eleve' && (specialites || options || id_classe !== undefined)) {
-      const eleveUpdate: any = {}
+      try {
+        await prisma.$transaction(async (tx) => {
+          const eleveUpdate: any = {}
 
-      if (id_classe !== undefined) {
-        eleveUpdate.id_classe = id_classe ? BigInt(id_classe) : null
-      }
+          if (id_classe !== undefined) {
+            eleveUpdate.id_classe = id_classe ? BigInt(id_classe) : null
+          }
 
-      // Validate specialites based on school level
-      if (Array.isArray(specialites)) {
-        // Get the class to determine school level
-        let classId = id_classe
-        if (classId === undefined || classId === null) {
-          // If not updating class, get current class
-          const currentEleve = await prisma.eleve.findUnique({
-            where: { id_user: BigInt(userId) },
-            select: { id_classe: true },
-          })
-          classId = currentEleve?.id_classe?.toString()
-        }
+          // Validate specialites based on school level
+          if (Array.isArray(specialites)) {
+            // Get the class to determine school level
+            let classId = id_classe
+            if (classId === undefined || classId === null) {
+              // If not updating class, get current class
+              const currentEleve = await tx.eleve.findUnique({
+                where: { id_user: BigInt(userId) },
+                select: { id_classe: true },
+              })
+              classId = currentEleve?.id_classe?.toString()
+            }
 
-        if (classId) {
-          const classe = await prisma.classe.findUnique({
-            where: { id_classe: BigInt(classId) },
-            select: { nom_classe: true },
-          })
+            if (classId) {
+              const classe = await tx.classe.findUnique({
+                where: { id_classe: BigInt(classId) },
+                select: { nom_classe: true },
+              })
 
-          if (classe) {
-            const level = getSchoolLevel(classe.nom_classe)
+              if (classe) {
+                const level = getSchoolLevel(classe.nom_classe)
 
-            if (level === 'college' || level === 'seconde') {
-              // No specialites allowed
-              if (specialites.length > 0) {
-                return res.status(400).json({
-                  error: 'Les spécialités ne sont pas disponibles pour cette classe',
-                })
-              }
-            } else if (level === 'premiere') {
-              // Exactly 3 specialites required
-              if (specialites.length !== 3) {
-                return res
-                  .status(400)
-                  .json({ error: 'Vous devez sélectionner exactement 3 spécialités en première' })
-              }
-            } else if (level === 'terminale') {
-              // Exactly 2 specialites required
-              if (specialites.length !== 2) {
-                return res
-                  .status(400)
-                  .json({ error: 'Vous devez sélectionner exactement 2 spécialités en terminale' })
+                if (level === 'college' || level === 'seconde') {
+                  // No specialites allowed
+                  if (specialites.length > 0) {
+                    throw new Error('Les spécialités ne sont pas disponibles pour cette classe')
+                  }
+                } else if (level === 'premiere') {
+                  // Exactly 3 specialites required
+                  if (specialites.length !== 3) {
+                    throw new Error('Vous devez sélectionner exactement 3 spécialités en première')
+                  }
+                } else if (level === 'terminale') {
+                  // Exactly 2 specialites required
+                  if (specialites.length !== 2) {
+                    throw new Error('Vous devez sélectionner exactement 2 spécialités en terminale')
+                  }
+                }
               }
             }
+
+            // Delete all existing specialites
+            await tx.eleveSpecialite.deleteMany({
+              where: { id_eleve: BigInt(userId) },
+            })
+            // Create new specialites
+            if (specialites.length > 0) {
+              await Promise.all(
+                specialites.map((id: any) =>
+                  tx.eleveSpecialite.create({
+                    data: {
+                      id_eleve: BigInt(userId),
+                      id_specialite: BigInt(id),
+                    },
+                  }),
+                ),
+              )
+            }
           }
-        }
 
-        eleveUpdate.specialites = {
-          deleteMany: {},
-          create: specialites.map((id: any) => ({
-            id_specialite: BigInt(id),
-          })),
-        }
-      }
+          if (Array.isArray(options)) {
+            // Delete all existing options
+            await tx.eleveOption.deleteMany({
+              where: { id_eleve: BigInt(userId) },
+            })
+            // Create new options
+            if (options.length > 0) {
+              await Promise.all(
+                options.map((id: any) =>
+                  tx.eleveOption.create({
+                    data: {
+                      id_eleve: BigInt(userId),
+                      id_option: BigInt(id),
+                    },
+                  }),
+                ),
+              )
+            }
+          }
 
-      if (Array.isArray(options)) {
-        eleveUpdate.options = {
-          deleteMany: {},
-          create: options.map((id: any) => ({
-            id_option: BigInt(id),
-          })),
-        }
-      }
-
-      if (Object.keys(eleveUpdate).length > 0) {
-        await prisma.eleve.update({
-          where: { id_user: BigInt(userId) },
-          data: eleveUpdate,
+          if (Object.keys(eleveUpdate).length > 0) {
+            await tx.eleve.update({
+              where: { id_user: BigInt(userId) },
+              data: eleveUpdate,
+            })
+          }
         })
+      } catch (err: any) {
+        return res.status(400).json({ error: err.message })
       }
     }
 
     // Update professeur-specific data (only for professeurs)
     if (user.role === 'professeur') {
-      const profUpdate: any = {}
-
-      if (matiere !== undefined) {
-        profUpdate.matiere = matiere || null
-      }
-
-      if (Array.isArray(classes_enseignees)) {
-        profUpdate.classes_enseignees = {
-          deleteMany: {},
-          create: classes_enseignees.map((id: any) => ({
-            id_classe: BigInt(id),
-          })),
-        }
-      }
-
-      if (Array.isArray(specialites_enseignees)) {
-        profUpdate.specialites_enseignees = {
-          deleteMany: {},
-          create: specialites_enseignees.map((id: any) => ({
-            id_specialite: BigInt(id),
-          })),
-        }
-      }
-
-      if (Array.isArray(options_enseignees)) {
-        profUpdate.options_enseignees = {
-          deleteMany: {},
-          create: options_enseignees.map((id: any) => ({
-            id_option: BigInt(id),
-          })),
-        }
-      }
-
-      if (Object.keys(profUpdate).length > 0) {
-        await prisma.professeur.update({
+      await prisma.$transaction(async (tx) => {
+        // Ensure professeur exists
+        const prof = await tx.professeur.findUnique({
           where: { id_user: BigInt(userId) },
-          data: profUpdate,
         })
-      }
+
+        if (!prof) {
+          await tx.professeur.create({
+            data: {
+              id_user: BigInt(userId),
+              already_connected: true,
+              matiere: matiere || null,
+            },
+          })
+        } else {
+          // Update basic info
+          await tx.professeur.update({
+            where: { id_user: BigInt(userId) },
+            data: {
+              already_connected: true,
+              matiere: matiere || null,
+            },
+          })
+        }
+
+        // Handle classes_enseignees
+        if (Array.isArray(classes_enseignees)) {
+          // Delete all existing connections
+          await tx.classeProfesseur.deleteMany({
+            where: { id_professeur: BigInt(userId) },
+          })
+          // Create new connections
+          if (classes_enseignees.length > 0) {
+            await Promise.all(
+              classes_enseignees.map((id: any) =>
+                tx.classeProfesseur.create({
+                  data: {
+                    id_professeur: BigInt(userId),
+                    id_classe: BigInt(id),
+                  },
+                }),
+              ),
+            )
+          }
+        }
+
+        // Handle specialites_enseignees
+        if (Array.isArray(specialites_enseignees)) {
+          // Delete all existing connections
+          await tx.professeurSpecialite.deleteMany({
+            where: { id_professeur: BigInt(userId) },
+          })
+          // Create new connections
+          if (specialites_enseignees.length > 0) {
+            await Promise.all(
+              specialites_enseignees.map((id: any) =>
+                tx.professeurSpecialite.create({
+                  data: {
+                    id_professeur: BigInt(userId),
+                    id_specialite: BigInt(id),
+                  },
+                }),
+              ),
+            )
+          }
+        }
+
+        // Handle options_enseignees
+        if (Array.isArray(options_enseignees)) {
+          // Delete all existing connections
+          await tx.professeurOption.deleteMany({
+            where: { id_professeur: BigInt(userId) },
+          })
+          // Create new connections
+          if (options_enseignees.length > 0) {
+            await Promise.all(
+              options_enseignees.map((id: any) =>
+                tx.professeurOption.create({
+                  data: {
+                    id_professeur: BigInt(userId),
+                    id_option: BigInt(id),
+                  },
+                }),
+              ),
+            )
+          }
+        }
+      })
     }
 
     res.json({ message: 'Profil mis à jour avec succès' })

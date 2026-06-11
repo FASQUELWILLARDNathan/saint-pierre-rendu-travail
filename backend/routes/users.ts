@@ -400,6 +400,18 @@ router.post(
           return { user, eleve }
         }
 
+        if (role === 'professeur') {
+          const profData: any = {
+            id_user: user.id_user,
+          }
+
+          const prof = await tx.professeur.create({
+            data: profData,
+          })
+
+          return { user, prof }
+        }
+
         return { user }
       })
 

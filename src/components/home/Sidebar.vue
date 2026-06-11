@@ -106,6 +106,17 @@
         <span class="menu-text">Gestion élèves</span>
       </router-link>
 
+      <router-link
+        v-if="authStore.user?.role === 'administrateur'"
+        to="/gestion-prof"
+        class="menu-item"
+        :class="{ active: $route.path === '/gestion-prof' }"
+        @click="isSidebarOpen = false"
+      >
+        <img src="/settings-icon.svg" alt="Gestion des professeurs" class="menu-icon" />
+        <span class="menu-text">Gestion professeurs</span>
+      </router-link>
+
       <!-- Informations légales -->
       <router-link class="menu-item" to="/mentions-legales">
         <img class="menu-icon" src="/info-icon.svg" alt="" />
