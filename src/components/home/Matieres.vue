@@ -23,6 +23,7 @@ import { computed, onMounted, ref } from 'vue'
 import MatiereCard from './MatiereCard.vue'
 import { useAuthStore } from '@/stores/auth.store'
 import { useApi } from '@/composables/useApi'
+import { MATIERES } from '@/utils/matieres.ts'
 
 interface Props {
   isDarkMode?: boolean
@@ -51,8 +52,12 @@ const categories = computed(() => {
     // Matière principale
     if (user.professeur?.matiere) {
       const nom = user.professeur.matiere
-      const found = allMatieresBDD.value.find(
+      const found =
+      allMatieresBDD.value.find(
         (m: any) => m.nom_matiere.toLowerCase() === nom.toLowerCase(),
+      ) ||
+      MATIERES.find(
+        (m: any) => m.nom.toLowerCase() === nom.toLowerCase(),
       )
       if (found) {
         result.push({
@@ -71,15 +76,19 @@ const categories = computed(() => {
     // Spécialités — on utilise l'id_specialite du prof
     user.professeur?.specialites_enseignees?.forEach((s) => {
       const nom = s.specialite.nom_specialite
-      const found = allMatieresBDD.value.find(
+      const found =
+      allMatieresBDD.value.find(
         (m: any) => m.nom_matiere.toLowerCase() === nom.toLowerCase(),
+      ) ||
+      MATIERES.find(
+        (m: any) => m.nom.toLowerCase() === nom.toLowerCase(),
       )
       result.push({
         id: s.specialite.id_specialite,
         nom,
-        icon: found?.icon_url ?? '/others-icon.svg',
-        color: found?.couleur ?? '#888',
-        devoirIcon: found?.devoir_icon_url ?? '/other-devoir-icon.svg',
+        icon: found?.icon_url ?? found?.icon ?? '/others-icon.svg',
+        color: found?.couleur ?? found?.color ?? '#888',
+        devoirIcon: found?.devoir_icon_url ?? found?.devoirIcon ?? '/other-devoir-icon.svg',
         cardType: 'specialite',
         categoryType: 'specialite',
         categoryName: nom,
@@ -89,15 +98,19 @@ const categories = computed(() => {
     // Options
     user.professeur?.options_enseignees?.forEach((o) => {
       const nom = o.option.nom_option
-      const found = allMatieresBDD.value.find(
+      const found =
+      allMatieresBDD.value.find(
         (m: any) => m.nom_matiere.toLowerCase() === nom.toLowerCase(),
+      ) ||
+      MATIERES.find(
+        (m: any) => m.nom.toLowerCase() === nom.toLowerCase(),
       )
       result.push({
         id: o.option.id_option,
         nom,
-        icon: found?.icon_url ?? '/others-icon.svg',
-        color: found?.couleur ?? '#888',
-        devoirIcon: found?.devoir_icon_url ?? '/other-devoir-icon.svg',
+        icon: found?.icon_url ?? found?.icon ?? '/others-icon.svg',
+        color: found?.couleur ?? found?.color ?? '#888',
+        devoirIcon: found?.devoir_icon_url ?? found?.devoirIcon ?? '/other-devoir-icon.svg',
         cardType: 'option',
         categoryType: 'option',
         categoryName: nom,
@@ -123,15 +136,19 @@ const categories = computed(() => {
 
     const spes = (user.eleve?.specialites ?? []).map((s: any) => {
       const nom = s.specialite.nom_specialite
-      const found = allMatieresBDD.value.find(
+      const found =
+      allMatieresBDD.value.find(
         (m: any) => m.nom_matiere.toLowerCase() === nom.toLowerCase(),
+      ) ||
+      MATIERES.find(
+        (m: any) => m.nom.toLowerCase() === nom.toLowerCase(),
       )
       return {
         id: s.specialite.id_specialite ?? nom,
         nom,
-        icon: found?.icon_url ?? '/others-icon.svg',
-        color: found?.couleur ?? '#888',
-        devoirIcon: found?.devoir_icon_url ?? '/other-devoir-icon.svg',
+        icon: found?.icon_url ?? found?.icon ?? '/others-icon.svg',
+        color: found?.couleur ?? found?.color ?? '#888',
+        devoirIcon: found?.devoir_icon_url ?? found?.devoirIcon ?? '/other-devoir-icon.svg',
         cardType: 'specialite',
         categoryType: 'specialite',
         categoryName: nom,
@@ -140,15 +157,19 @@ const categories = computed(() => {
 
     const opts = (user.eleve?.options ?? []).map((o: any) => {
       const nom = o.option.nom_option
-      const found = allMatieresBDD.value.find(
+      const found =
+      allMatieresBDD.value.find(
         (m: any) => m.nom_matiere.toLowerCase() === nom.toLowerCase(),
+      ) ||
+      MATIERES.find(
+        (m: any) => m.nom.toLowerCase() === nom.toLowerCase(),
       )
       return {
         id: o.option.id_option ?? nom,
         nom,
-        icon: found?.icon_url ?? '/others-icon.svg',
-        color: found?.couleur ?? '#888',
-        devoirIcon: found?.devoir_icon_url ?? '/other-devoir-icon.svg',
+        icon: found?.icon_url ?? found?.icon ?? '/others-icon.svg',
+        color: found?.couleur ?? found?.color ?? '#888',
+        devoirIcon: found?.devoir_icon_url ?? found?.devoirIcon ?? '/other-devoir-icon.svg',
         cardType: 'option',
         categoryType: 'option',
         categoryName: nom,

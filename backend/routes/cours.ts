@@ -1,6 +1,6 @@
 import { Router } from 'express'
-import type { File } from 'multer'
 import { prisma } from '../config.ts'
+import type { Request } from 'express'
 import { authenticateToken } from '../middleware/auth.ts'
 import multer from 'multer'
 import path from 'path'
@@ -209,8 +209,9 @@ router.post(
         },
       })
 
-      const files = req.files as File[]
-      if (files?.length) {
+      const files = req.files as Express.Multer.File[]
+
+      if (files && files.length > 0) {
         await prisma.ressource_cours.createMany({
           data: files.map((f) => ({
             id_cours: cours.id_cours,
@@ -403,6 +404,76 @@ router.get('/:id', authenticateToken, async (req, res) => {
   })
   res.json(matiere)
 })
+
+router.put(
+  '/:id',
+  authenticateToken,
+  authorizeRole('professeur', 'administrateur'),
+  upload.array('fichiers', 10),
+  async (req, res) => {
+    try {
+      const { id } = req.params
+      const { nom_cours, description_cours } = req.body
+      const userId = toBigIntOrNull(req.user?.id_user)
+
+      if (!userId) {
+        return res.status(400).json({ error: 'ID utilisateur invalide' })
+      }
+
+      const idCoursBigInt = toBigIntOrNull(id)
+      if (!idCoursBigInt) {
+        return res.status(400).json({ error: 'ID cours invalide' })
+      }
+
+      // Vérifier que le cours appartient à l'utilisateur
+      const existingCours = await prisma.cours.findFirst({
+        where: {
+          id_cours: idCoursBigInt,
+          id_user: userId,
+        },
+      })
+
+      if (!existingCours) {
+        return res.status(404).json({ error: 'Cours non trouvé ou non autorisé' })
+      }
+
+      // Mettre à jour le cours
+      const updatedCours = await prisma.cours.update({
+        where: { id_cours: idCoursBigInt },
+        data: {
+          nom_cours: nom_cours || existingCours.nom_cours,
+          description_cours:
+            description_cours !== undefined ? description_cours : existingCours.description_cours,
+        },
+      })
+
+      // Gérer les nouveaux fichiers
+      const files = req.files as Express.Multer.File[]
+      if (files?.length) {
+        await prisma.ressource_cours.createMany({
+          data: files.map((f) => ({
+            id_cours: idCoursBigInt,
+            nom_fichier: f.originalname.slice(0, 254),
+            chemin_fichier: `/cours/${f.filename}`.slice(0, 499),
+            type_fichier: f.mimetype,
+            taille_octets: toBigIntOrNull(f.size) || BigInt(0),
+          })),
+        })
+      }
+
+
+      const coursComplet = await prisma.cours.findUnique({
+        where: { id_cours: idCoursBigInt },
+        include: { ressources: true, matiere: true, classe: true, specialite: true, option: true },
+      })
+
+      res.json(coursComplet)
+    } catch (error) {
+      console.error('Erreur mise à jour cours:', error)
+      res.status(500).json({ error: 'Erreur serveur' })
+    }
+  },
+)
 
 router.delete('/:id', authenticateToken, async (req, res) => {
   try {

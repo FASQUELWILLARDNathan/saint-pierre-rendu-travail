@@ -96,6 +96,13 @@ export const MATIERES: Matiere[] = [
     color: '#70BEFA',
     devoirIcon: '/other-devoir-icon.svg',
   },
+  {
+    id: 13,
+    nom: 'NSI',
+    icon: '/code-icon.svg',
+    color: '#5900FF',
+    devoirIcon: '/other-devoir-icon.svg',
+  },
 ]
 
 //Récupère une matière par son ID

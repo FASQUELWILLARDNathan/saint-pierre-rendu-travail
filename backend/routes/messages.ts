@@ -1,5 +1,4 @@
 import express from 'express'
-import type { File } from 'multer'
 import { prisma } from '../config.ts'
 import { authenticateToken } from '../middleware/auth.ts'
 import {
@@ -174,7 +173,7 @@ router.post(
     try {
       const userId = toBigIntOrNull((req as any).user.id_user)
       const { id_destinataire, sujet, contenu } = req.body
-      const files = req.files as File[]
+      const files = req.files as Express.Multer.File[]
 
       // Validate required fields
       if (!id_destinataire || !sujet || !contenu) {

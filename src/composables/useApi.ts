@@ -437,6 +437,20 @@ export function useApi() {
     })
   }
 
+  async function updateCours(id: string, data: FormData) {
+    return request(`/api/cours/${id}`, {
+      method: 'PUT',
+      body: data,
+    })
+  }
+
+  async function updateDevoir(id: string, data: FormData) {
+    return request(`/api/devoirs/${id}`, {
+      method: 'PUT',
+      body: data,
+    })
+  }
+
   return {
     signIn,
     signUp,
@@ -498,7 +512,9 @@ export function useApi() {
     deleteCours,
     deleteDevoir,
     deleteEvenement,
+    updateCours,
+    updateDevoir,
     getAllProfs,
-    importProfs
+    importProfs,
   }
 }

@@ -48,6 +48,9 @@
                 style="cursor: pointer"
               >
                 <div class="item-actions" v-if="isProfessor">
+                  <button class="edit-btn" @click.stop="openEditCoursModal(c)" title="Modifier">
+                    <img src="/edit-icon.svg" alt="Modifier" class="edit-icon" />
+                  </button>
                   <button class="delete-btn" @click.stop="deleteCours(c.id_cours)">
                     <img src="/red-cross-icon.svg" alt="Supprimer" class="delete-icon" />
                   </button>
@@ -89,6 +92,9 @@
                 @click="openDevoir(d)"
               >
                 <div class="item-actions" v-if="isProfessor">
+                  <button class="edit-btn" @click.stop="openEditDevoirModal(d)" title="Modifier">
+                    <img src="/edit-icon.svg" alt="Modifier" class="edit-icon" />
+                  </button>
                   <button class="delete-btn" @click.stop="deleteDevoir(d.id_devoir)">
                     <img src="/red-cross-icon.svg" alt="Supprimer" class="delete-icon" />
                   </button>
@@ -259,6 +265,98 @@
           <n-button type="primary" @click="createEvenementHandler">Créer</n-button>
         </template>
       </n-modal>
+
+      <!-- Modal Modifier Cours -->
+      <n-modal
+        v-model:show="showEditCoursModal"
+        title="Modifier le cours"
+        preset="dialog"
+        size="medium"
+      >
+        <n-form
+          ref="editCoursFormRef"
+          :model="editingCours"
+          :rules="coursRules"
+          v-if="editingCours"
+        >
+          <n-form-item label="Nom du cours" path="nom_cours">
+            <n-input v-model:value="editingCours.nom_cours" placeholder="Entrez le nom du cours" />
+          </n-form-item>
+          <n-form-item label="Description" path="description_cours">
+            <n-input
+              v-model:value="editingCours.description_cours"
+              placeholder="Entrez la description"
+              type="textarea"
+              :rows="3"
+            />
+          </n-form-item>
+          <n-form-item label="Fichiers">
+            <n-upload
+              v-model:file-list="editCoursFileList"
+              accept=".pdf,.doc,.docx,.xls,.xlsx,.zip,.rar,.7z,.py,.c,.sql,.html,.css,.js,.java"
+              :max="10"
+            >
+              <n-button>Ajouter/Modifier fichiers</n-button>
+            </n-upload>
+          </n-form-item>
+        </n-form>
+
+        <template #action>
+          <n-button @click="showEditCoursModal = false">Annuler</n-button>
+          <n-button type="primary" @click="updateCourseHandler">Mettre à jour</n-button>
+        </template>
+      </n-modal>
+
+      <!-- Modal Modifier Devoir -->
+      <n-modal
+        v-model:show="showEditDevoirModal"
+        title="Modifier le devoir"
+        preset="dialog"
+        size="medium"
+      >
+        <n-form
+          ref="editDevoirFormRef"
+          :model="editingDevoir"
+          :rules="devoirRules"
+          v-if="editingDevoir"
+        >
+          <n-form-item label="Nom du devoir" path="nom_devoir">
+            <n-input
+              v-model:value="editingDevoir.nom_devoir"
+              placeholder="Entrez le nom du devoir"
+            />
+          </n-form-item>
+          <n-form-item label="Description" path="description_devoir">
+            <n-input
+              v-model:value="editingDevoir.description_devoir"
+              placeholder="Entrez la description"
+              type="textarea"
+              :rows="3"
+            />
+          </n-form-item>
+          <n-form-item label="Date limite" path="date_limite">
+            <n-date-picker v-model:value="editingDevoir.date_limite" type="datetime" />
+          </n-form-item>
+          <n-form-item label="Coefficient" path="coefficient">
+            <n-input-number v-model:value="editingDevoir.coefficient" :min="0" :max="20" />
+          </n-form-item>
+          <n-form-item label="Fichiers">
+            <n-upload
+              v-model:file-list="devoirFileList"
+              :max="10"
+              accept=".pdf,.doc,.docx,.xls,.xlsx,.zip,.rar,.7z,.py,.c,.sql,.html,.css,.js,.java"
+            >
+              <n-button>Ajouter/Modifier fichiers</n-button>
+            </n-upload>
+          </n-form-item>
+        </n-form>
+
+        <template #action>
+          <n-button @click="showEditDevoirModal = false">Annuler</n-button>
+          <n-button type="primary" @click="updateDevoirHandler">Mettre à jour</n-button>
+        </template>
+      </n-modal>
+
       <!-- Modal détail cours -->
       <n-modal
         v-model:show="showDetailModal"
@@ -407,11 +505,20 @@ const selectedDevoir = ref<any>(null)
 const showCreateCoursModal = ref(false)
 const showCreateDevoirModal = ref(false)
 const showCreateEvenementModal = ref(false)
+const showEditCoursModal = ref(false)
+const showEditDevoirModal = ref(false)
 
 // Form refs
 const coursFormRef = ref<FormInst | null>(null)
 const devoirFormRef = ref<FormInst | null>(null)
 const evenementFormRef = ref<FormInst | null>(null)
+const editCoursFormRef = ref<FormInst | null>(null)
+const editDevoirFormRef = ref<FormInst | null>(null)
+
+// Edit states
+const editingCours = ref<any>(null)
+const editingDevoir = ref<any>(null)
+const editCoursFileList = ref<UploadFileInfo[]>([])
 
 const matieres = ref<any[]>([])
 
@@ -608,6 +715,81 @@ async function deleteEvenement(id: string) {
     await loadData()
   } catch (err: any) {
     message.error(err.message || 'Erreur suppression événement')
+  }
+}
+
+function openEditCoursModal(c: any) {
+  editingCours.value = {
+    id_cours: c.id_cours,
+    nom_cours: c.nom_cours,
+    description_cours: c.description_cours,
+  }
+  editCoursFileList.value = []
+  showEditCoursModal.value = true
+}
+
+function openEditDevoirModal(d: any) {
+  editingDevoir.value = {
+    id_devoir: d.id_devoir,
+    nom_devoir: d.nom_devoir,
+    description_devoir: d.description_devoir,
+    date_limite: d.date_limite ? new Date(d.date_limite).getTime() : null,
+    coefficient: d.coefficient || 1,
+  }
+  devoirFileList.value = []
+  showEditDevoirModal.value = true
+}
+
+async function updateCourseHandler() {
+  await editCoursFormRef.value?.validate()
+
+  try {
+    const formData = new FormData()
+    formData.append('nom_cours', editingCours.value.nom_cours)
+    formData.append('description_cours', editingCours.value.description_cours || '')
+
+    editCoursFileList.value.forEach((file) => {
+      if (file.file) formData.append('fichiers', file.file)
+    })
+
+    await api.updateCours(editingCours.value.id_cours, formData)
+    message.success('Cours mis à jour avec succès')
+    showEditCoursModal.value = false
+    editingCours.value = null
+    editCoursFileList.value = []
+    await loadData()
+  } catch (err: any) {
+    message.error(err.message || 'Erreur lors de la mise à jour du cours')
+  }
+}
+
+async function updateDevoirHandler() {
+  await editDevoirFormRef.value?.validate()
+
+  try {
+    const formData = new FormData()
+
+    formData.append('nom_devoir', editingDevoir.value.nom_devoir)
+    formData.append('description_devoir', editingDevoir.value.description_devoir || '')
+
+    if (editingDevoir.value.date_limite) {
+      formData.append('date_limite', new Date(editingDevoir.value.date_limite).toISOString())
+    }
+
+    formData.append('coefficient', String(editingDevoir.value.coefficient || 1))
+
+    devoirFileList.value.forEach((f) => {
+      if (f.file) formData.append('fichiers', f.file)
+    })
+
+    await api.updateDevoir(editingDevoir.value.id_devoir, formData)
+    message.success('Devoir mis à jour avec succès')
+    showEditDevoirModal.value = false
+    editingDevoir.value = null
+    devoirFileList.value = []
+    await loadData()
+  } catch (err: any) {
+    message.error(err.message || 'Erreur lors de la mise à jour du devoir')
   }
 }
 
@@ -960,6 +1142,30 @@ function goToDevoirs() {
 
 .delete-btn:hover {
   transform: scale(1.1);
+}
+
+.edit-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #3b82f6;
+  font-size: 16px;
+  margin-right: 8px;
+}
+
+.edit-btn:hover {
+  transform: scale(1.1);
+}
+
+.edit-icon {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  transition: transform 0.15s ease;
+}
+
+.edit-btn:hover .edit-icon {
+  transform: scale(1.15);
 }
 
 .matiere-icon-header {

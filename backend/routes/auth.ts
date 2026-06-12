@@ -1,7 +1,7 @@
 import express, { Router } from 'express'
 import bcrypt from 'bcrypt'
 import crypto from 'crypto'
-import type { eleve, professeur } from '@prisma/client'
+import type { eleve as EleveModel, professeur as ProfModel } from '@prisma/client'
 import { prisma } from '../config.ts'
 import { signToken } from '../jwt-manager.ts'
 import { sendResetPasswordEmail, sendWelcomeEmail } from '../mail-service.ts'
@@ -186,8 +186,8 @@ router.post('/sign-up', authLimiter, async (req: express.Request, res: express.R
         },
       })
 
-      let eleve = null
-      let professeur = null
+      let eleve: EleveModel | null = null
+      let professeur: ProfModel | null = null
 
       if (role === 'eleve') {
         // Trouver la classe par ID

@@ -1,5 +1,4 @@
 import { Router } from 'express'
-import type { File } from 'multer'
 import { prisma } from '../config.ts'
 import { authenticateToken } from '../middleware/auth.ts'
 import { uploadDevoir } from '../middleware/uploadDevoir.ts'
@@ -257,7 +256,7 @@ router.post(
         },
       })
 
-      const files = req.files as File[]
+      const files = req.files as Express.Multer.File[];
 
       if (files?.length) {
         await prisma.piece_jointe_devoir.createMany({
@@ -279,8 +278,67 @@ router.post(
   },
 )
 
-// Get tous les devoirs (travaux à rendre) pour un élève
-// Triés par date limite en ordre croissant
+router.put(
+  '/:id',
+  authenticateToken,
+  authorizeRole('professeur', 'administrateur'),
+  uploadDevoir.array('fichiers', 10),
+  async (req, res) => {
+    try {
+      const { id } = req.params
+      const { nom_devoir, description_devoir, date_limite, coefficient } = req.body
+
+      const idDevoirBigInt = toBigIntOrNull(id)
+      if (!idDevoirBigInt) {
+        return res.status(400).json({ error: 'ID devoir invalide' })
+      }
+
+      // Vérifier que le devoir existe
+      const existingDevoir = await prisma.devoir.findUnique({
+        where: { id_devoir: idDevoirBigInt },
+      })
+
+      if (!existingDevoir) {
+        return res.status(404).json({ error: 'Devoir non trouvé' })
+      }
+
+      // Mettre à jour le devoir
+      const updatedDevoir = await prisma.devoir.update({
+        where: { id_devoir: idDevoirBigInt },
+        data: {
+          nom_devoir: nom_devoir || existingDevoir.nom_devoir,
+          description_devoir:
+            description_devoir !== undefined
+              ? description_devoir
+              : existingDevoir.description_devoir,
+          date_limite: date_limite ? new Date(date_limite) : existingDevoir.date_limite,
+          coefficient: coefficient ? Number(coefficient) : existingDevoir.coefficient,
+        },
+      })
+
+      // Gérer les nouveaux fichiers
+      const files = req.files as Express.Multer.File[]
+      if (files?.length) {
+        await prisma.piece_jointe_devoir.createMany({
+          data: files.map((f) => ({
+            id_devoir: idDevoirBigInt,
+            nom_fichier: f.originalname.slice(0, 254),
+            chemin_fichier: `/devoirs/${f.filename}`.slice(0, 499),
+            type_fichier: f.mimetype,
+            taille_octets: toBigIntOrNull(f.size) || BigInt(0),
+          })),
+        })
+      }
+
+
+      res.json(updatedDevoir)
+    } catch (e) {
+      console.error(e)
+      res.status(500).json({ error: 'Erreur serveur' })
+    }
+  },
+)
+
 router.get('/travaux-a-rendre', authenticateToken, async (req, res) => {
   try {
     const userId = req.user?.id_user
