@@ -1,7 +1,7 @@
 <template>
-  <div class="home-layout">
+  <div class="home-layout" :class="{ 'dark-mode': isDarkMode }">
     <!-- Sidebar Navigation -->
-    <Sidebar />
+    <Sidebar :is-dark-mode="isDarkMode" />
 
     <!-- Main Wrapper -->
     <div class="main-wrapper">
@@ -11,6 +11,15 @@
           <div class="header-title">
             <h1>Bonjour, {{ userName }} !</h1>
             <p>Voici votre espace de travail.</p>
+          </div>
+        </div>
+
+        <div class="header-controls">
+          <!-- Dark Mode Toggle -->
+          <div class="dark-mode-toggle">
+            <span class="toggle-label">🌙</span>
+            <input type="checkbox" id="darkModeSwitch" v-model="isDarkMode" class="toggle-switch" />
+            <label for="darkModeSwitch" class="toggle-slider"></label>
           </div>
         </div>
 
@@ -33,18 +42,18 @@
         <div class="content-grid">
           <!-- Mes matières (gauche) -->
           <div class="left-column">
-            <Matieres />
+            <Matieres :is-dark-mode="isDarkMode" />
           </div>
 
           <!-- Travaux récents (droite) -->
           <div class="right-column">
-            <TravauxRecents />
+            <TravauxRecents :is-dark-mode="isDarkMode" />
           </div>
         </div>
 
         <!-- À venir (dessous, pleine largeur) -->
         <div class="full-width">
-          <TravauxAVenir />
+          <TravauxAVenir :is-dark-mode="isDarkMode" />
         </div>
       </main>
     </div>
@@ -69,6 +78,7 @@ import ProfOnBoardingModal from '../components/onboarding/ProfOnBoardingModal.co
 const authStore = useAuthStore()
 const onboardingStore = useOnboardingStore()
 const router = useRouter()
+const isDarkMode = ref(false)
 onMounted(async () => {
   console.log('onMounted fetchMe start')
   await authStore.fetchMe()
@@ -166,6 +176,11 @@ const handleOnboarded = () => {
   min-height: 100vh;
   background: #f5f7fa;
   display: flex;
+  transition: all 0.3s ease;
+}
+
+.home-layout.dark-mode {
+  background: #1a1a1a;
 }
 
 .main-wrapper {
@@ -173,6 +188,11 @@ const handleOnboarded = () => {
   margin-left: 180px;
   display: flex;
   flex-direction: column;
+  transition: all 0.3s ease;
+}
+
+.home-layout.dark-mode .main-wrapper {
+  background: #2d2d2d;
 }
 
 .home-header {
@@ -184,6 +204,12 @@ const handleOnboarded = () => {
   gap: 32px;
   box-shadow: none;
   flex-wrap: wrap;
+  transition: all 0.3s ease;
+}
+
+.home-layout.dark-mode .home-header {
+  background: rgba(0, 0, 0, 0.3);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .header-content {
@@ -199,12 +225,93 @@ const handleOnboarded = () => {
   font-weight: 700;
   color: #205781;
   margin: 0;
+  transition: all 0.3s ease;
+}
+
+.home-layout.dark-mode .header-title h1 {
+  color: #64b5f6;
 }
 
 .header-title p {
   font-size: 16px;
   color: #817f7f;
   margin: 4px 0 0 0;
+  transition: all 0.3s ease;
+}
+
+.home-layout.dark-mode .header-title p {
+  color: #b0b0b0;
+}
+
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* Dark Mode Toggle Styles */
+.dark-mode-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 20px;
+  background: rgba(32, 87, 129, 0.1);
+  transition: all 0.3s ease;
+}
+
+.home-layout.dark-mode .dark-mode-toggle {
+  background: rgba(100, 181, 246, 0.1);
+}
+
+.toggle-label {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.toggle-switch {
+  display: none;
+}
+
+.toggle-slider {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 22px;
+  background-color: #d3d3d3;
+  border-radius: 11px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.toggle-slider::before {
+  content: '';
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background-color: white;
+  top: 2px;
+  left: 2px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.toggle-switch:checked + .toggle-slider {
+  background-color: #64b5f6;
+}
+
+.toggle-switch:checked + .toggle-slider::before {
+  left: 20px;
+  background-color: white;
+}
+
+.toggle-switch:hover + .toggle-slider {
+  box-shadow: 0 0 8px rgba(32, 87, 129, 0.3);
+}
+
+.home-layout.dark-mode .toggle-switch:hover + .toggle-slider {
+  box-shadow: 0 0 8px rgba(100, 181, 246, 0.3);
 }
 
 .user-info {
@@ -227,6 +334,10 @@ const handleOnboarded = () => {
   background: rgba(32, 87, 129, 0.1);
 }
 
+.home-layout.dark-mode .user-dropdown:hover {
+  background: rgba(100, 181, 246, 0.1);
+}
+
 .user-avatar {
   width: 40px;
   height: 40px;
@@ -239,6 +350,12 @@ const handleOnboarded = () => {
   font-weight: 700;
   font-size: 14px;
   flex-shrink: 0;
+  transition: all 0.3s ease;
+}
+
+.home-layout.dark-mode .user-avatar {
+  background: #64b5f6;
+  color: #1a1a1a;
 }
 
 .user-details {
@@ -252,18 +369,33 @@ const handleOnboarded = () => {
   font-weight: 600;
   color: #205781;
   margin: 0;
+  transition: all 0.3s ease;
+}
+
+.home-layout.dark-mode .user-name {
+  color: #64b5f6;
 }
 
 .user-class {
   font-size: 12px;
   color: #817f7f;
   margin: 0;
+  transition: all 0.3s ease;
+}
+
+.home-layout.dark-mode .user-class {
+  color: #b0b0b0;
 }
 
 .dropdown-arrow {
   color: #205781;
   font-size: 12px;
   margin-left: 8px;
+  transition: all 0.3s ease;
+}
+
+.home-layout.dark-mode .dropdown-arrow {
+  color: #64b5f6;
 }
 
 .home-content {
@@ -272,6 +404,7 @@ const handleOnboarded = () => {
   padding: 32px 24px;
   flex: 1;
   width: 100%;
+  transition: all 0.3s ease;
 }
 
 .content-grid {
@@ -324,6 +457,10 @@ const handleOnboarded = () => {
     grid-template-columns: 1fr 1fr;
     gap: 16px;
   }
+
+  .dark-mode-toggle {
+    order: -1;
+  }
 }
 
 /* Grand écran (> 1024px) */
@@ -343,11 +480,16 @@ const handleOnboarded = () => {
     padding: 16px 12px;
     padding-left: 60px;
     gap: 12px;
-    justify-content: flex-end;
+    justify-content: space-between;
   }
 
   .header-content {
     display: none;
+  }
+
+  .header-controls {
+    display: flex;
+    gap: 12px;
   }
 
   .header-title h1 {
@@ -386,6 +528,28 @@ const handleOnboarded = () => {
     gap: 16px;
     margin-bottom: 16px;
   }
+
+  .dark-mode-toggle {
+    padding: 6px 10px;
+  }
+
+  .toggle-slider {
+    width: 36px;
+    height: 20px;
+  }
+
+  .toggle-slider::before {
+    width: 16px;
+    height: 16px;
+  }
+
+  .toggle-switch:checked + .toggle-slider::before {
+    left: 18px;
+  }
+
+  .toggle-label {
+    font-size: 14px;
+  }
 }
 
 /* Petit téléphone (< 480px) */
@@ -396,6 +560,29 @@ const handleOnboarded = () => {
 
   .home-content {
     padding: 12px 8px;
+  }
+
+  .dark-mode-toggle {
+    padding: 5px 8px;
+    gap: 5px;
+  }
+
+  .toggle-slider {
+    width: 32px;
+    height: 18px;
+  }
+
+  .toggle-slider::before {
+    width: 14px;
+    height: 14px;
+  }
+
+  .toggle-switch:checked + .toggle-slider::before {
+    left: 16px;
+  }
+
+  .toggle-label {
+    font-size: 12px;
   }
 
   .user-avatar {

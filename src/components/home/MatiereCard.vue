@@ -1,5 +1,5 @@
 <template>
-  <div class="matiere-card" @click="goToMatiere">
+  <div class="matiere-card" :class="{ 'dark-mode': isDarkMode }" @click="goToMatiere">
     <div class="matiere-icon" :style="{ backgroundColor: iconBackgroundColor }">
       <img v-if="icon" :src="icon" :alt="nom" />
       <div v-else class="icon-placeholder">📚</div>
@@ -42,6 +42,10 @@ const props = defineProps({
   categoryName: {
     type: String,
     default: null,
+  },
+  isDarkMode: {
+    type: Boolean,
+    default: false,
   },
 })
 
@@ -87,6 +91,26 @@ const iconBackgroundColor = computed(() => {
   background: #e8eef5;
   transform: translateY(-4px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.matiere-card.dark-mode {
+  background: #3a3a3a;
+  border: 1px solid rgba(100, 181, 246, 0.15);
+}
+
+.matiere-card.dark-mode:hover {
+  background: #454545;
+  box-shadow: 0 4px 12px rgba(100, 181, 246, 0.15);
+  transform: translateY(-4px);
+}
+
+.matiere-card.dark-mode .matiere-icon {
+  background: rgba(100, 181, 246, 0.1);
+  border: 1px solid rgba(100, 181, 246, 0.2);
+}
+
+.matiere-card.dark-mode .matiere-nom {
+  color: #e0e0e0;
 }
 
 .matiere-icon {

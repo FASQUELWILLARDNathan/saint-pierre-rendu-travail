@@ -1,5 +1,5 @@
 <template>
-  <div class="travaux-a-venir-section">
+  <div class="travaux-a-venir-section" :class="{ 'dark-mode': isDarkMode }">
     <div class="section-header">
       <h2>À venir</h2>
       <router-link to="/calendrier" class="voir-tout">Voir Tout</router-link>
@@ -62,6 +62,14 @@
 import { ref, onMounted } from 'vue'
 import { useApi } from '@/composables/useApi'
 import { hexToRgba } from '@/utils/colors'
+
+interface Props {
+  isDarkMode?: boolean
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  isDarkMode: false,
+})
 
 interface Evenement {
   id: string
@@ -134,6 +142,12 @@ onMounted(async () => {
   border-radius: 12px;
   padding: 24px;
   margin-top: 0;
+  transition: all 0.3s ease;
+}
+
+.travaux-a-venir-section.dark-mode {
+  background: #2d2d2d;
+  border: 1px solid rgba(100, 181, 246, 0.1);
 }
 
 .section-header {
@@ -150,6 +164,11 @@ onMounted(async () => {
   font-weight: 700;
   color: #205781;
   margin: 0;
+  transition: all 0.3s ease;
+}
+
+.travaux-a-venir-section.dark-mode .section-header h2 {
+  color: #64b5f6;
 }
 
 .voir-tout {
@@ -158,6 +177,11 @@ onMounted(async () => {
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.travaux-a-venir-section.dark-mode .voir-tout {
+  color: #64b5f6;
 }
 
 .voir-tout:hover {
@@ -170,6 +194,13 @@ onMounted(async () => {
   padding: 20px;
   text-align: center;
   color: #666;
+  transition: all 0.3s ease;
+}
+
+.travaux-a-venir-section.dark-mode .loading,
+.travaux-a-venir-section.dark-mode .error,
+.travaux-a-venir-section.dark-mode .empty {
+  color: #b0b0b0;
 }
 
 .loading {
@@ -183,11 +214,23 @@ onMounted(async () => {
   border: 1px solid #f5b7b1;
 }
 
+.travaux-a-venir-section.dark-mode .error {
+  color: #ff7f5c;
+  background: rgba(255, 127, 92, 0.1);
+  border: 1px solid rgba(255, 127, 92, 0.3);
+}
+
 .empty {
   color: #27ae60;
   background: #d5f4e6;
   border-radius: 8px;
   border: 1px solid #abebc6;
+}
+
+.travaux-a-venir-section.dark-mode .empty {
+  color: #5fd99a;
+  background: rgba(95, 217, 154, 0.1);
+  border: 1px solid rgba(95, 217, 154, 0.3);
 }
 
 .travaux-coming {
@@ -208,6 +251,16 @@ onMounted(async () => {
 .event-card:hover {
   background: #e8eef5;
   transform: translateX(4px);
+}
+
+.travaux-a-venir-section.dark-mode .event-card {
+  background: #3a3a3a;
+  border: 1px solid rgba(100, 181, 246, 0.1);
+}
+
+.travaux-a-venir-section.dark-mode .event-card:hover {
+  background: #454545;
+  border: 1px solid rgba(100, 181, 246, 0.2);
 }
 
 .event-icon {
@@ -246,6 +299,11 @@ onMounted(async () => {
   margin: 0;
   word-break: break-word;
   flex: 1;
+  transition: all 0.3s ease;
+}
+
+.travaux-a-venir-section.dark-mode .event-titre {
+  color: #e0e0e0;
 }
 
 .event-type-dot {
@@ -259,6 +317,11 @@ onMounted(async () => {
   font-size: 12px;
   color: #666;
   margin: 0;
+  transition: all 0.3s ease;
+}
+
+.travaux-a-venir-section.dark-mode .event-date {
+  color: #b0b0b0;
 }
 
 .see-more-btn {
@@ -278,6 +341,14 @@ onMounted(async () => {
 .see-more-btn:hover {
   text-decoration: underline;
   background: rgba(32, 87, 129, 0.05);
+}
+
+.travaux-a-venir-section.dark-mode .see-more-btn {
+  color: #64b5f6;
+}
+
+.travaux-a-venir-section.dark-mode .see-more-btn:hover {
+  background: rgba(100, 181, 246, 0.1);
 }
 
 /* Tablette 768px-1024px */

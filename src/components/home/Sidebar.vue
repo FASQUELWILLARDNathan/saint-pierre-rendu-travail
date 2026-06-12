@@ -10,7 +10,7 @@
   <div v-if="isSidebarOpen" class="sidebar-backdrop" @click="isSidebarOpen = false"></div>
 
   <!-- Sidebar -->
-  <nav class="sidebar" :class="{ open: isSidebarOpen }">
+  <nav class="sidebar" :class="{ open: isSidebarOpen, 'dark-mode': isDarkMode }">
     <!-- Close button on mobile -->
     <button class="sidebar-close-btn" @click="isSidebarOpen = false">✕</button>
 
@@ -154,6 +154,14 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth.store'
 
+interface Props {
+  isDarkMode?: boolean
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  isDarkMode: false,
+})
+
 const router = useRouter()
 const authStore = useAuthStore()
 const isSidebarOpen = ref(false)
@@ -209,6 +217,13 @@ const handleLogout = () => {
   overflow-y: auto;
   font-family:
     -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  transition: all 0.3s ease;
+}
+
+.sidebar.dark-mode {
+  background: #1a1a1a;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.3);
+  border-right: 1px solid rgba(100, 181, 246, 0.1);
 }
 
 .sidebar-close-btn {
@@ -290,6 +305,38 @@ const handleLogout = () => {
   color: white;
   border-left: 3px solid #5dbfa3;
   padding-left: 9px;
+}
+
+.sidebar.dark-mode .menu-item {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.sidebar.dark-mode .menu-item:hover {
+  background: rgba(100, 181, 246, 0.1);
+  color: #64b5f6;
+}
+
+.sidebar.dark-mode .menu-item.active {
+  background: rgba(100, 181, 246, 0.15);
+  color: #64b5f6;
+  border-left: 3px solid #64b5f6;
+}
+
+.sidebar.dark-mode .sidebar-header {
+  border-bottom: 1px solid rgba(100, 181, 246, 0.1);
+}
+
+.sidebar.dark-mode .sidebar-logout {
+  border-top: 1px solid rgba(100, 181, 246, 0.1);
+}
+
+.sidebar.dark-mode .logout-item {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.sidebar.dark-mode .logout-item:hover {
+  background: rgba(100, 181, 246, 0.1);
+  color: #64b5f6;
 }
 
 .menu-icon {

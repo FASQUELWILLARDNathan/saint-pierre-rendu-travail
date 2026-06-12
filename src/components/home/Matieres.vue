@@ -1,5 +1,5 @@
 <template>
-  <div class="matieres-section">
+  <div class="matieres-section" :class="{ 'dark-mode': isDarkMode }">
     <h2>Mes catégories</h2>
     <div class="matieres-grid">
       <MatiereCard
@@ -12,6 +12,7 @@
         :category-id="categorie.id"
         :category-type="categorie.categoryType"
         :category-name="categorie.categoryName"
+        :is-dark-mode="isDarkMode"
       />
     </div>
   </div>
@@ -22,6 +23,14 @@ import { computed, onMounted, ref } from 'vue'
 import MatiereCard from './MatiereCard.vue'
 import { useAuthStore } from '@/stores/auth.store'
 import { useApi } from '@/composables/useApi'
+
+interface Props {
+  isDarkMode?: boolean
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  isDarkMode: false,
+})
 
 const authStore = useAuthStore()
 const api = useApi()
@@ -158,6 +167,16 @@ const categories = computed(() => {
   background: white;
   border-radius: 12px;
   padding: 24px;
+  transition: all 0.3s ease;
+}
+
+.matieres-section :deep(.dark-mode-context) {
+  background: #2d2d2d;
+}
+
+.matieres-section.dark-mode {
+  background: #2d2d2d;
+  border: 1px solid rgba(100, 181, 246, 0.1);
 }
 
 .matieres-section h2 {
@@ -165,6 +184,11 @@ const categories = computed(() => {
   font-weight: 700;
   color: #205781;
   margin: 0 0 24px 0;
+  transition: all 0.3s ease;
+}
+
+.matieres-section.dark-mode h2 {
+  color: #64b5f6;
 }
 
 .matieres-grid {

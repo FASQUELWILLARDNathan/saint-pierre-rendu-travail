@@ -1,5 +1,5 @@
 <template>
-  <div class="travaux-recents-section">
+  <div class="travaux-recents-section" :class="{ 'dark-mode': isDarkMode }">
     <div class="section-header">
       <h2>Travaux à rendre</h2>
       <router-link v-if="travaux.length > 3" to="/devoirs" class="voir-tout">
@@ -60,6 +60,14 @@ import { useApi } from '@/composables/useApi'
 import { useAuthStore } from '@/stores/auth.store'
 import { hexToRgba } from '@/utils/colors'
 
+interface Props {
+  isDarkMode?: boolean
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  isDarkMode: false,
+})
+
 interface Travail {
   id: string
   titre: string
@@ -106,6 +114,12 @@ onMounted(async () => {
   background: white;
   border-radius: 12px;
   padding: 24px;
+  transition: all 0.3s ease;
+}
+
+.travaux-recents-section.dark-mode {
+  background: #2d2d2d;
+  border: 1px solid rgba(100, 181, 246, 0.1);
 }
 
 .section-header {
@@ -122,6 +136,11 @@ onMounted(async () => {
   font-weight: 700;
   color: #205781;
   margin: 0;
+  transition: all 0.3s ease;
+}
+
+.travaux-recents-section.dark-mode .section-header h2 {
+  color: #64b5f6;
 }
 
 .voir-tout {
@@ -130,6 +149,11 @@ onMounted(async () => {
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.travaux-recents-section.dark-mode .voir-tout {
+  color: #64b5f6;
 }
 
 .voir-tout:hover {
@@ -142,6 +166,13 @@ onMounted(async () => {
   padding: 20px;
   text-align: center;
   color: #666;
+  transition: all 0.3s ease;
+}
+
+.travaux-recents-section.dark-mode .loading,
+.travaux-recents-section.dark-mode .error,
+.travaux-recents-section.dark-mode .empty {
+  color: #b0b0b0;
 }
 
 .loading {
@@ -155,11 +186,23 @@ onMounted(async () => {
   border: 1px solid #f5b7b1;
 }
 
+.travaux-recents-section.dark-mode .error {
+  color: #ff7f5c;
+  background: rgba(255, 127, 92, 0.1);
+  border: 1px solid rgba(255, 127, 92, 0.3);
+}
+
 .empty {
   color: #27ae60;
   background: #d5f4e6;
   border-radius: 8px;
   border: 1px solid #abebc6;
+}
+
+.travaux-recents-section.dark-mode .empty {
+  color: #5fd99a;
+  background: rgba(95, 217, 154, 0.1);
+  border: 1px solid rgba(95, 217, 154, 0.3);
 }
 
 .travaux-list {
@@ -175,10 +218,21 @@ onMounted(async () => {
   background: #f8f9fa;
   border-radius: 8px;
   transition: all 0.3s ease;
+  cursor: pointer;
 }
 
 .travail-item:hover {
   background: #e8eef5;
+}
+
+.travaux-recents-section.dark-mode .travail-item {
+  background: #3a3a3a;
+  border: 1px solid rgba(100, 181, 246, 0.1);
+}
+
+.travaux-recents-section.dark-mode .travail-item:hover {
+  background: #454545;
+  border: 1px solid rgba(100, 181, 246, 0.2);
 }
 
 .travail-icon {
@@ -208,12 +262,22 @@ onMounted(async () => {
   color: #1a1a1a;
   margin: 0 0 4px 0;
   word-break: break-word;
+  transition: all 0.3s ease;
+}
+
+.travaux-recents-section.dark-mode .travail-titre {
+  color: #e0e0e0;
 }
 
 .travail-matiere {
   font-size: 12px;
   color: #666;
   margin: 0 0 4px 0;
+  transition: all 0.3s ease;
+}
+
+.travaux-recents-section.dark-mode .travail-matiere {
+  color: #b0b0b0;
 }
 
 .travail-date {
@@ -221,6 +285,11 @@ onMounted(async () => {
   color: #d9534f;
   margin: 0;
   font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.travaux-recents-section.dark-mode .travail-date {
+  color: #ff7f5c;
 }
 
 .btn-action {
