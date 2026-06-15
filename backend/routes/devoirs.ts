@@ -260,7 +260,7 @@ router.post(
         },
       })
 
-      const files = req.files as Express.Multer.File[];
+      const files = req.files as MulterCustom.File[]
 
       if (files?.length) {
         await prisma.piece_jointe_devoir.createMany({
@@ -321,7 +321,7 @@ router.put(
       })
 
       // Gérer les nouveaux fichiers
-      const files = req.files as Express.Multer.File[]
+      const files = req.files as MulterCustom.File[]
       if (files?.length) {
         await prisma.piece_jointe_devoir.createMany({
           data: files.map((f) => ({
@@ -333,7 +333,6 @@ router.put(
           })),
         })
       }
-
 
       res.json(updatedDevoir)
     } catch (e) {
@@ -627,13 +626,41 @@ router.get('/categorie', authenticateToken, async (req, res) => {
 })
 
 router.delete('/:id', async (req, res) => {
-  const id = Number(req.params.id)
+  try {
+    const id = BigInt(req.params.id)
 
-  await prisma.devoir.delete({
-    where: { id_devoir: id },
-  })
+    await prisma.$transaction(async (tx) => {
+      // 1) Supprimer les relations prof ↔ devoir
+      await tx.assprofdevoir.deleteMany({
+        where: { id_devoir: id },
+      })
 
-  res.json({ success: true })
+      // 2) Supprimer les rendus
+      await tx.rendu.deleteMany({
+        where: { id_devoir: id },
+      })
+
+      // 3) Supprimer les fichiers du devoir
+      await tx.devoirFichier.deleteMany({
+        where: { id_devoir: id },
+      })
+
+      // 4) Supprimer les pièces jointes du devoir
+      await tx.piece_jointe_devoir.deleteMany({
+        where: { id_devoir: id },
+      })
+
+      // 5) Supprimer le devoir
+      await tx.devoir.delete({
+        where: { id_devoir: id },
+      })
+    })
+
+    res.json({ success: true })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Erreur lors de la suppression du devoir' })
+  }
 })
 
 router.get(
