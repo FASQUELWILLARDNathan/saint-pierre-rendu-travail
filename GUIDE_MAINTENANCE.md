@@ -63,9 +63,6 @@ npm install
 
 # Configurer la base de données Prisma
 npx prisma generate
-
-# Initialiser les migrations et seed
-npm run prisma:setup
 ```
 
 ### 2️⃣ Démarrer l'application
@@ -73,7 +70,7 @@ npm run prisma:setup
 #### 🔧 Mode développement
 
 ```bash
-npm run dev:api          # Lance le serveur Express (port 5000)
+npm run dev:api          # Lance le serveur Express (port 3000)
 npm run dev             # Lance l'interface Vue (port 5173)
 ```
 
@@ -98,9 +95,9 @@ docker compose up -d --build
 | Service                             | URL                             |
 | ----------------------------------- | ------------------------------- |
 | **Interface web**                   | `http://localhost:3000`         |
-| **API**                             | `http://localhost:5000/api`     |
-| **Swagger (documentation API)**     | `http://localhost:5000/swagger` |
-| **Prisma Studio (base de données)** | `http://localhost:5555`         |
+| **API**                             | `http://localhost:3000/api`     |
+| **Swagger (documentation API)**     | `http://localhost:3000/api/docs` |
+| **Prisma Studio (base de données)** | `http://localhost:5555/`         |
 
 ---
 
@@ -183,19 +180,14 @@ Créer un fichier `.xlsx` (Excel) avec les colonnes suivantes :
 
 Créer un fichier `.xlsx` avec les colonnes suivantes :
 
-| Nom     | Prénom | Login    | Email                   | Matière       | Classes                 |
-| ------- | ------ | -------- | ----------------------- | ------------- | ----------------------- |
-| Bernard | Marie  | mbernard | marie.bernard@ecole.fr  | Mathématiques | Terminale A,Terminale B |
-| Lefevre | Pierre | plefevre | pierre.lefevre@ecole.fr | Français      | 1ère A                  |
+| Nom     | Prénom |
+| ------- | ------ |
+| Bernard | Marie  |
+| Lefevre | Pierre |
 
 **Colonnes obligatoires :**
 
-- `Nom`, `Prénom`, `Login`, `Email`
-
-**Colonnes optionnelles :**
-
-- `Matière` : la discipline enseignée (ex: Mathématiques, Français, Physique...)
-- `Classes` : classes enseignées, séparées par des virgules
+- `Nom`, `Prénom`
 
 #### Étape 2 : Importer le fichier
 
@@ -211,8 +203,6 @@ Créer un fichier `.xlsx` avec les colonnes suivantes :
 2. Aller dans **Utilisateurs** → **Ajouter un professeur**
 3. Remplir le formulaire :
    - Nom et Prénom
-   - Login (unique)
-   - Email (unique)
    - Mot de passe
    - Matière (optionnel)
 4. Ajouter les classes à enseigner
@@ -234,47 +224,6 @@ Créer un fichier `.xlsx` avec les colonnes suivantes :
 
 ---
 
-## 🏫 Gestion des classes et matières
-
-### Ajouter une classe
-
-1. Se connecter comme **administrateur**
-2. Aller dans **Paramètres** → **Classes** → **Ajouter une classe**
-3. Remplir :
-   - **Niveau** : Terminale, 1ère, 2nde, etc.
-   - **Lettre** : A, B, C, etc.
-   - **Nom complet** : auto-généré (ex: "Terminale A")
-4. Valider
-
-### Ajouter une matière
-
-1. Se connecter comme **administrateur**
-2. Aller dans **Paramètres** → **Matières** → **Ajouter une matière**
-3. Remplir :
-   - **Nom** : Mathématiques, Français, Physique, etc.
-   - **Description** : (optionnel)
-   - **Couleur** : (optionnel, pour l'interface)
-   - **Icône** : (optionnel)
-4. Valider
-
-### Ajouter une spécialité
-
-1. Se connecter comme **administrateur**
-2. Aller dans **Paramètres** → **Spécialités** → **Ajouter une spécialité**
-3. Remplir :
-   - **Nom** : NSI, SVT, Maths, etc.
-4. Valider
-
-### Ajouter une option
-
-1. Se connecter comme **administrateur**
-2. Aller dans **Paramètres** → **Options** → **Ajouter une option**
-3. Remplir :
-   - **Nom** : Sport, Latin, Musique, etc.
-4. Valider
-
----
-
 ## 🔐 Accès administrateur
 
 ### Premier administrateur
@@ -285,18 +234,10 @@ Lors de l'initialisation, le premier administrateur est créé avec le seed :
 npm run prisma:seed
 ```
 
-**Identifiants par défaut :**
-
-- **Login** : `admin`
-- **Email** : `admin@ecole.fr`
-- **Mot de passe** : `AdminPassword123!` (À CHANGER IMMÉDIATEMENT)
-
 ### Ajouter un nouvel administrateur
 
-1. Se connecter comme administrateur existant
-2. Aller dans **Utilisateurs** → **Ajouter un administrateur**
-3. Remplir le formulaire
-4. Valider
+1. Accèder a la base de données
+2. Insérer dans utilisateurs
 
 ⚠️ **IMPORTANT** : Garder le nombre d'administrateurs limité pour la sécurité
 
@@ -450,19 +391,37 @@ npm run test:coverage
 Créer un fichier `.env` à la racine du projet :
 
 ```env
-# Database
-DATABASE_URL=postgresql://app_user:app_password@localhost:5432/saint_pierre
+# Database Configuration
+DB_USER=your_user
+DB_PASSWORD=your_password
+DB_NAME=your_database
+DB_PORT=your_port (5432)
+DATABASE_URL=postgresql://your_user:your_password@postgres:your_port/your_database
 
-# JWT
-JWT_SECRET=votre-clé-secrète-très-sécurisée-changez-moi
-
-# Email (optionnel)
-MAILJET_API_KEY=votre-clé-api
-MAILJET_SECRET_KEY=votre-clé-secrète
-
-# Environnement
+# API Configuration
+API_PORT=3000
+VITE_API_URL=http://url:3000
 NODE_ENV=production
-API_PORT=5000
+
+# Frontend Configuration
+FRONTEND_PORT=5173
+FRONTEND_URL=http://url:5173
+
+#JWT SECRET
+JWT_SECRET=generate_your_jwt_secret
+
+# Email Configuration (Mailjet)
+MAILJET_API_KEY=your_api_key
+MAILJET_API_SECRET=your_api_secret
+MAILJET_FROM_EMAIL=noreply@your_domain.fr
+MAILJET_FROM_NAME=your_domain
+
+# Admin permissions
+DEFAULT_ADMIN_EMAIL=admin_email
+DEFAULT_ADMIN_PASSWORD=admin_password
+
+# Ghost User (Pour les devoirs archivés)
+GHOST_USER_ID=ghost_id
 ```
 
 ⚠️ **NE PAS commiter le `.env` dans Git** - ajouter à `.gitignore`
@@ -476,7 +435,7 @@ API_PORT=5000
 ### Authentification
 
 - JWT (JSON Web Token) stocké en cookie sécurisé
-- Expiration des tokens après 24 heures
+- Expiration des tokens après 1 semaine
 - Déconnexion automatique après inactivité
 
 ---
@@ -497,11 +456,8 @@ API_PORT=5000
 ### Logs importants
 
 ```bash
-# API logs
-docker compose logs -f api
 
-# Database logs
-docker compose logs -f db
+docker compose logs {id_container}
 
 # Frontend
 npm run dev
@@ -509,7 +465,7 @@ npm run dev
 
 ### Documentation API
 
-Accessible via `/swagger` sur le serveur (ex: `http://localhost:5000/swagger`)
+Accessible via `/swagger` sur le serveur (ex: `http://localhost:5555/swagger`)
 
 ---
 
@@ -521,7 +477,7 @@ Avant de mettre en production :
 - [ ] Cloner le projet
 - [ ] Configurer le `.env` avec les bonnes valeurs
 - [ ] Exécuter `npm install`
-- [ ] Exécuter `npm run prisma:setup`
+- [ ] Exécuter `npx prisma generate`
 - [ ] Changer le mot de passe administrateur par défaut
 - [ ] Tester l'import des élèves/professeurs
 - [ ] Vérifier l'accès à la base de données avec Prisma Studio
@@ -531,6 +487,6 @@ Avant de mettre en production :
 
 ---
 
-**Dernière mise à jour : Décembre 2026**
+**Dernière mise à jour : Juin 2026**
 
 Pour toute question ou problème, consultez la documentation API ou les logs Docker.

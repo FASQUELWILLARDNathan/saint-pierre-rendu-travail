@@ -86,19 +86,12 @@ DOCUMENTATION/
 docker compose -f docker-compose-prod.yml up -d --build
 ```
 
-Puis accédez à : **http://localhost:3000**
-
-### Se connecter
-
-- **Login :** `admin`
-- **Mot de passe :** `AdminPassword123!` (À CHANGER)
+Puis accédez à : **http://your_domain:8079**
 
 ### Première action
 
-1. Créer les **classes** (Terminale A, 1ère B, etc.)
-2. Créer les **matières** (Mathématiques, Français, etc.)
-3. **Importer les élèves** par Excel
-4. **Importer les professeurs** par Excel
+1. **Importer les élèves** par Excel
+2. **Importer les professeurs** par Excel
 
 ✅ Prêt !
 
@@ -186,18 +179,6 @@ Puis accédez à : **http://localhost:3000**
 
 ---
 
-### Scénario 4 : "Je dois ajouter une nouvelle classe/matière"
-
-**Étapes :**
-
-1. Lire : GUIDE_RAPIDE → TASK 1 ou TASK 2
-2. Ajouter via l'interface
-3. ✅ C'est fait
-
-**Document :** GUIDE_RAPIDE.md (5 min)
-
----
-
 ### Scénario 5 : "Les élèves ne voient pas les cours"
 
 **Étapes :**
@@ -256,8 +237,8 @@ Puis accédez à : **http://localhost:3000**
 
 **Accès à l'app :**
 
-- Interface web : `http://localhost:3000`
-- API docs : `http://localhost:5000/swagger`
+- Interface web : `http://localhost:8079`
+- API docs : `http://localhost:3000/api/docs`
 - DB management : `http://localhost:5555` (Prisma Studio)
 
 ---
@@ -348,7 +329,7 @@ Puis accédez à : **http://localhost:3000**
 ## 📝 Historique & version
 
 - **Version** : 1.0
-- **Date** : Décembre 2026
+- **Date** : Juin 2026
 - **Créée pour** : Maintenance à long terme
 - **Couvre** : Installation, utilisation, développement, dépannage
 

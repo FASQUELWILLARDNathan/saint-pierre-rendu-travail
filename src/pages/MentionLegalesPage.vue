@@ -22,8 +22,7 @@
             <strong>Assujetti à la TVA :</strong> Non
           </p>
           <p>
-            <strong>Directrice de la publication :</strong> Estelle Jusselme<br />
-            <strong>Responsable de la rédaction :</strong> Estelle Jusselme
+            <strong>Responsable de la rédaction :</strong> Fasquel Willard Nathan
           </p>
         </div>
 
@@ -33,8 +32,8 @@
           <p>
             <strong>Nom du site :</strong> Saint Pierre Plateforme<br />
             <strong>URL :</strong>
-            <a href="https://saintpierrecalais.fr" target="_blank">
-              https://saintpierrecalais.fr
+            <a href="https://cssaintpierrecalais.fr:8079" target="_blank">
+              http://cssaintpierrecalais.fr:8079
             </a>
           </p>
         </div>

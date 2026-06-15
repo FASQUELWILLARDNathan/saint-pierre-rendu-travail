@@ -87,13 +87,6 @@ docker stats  # Pour vérifier l'utilisation
 3. **Réinitialiser le mot de passe**
 4. Email envoyé à l'utilisateur
 
-**3. Admin par défaut**
-
-```
-Login : admin
-Mot de passe : AdminPassword123!
-```
-
 ---
 
 ## 🔴 Import Excel échoue
@@ -483,7 +476,7 @@ docker compose -f docker-compose-prod.yml ps
 
 # 5. Check app
 curl http://localhost:3000 && echo "✓ OK"
-curl http://localhost:5000/swagger && echo "✓ OK"
+curl http://localhost:3000/api/docs && echo "✓ OK"
 ```
 
 Si toujours KO :
@@ -497,6 +490,6 @@ docker compose -f docker-compose-prod.yml logs > logs_emergency.txt
 
 ---
 
-**Version 1.0 - Décembre 2026**
+**Version 1.0 - Juin 2026**
 
 **Dernière mise à jour : Vérifiez régulièrement qu'aucune erreur ne s'accumule dans les logs !**
