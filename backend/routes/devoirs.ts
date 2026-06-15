@@ -233,6 +233,7 @@ router.post(
   uploadDevoir.array('fichiers', 10),
   async (req, res) => {
     try {
+      const userId = req.user?.id_user
       const { nom_devoir, description_devoir, id_cours, date_limite, coefficient } = req.body
 
       if (!nom_devoir || !id_cours) {
@@ -252,6 +253,9 @@ router.post(
           coefficient: coefficient ? Number(coefficient) : 1,
           cours: {
             connect: { id_cours: idCoursBigInt },
+          },
+          professeurs: {
+            create: [{ id_user: userId }],
           },
         },
       })

@@ -82,26 +82,52 @@ export async function promoteStudents() {
 
   const terminaleClasses = classes.filter((c) => getLevel(c.nom_classe) === 'terminale')
 
+  const ghostId = BigInt(process.env.GHOST_USER_ID)
+
   for (const classe of terminaleClasses) {
     const eleves = await prisma.eleve.findMany({
       where: { id_classe: classe.id_classe },
       select: { id_user: true },
     })
 
-    const ids = eleves.map((e) => e.id_user)
+    for (const eleve of eleves) {
+      const idEleve = eleve.id_user
 
-    if (ids.length > 0) {
-      await prisma.eleve.deleteMany({
-        where: { id_classe: classe.id_classe },
-      })
-
-      await prisma.utilisateur.deleteMany({
+      // 1) Déplacer uniquement les rendus archivés
+      await prisma.rendu.updateMany({
         where: {
-          id_user: {
-            in: ids,
-          },
+          id_user: idEleve,
+          archive: true,
+        },
+        data: {
+          id_user: ghostId,
         },
       })
+
+      // 2) Vérifier s’il reste des rendus non archivés
+      const remaining = await prisma.rendu.count({
+        where: {
+          id_user: idEleve,
+          archive: false,
+        },
+      })
+
+      if (remaining > 0) {
+        console.log(`❌ Élève ${idEleve} non supprimé : rendus non archivés`)
+        continue
+      }
+
+      // 3) Supprimer l’élève
+      await prisma.eleve.delete({
+        where: { id_user: idEleve },
+      })
+
+      // 4) Supprimer l’utilisateur
+      await prisma.utilisateur.delete({
+        where: { id_user: idEleve },
+      })
+
+      console.log(`✔️ Élève ${idEleve} supprimé`)
     }
   }
 

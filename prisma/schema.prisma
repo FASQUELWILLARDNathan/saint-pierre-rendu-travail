@@ -244,7 +244,7 @@ model rendu {
   note                      Decimal?                @db.Decimal(5, 2)
   retour                    String?                 @db.VarChar(255)
   archive                   Boolean                 @default(false)
-  devoir                    devoir                  @relation(fields: [id_devoir], references: [id_devoir])
+  devoir                    devoir                  @relation(fields: [id_devoir], references: [id_devoir], onDelete: Cascade)
   eleve                     eleve                   @relation(fields: [id_user], references: [id_user])
   pieces_jointes            piece_jointe_rendu[]
 

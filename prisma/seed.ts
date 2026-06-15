@@ -27,6 +27,32 @@ async function main() {
     },
   })
 
+  const ghostId = BigInt(process.env.GHOST_USER_ID!)
+
+  const ghostUser = await prisma.utilisateur.upsert({
+    where: { id_user: ghostId },
+    update: {},
+    create: {
+      id_user: ghostId,
+      nom: 'Archive',
+      prenom: 'User',
+      login: 'archive.user',
+      email: 'archive@example.com',
+      hashed_password: await bcrypt.hash('unused_password', 10),
+      role: 'eleve',
+    },
+  })
+
+  await prisma.eleve.upsert({
+    where: { id_user: ghostId },
+    update: {},
+    create: {
+      id_user: ghostId,
+      id_classe: null,
+      annee: null,
+    },
+  })
+
   // CLASSES
   const classesConfig = [
     { niveau: '6ème', lettres: ['A', 'B', 'C', 'D', 'E'] },
