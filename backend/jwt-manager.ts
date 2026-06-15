@@ -11,7 +11,7 @@ if (!initialSecret) {
   throw new Error('La variable d environnement JWT_SECRET est requis')
 }
 
-let keyStore: JWTKeyStore = {
+const keyStore: JWTKeyStore = {
   current: initialSecret,
   rotatedAt: new Date(),
 }

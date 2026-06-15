@@ -53,12 +53,8 @@ const categories = computed(() => {
     if (user.professeur?.matiere) {
       const nom = user.professeur.matiere
       const found =
-      allMatieresBDD.value.find(
-        (m: any) => m.nom_matiere.toLowerCase() === nom.toLowerCase(),
-      ) ||
-      MATIERES.find(
-        (m: any) => m.nom.toLowerCase() === nom.toLowerCase(),
-      )
+        allMatieresBDD.value.find((m: any) => m.nom_matiere.toLowerCase() === nom.toLowerCase()) ||
+        MATIERES.find((m: any) => m.nom.toLowerCase() === nom.toLowerCase())
       if (found) {
         result.push({
           id: found.id_matiere,
@@ -77,12 +73,8 @@ const categories = computed(() => {
     user.professeur?.specialites_enseignees?.forEach((s) => {
       const nom = s.specialite.nom_specialite
       const found =
-      allMatieresBDD.value.find(
-        (m: any) => m.nom_matiere.toLowerCase() === nom.toLowerCase(),
-      ) ||
-      MATIERES.find(
-        (m: any) => m.nom.toLowerCase() === nom.toLowerCase(),
-      )
+        allMatieresBDD.value.find((m: any) => m.nom_matiere.toLowerCase() === nom.toLowerCase()) ||
+        MATIERES.find((m: any) => m.nom.toLowerCase() === nom.toLowerCase())
       result.push({
         id: s.specialite.id_specialite,
         nom,
@@ -99,12 +91,8 @@ const categories = computed(() => {
     user.professeur?.options_enseignees?.forEach((o) => {
       const nom = o.option.nom_option
       const found =
-      allMatieresBDD.value.find(
-        (m: any) => m.nom_matiere.toLowerCase() === nom.toLowerCase(),
-      ) ||
-      MATIERES.find(
-        (m: any) => m.nom.toLowerCase() === nom.toLowerCase(),
-      )
+        allMatieresBDD.value.find((m: any) => m.nom_matiere.toLowerCase() === nom.toLowerCase()) ||
+        MATIERES.find((m: any) => m.nom.toLowerCase() === nom.toLowerCase())
       result.push({
         id: o.option.id_option,
         nom,
@@ -137,12 +125,8 @@ const categories = computed(() => {
     const spes = (user.eleve?.specialites ?? []).map((s: any) => {
       const nom = s.specialite.nom_specialite
       const found =
-      allMatieresBDD.value.find(
-        (m: any) => m.nom_matiere.toLowerCase() === nom.toLowerCase(),
-      ) ||
-      MATIERES.find(
-        (m: any) => m.nom.toLowerCase() === nom.toLowerCase(),
-      )
+        allMatieresBDD.value.find((m: any) => m.nom_matiere.toLowerCase() === nom.toLowerCase()) ||
+        MATIERES.find((m: any) => m.nom.toLowerCase() === nom.toLowerCase())
       return {
         id: s.specialite.id_specialite ?? nom,
         nom,
@@ -158,12 +142,8 @@ const categories = computed(() => {
     const opts = (user.eleve?.options ?? []).map((o: any) => {
       const nom = o.option.nom_option
       const found =
-      allMatieresBDD.value.find(
-        (m: any) => m.nom_matiere.toLowerCase() === nom.toLowerCase(),
-      ) ||
-      MATIERES.find(
-        (m: any) => m.nom.toLowerCase() === nom.toLowerCase(),
-      )
+        allMatieresBDD.value.find((m: any) => m.nom_matiere.toLowerCase() === nom.toLowerCase()) ||
+        MATIERES.find((m: any) => m.nom.toLowerCase() === nom.toLowerCase())
       return {
         id: o.option.id_option ?? nom,
         nom,

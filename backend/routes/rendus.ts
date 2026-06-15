@@ -83,7 +83,7 @@ router.post(
       }
 
       // Sauvegarde les fichiers
-      const files = req.files as Express.Multer.File[]
+      const files = req.files as MulterCustom.File[]
       if (files && files.length > 0) {
         await prisma.piece_jointe_rendu.createMany({
           data: files.map((f) => ({

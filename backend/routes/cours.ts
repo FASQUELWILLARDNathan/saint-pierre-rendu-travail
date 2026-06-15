@@ -43,7 +43,7 @@ router.get('/', authenticateToken, async (req, res) => {
       },
     })
 
-    let where: any = {}
+    const where: any = {}
 
     const kind = String(req.query.kind ?? '')
     const id = String(req.query.id ?? '')
@@ -209,7 +209,7 @@ router.post(
         },
       })
 
-      const files = req.files as Express.Multer.File[]
+      const files = req.files as MulterCustom.File[]
 
       if (files && files.length > 0) {
         await prisma.ressource_cours.createMany({
@@ -448,7 +448,7 @@ router.put(
       })
 
       // Gérer les nouveaux fichiers
-      const files = req.files as Express.Multer.File[]
+      const files = req.files as MulterCustom.File[]
       if (files?.length) {
         await prisma.ressource_cours.createMany({
           data: files.map((f) => ({
@@ -460,7 +460,6 @@ router.put(
           })),
         })
       }
-
 
       const coursComplet = await prisma.cours.findUnique({
         where: { id_cours: idCoursBigInt },
