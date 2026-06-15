@@ -173,7 +173,7 @@ router.post(
     try {
       const userId = toBigIntOrNull((req as any).user.id_user)
       const { id_destinataire, sujet, contenu } = req.body
-      const files = req.files as Express.Multer.File[]
+      const files = req.files as MulterCustom.File[]
 
       // Validate required fields
       if (!id_destinataire || !sujet || !contenu) {
