@@ -148,7 +148,7 @@ export const MATIERES: Matiere[] = [
   {
     id: 20,
     nom: 'Section Européenne',
-    icon: '/langues-geo-icon.svg',
+    icon: '/langues-icon.svg',
     color: '#FF0000',
     devoirIcon: '/langues-devoir-icon.svg',
   },

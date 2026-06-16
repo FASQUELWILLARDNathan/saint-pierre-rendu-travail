@@ -217,6 +217,14 @@
           <n-form-item label="Coefficient" path="coefficient">
             <n-input-number v-model:value="devoirForm.coefficient" :min="0" :max="20" />
           </n-form-item>
+          <n-form-item label="Cours associé" path="id_cours">
+            <n-select
+              v-model:value="devoirForm.id_cours"
+              :options="cours.map(c => ({ label: c.nom_cours, value: c.id_cours }))"
+              placeholder="Sélectionner un cours (optionnel)"
+              clearable
+            />
+          </n-form-item>
           <n-form-item label="Fichiers">
             <n-upload
               v-model:file-list="devoirFileList"
@@ -378,30 +386,72 @@
             </span>
           </div>
 
-          <p class="detail-desc">{{ selectedCours.description_cours ?? 'Pas de description' }}</p>
-
-          <div v-if="selectedCours.ressources?.length > 0" class="detail-ressources">
-            <h4>Fichiers du cours</h4>
-            <div class="ressources-list">
-              <a
-                v-for="ressource in selectedCours.ressources"
-                :key="ressource.id_ressource"
-                :href="`${apiBase}/public${ressource.chemin_fichier}`"
-                target="_blank"
-                class="ressource-item"
-              >
-                <span>{{ getFileIcon(ressource.type_fichier) }}</span>
-                <div class="ressource-info">
-                  <span class="ressource-nom">{{ ressource.nom_fichier }}</span>
-                  <span class="ressource-size">{{
-                    formatSize(Number(ressource.taille_octets))
-                  }}</span>
+          <!-- Onglets -->
+          <n-tabs v-model:value="coursDetailTab" type="line" style="margin-top: 16px">
+            <!-- Onglet Fichiers -->
+            <n-tab-pane name="fichiers" tab="📁 Fichiers">
+              <p class="detail-desc">{{ selectedCours.description_cours ?? 'Pas de description' }}</p>
+              <div v-if="selectedCours.ressources?.length > 0" class="detail-ressources">
+                <h4>Fichiers du cours</h4>
+                <div class="ressources-list">
+                  <a
+                    v-for="ressource in selectedCours.ressources"
+                    :key="ressource.id_ressource"
+                    :href="`${apiBase}/public${ressource.chemin_fichier}`"
+                    target="_blank"
+                    class="ressource-item"
+                  >
+                    <span>{{ getFileIcon(ressource.type_fichier) }}</span>
+                    <div class="ressource-info">
+                      <span class="ressource-nom">{{ ressource.nom_fichier }}</span>
+                      <span class="ressource-size">{{
+                        formatSize(Number(ressource.taille_octets))
+                      }}</span>
+                    </div>
+                    <span class="ressource-dl">⬇</span>
+                  </a>
                 </div>
-                <span class="ressource-dl">⬇</span>
-              </a>
-            </div>
-          </div>
-          <n-empty v-else description="Aucun fichier joint" />
+              </div>
+              <n-empty v-else description="Aucun fichier joint" />
+            </n-tab-pane>
+
+            <!-- Onglet Devoirs -->
+            <n-tab-pane name="devoirs" tab="📝 Devoirs">
+              <div class="cours-devoirs-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <span>Devoirs liés à ce cours</span>
+                <n-button v-if="isProfessor" size="small" type="primary" @click="openCreateDevoirFromCours(selectedCours)">
+                  ➕ Nouveau devoir
+                </n-button>
+              </div>
+
+              <n-empty
+                v-if="!devoirsForSelectedCours.length"
+                description="Aucun devoir pour ce cours"
+              />
+
+              <div v-else class="items-list">
+                <div
+                  v-for="d in devoirsForSelectedCours"
+                  :key="d.id_devoir"
+                  class="item-card devoir-item"
+                  @click="openDevoir(d)"
+                  style="cursor: pointer"
+                >
+                  <div class="item-icon" :style="{ backgroundColor: iconBg }">
+                    <span>📝</span>
+                  </div>
+                  <div class="item-content">
+                    <p class="item-title">{{ d.nom_devoir }}</p>
+                    <p class="item-sub">{{ d.description_devoir ?? 'Pas de description' }}</p>
+                    <p class="item-meta" v-if="d.date_limite">
+                      📅 {{ new Date(d.date_limite).toLocaleDateString('fr-FR') }}
+                    </p>
+                  </div>
+                  <div class="item-badge" v-if="d.coefficient">Coef. {{ d.coefficient }}</div>
+                </div>
+              </div>
+            </n-tab-pane>
+          </n-tabs>
         </div>
       </n-modal>
       <!-- Modal détail devoir -->
@@ -449,6 +499,25 @@
           </div>
 
           <n-empty v-else description="Aucun fichier joint" />
+
+          <!-- Bouton Rendre / Rendus -->
+          <div style="margin-top: 20px; display: flex; justify-content: flex-end;">
+            <n-button
+              v-if="isEleve"
+              type="primary"
+              @click="handleRendreDevoir(selectedDevoir)"
+            >
+              📤 Rendre
+            </n-button>
+            <n-button
+              v-else-if="isProfessor"
+              type="default"
+              @click="handleVoirRendus(selectedDevoir)"
+            >
+              <img src="/eye-password-show-svgrepo-com.svg" alt="Rendus" style="width: 16px; height: 16px; margin-right: 6px;" />
+              Rendus
+            </n-button>
+          </div>
         </div>
       </n-modal>
     </div>
@@ -492,6 +561,7 @@ const categoryLabel = computed(() => String(route.query.name ?? ''))
 
 const isLoading = ref(true)
 const error = ref<string | null>(null)
+const isEleve = computed(() => authStore.user?.role === 'eleve')
 
 const matiere = ref<any>(null)
 const cours = ref<any[]>([])
@@ -500,6 +570,7 @@ const evenements = ref<any[]>([])
 const devoirFileList = ref<UploadFileInfo[]>([])
 const showDevoirDetailModal = ref(false)
 const selectedDevoir = ref<any>(null)
+const coursDetailTab = ref('fichiers')
 
 // Modal states
 const showCreateCoursModal = ref(false)
@@ -525,11 +596,6 @@ const matieres = ref<any[]>([])
 const showDetailModal = ref(false)
 const selectedCours = ref<any>(null)
 const apiBase = import.meta.env.VITE_API_URL
-
-function openCours(c: any) {
-  selectedCours.value = c
-  showDetailModal.value = true
-}
 
 function getFileIcon(type: string) {
   if (type?.includes('pdf')) return '📄'
@@ -580,7 +646,33 @@ const devoirForm = ref({
   description_devoir: '',
   date_limite: null as number | null,
   coefficient: 1 as number,
+  id_cours: null,
 })
+
+// Devoirs filtrés pour le cours sélectionné
+const devoirsForSelectedCours = computed(() =>
+  devoirs.value.filter(d => d.id_cours === selectedCours.value?.id_cours)
+)
+
+// Ouvrir la modal cours en forçant l'onglet devoirs + pré-remplir id_cours
+function openCreateDevoirFromCours(cours) {
+  showDetailModal.value = false
+  devoirForm.value = {
+    nom_devoir: '',
+    description_devoir: '',
+    date_limite: null,
+    coefficient: null,
+    id_cours: cours.id_cours,
+  }
+  showCreateDevoirModal.value = true
+}
+
+// Réinitialiser l'onglet à l'ouverture d'un cours
+function openCours(c) {
+  selectedCours.value = c
+  coursDetailTab.value = 'fichiers'
+  showDetailModal.value = true
+}
 
 const evenementForm = ref({
   nom_evenement: '',
@@ -882,6 +974,16 @@ function handleCreateSelect(key: string) {
   else if (key === 'evenement') openCreateEvenementModal()
 }
 
+function handleRendreDevoir(devoir: any) {
+  showDevoirDetailModal.value = false
+  router.push({ path: '/devoirs', query: { focus: String(devoir.id_devoir) } })
+}
+
+function handleVoirRendus(devoir: any) {
+  showDevoirDetailModal.value = false
+  router.push({ path: '/devoirs', query: { focus: String(devoir.id_devoir) } })
+}
+
 function openCreateEvenementModal() {
   // Pour matière : pré-remplir avec la matière
   // Pour spécialité/option : id_matiere est juste un placeholder (pas utilisé)
@@ -957,13 +1059,12 @@ async function createDevoirHandler() {
 
     formData.append('coefficient', String(devoirForm.value.coefficient || 1))
 
-    const cours_defaut = cours.value[0]?.id_cours
-    if (!cours_defaut) {
-      message.error('Créez d’abord un cours')
+    const id_cours = devoirForm.value.id_cours ?? cours.value[0]?.id_cours
+    if (!id_cours) {
+      message.error("Créez d'abord un cours")
       return
     }
-
-    formData.append('id_cours', String(cours_defaut))
+    formData.append('id_cours', String(id_cours))
 
     // fichiers devoir
     devoirFileList.value.forEach((f) => {
