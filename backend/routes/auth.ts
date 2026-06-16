@@ -171,7 +171,7 @@ router.post('/sign-up', authLimiter, async (req: express.Request, res: express.R
       return res.status(409).json({ error: 'Cet email existe deja' })
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10)
+    const hashedPassword = await bcrypt.hash(password, 12)
 
     // Créer l'utilisateur
     const result = await prisma.$transaction(async (tx) => {
@@ -410,7 +410,7 @@ router.post('/reset-password', authLimiter, async (req: express.Request, res: ex
     }
 
     // Encrypte le nouveau mot de passe
-    const hashedPassword = await bcrypt.hash(newPassword, 10)
+    const hashedPassword = await bcrypt.hash(newPassword, 12)
 
     // Met a jour le user et reset le password
     await prisma.utilisateur.update({
