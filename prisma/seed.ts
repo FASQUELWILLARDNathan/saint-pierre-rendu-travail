@@ -22,7 +22,7 @@ async function main() {
       prenom: 'Serveur',
       login: 'admin.serveur',
       email: process.env.DEFAULT_ADMIN_EMAIL!,
-      hashed_password: await bcrypt.hash(process.env.DEFAULT_ADMIN_PASSWORD!, 10),
+      hashed_password: await bcrypt.hash(process.env.DEFAULT_ADMIN_PASSWORD!, 12),
       role: 'administrateur',
     },
   })
@@ -38,7 +38,7 @@ async function main() {
       prenom: 'User',
       login: 'archive.user',
       email: 'archive@example.com',
-      hashed_password: await bcrypt.hash('unused_password', 10),
+      hashed_password: await bcrypt.hash('unused_password', 12),
       role: 'eleve',
     },
   })
@@ -266,9 +266,6 @@ async function main() {
     college: [
       'Mathématiques',
       'Français',
-      'Anglais',
-      'Espagnol',
-      'Allemand',
       'Histoire-Géo',
       'EMC',
       'SVT',
@@ -282,9 +279,6 @@ async function main() {
     seconde: [
       'Mathématiques',
       'Français',
-      'Anglais',
-      'Espagnol',
-      'Allemand',
       'Histoire-Géo',
       'EMC',
       'SVT',
@@ -296,9 +290,6 @@ async function main() {
     premiere: [
       'Mathématiques',
       'Français',
-      'Anglais',
-      'Espagnol',
-      'Allemand',
       'Histoire-Géo',
       'Enseignement Scientifique',
       'Sport',
@@ -306,10 +297,6 @@ async function main() {
     ],
     terminale: [
       'Philosophie',
-      'Mathématiques',
-      'Anglais',
-      'Espagnol',
-      'Allemand',
       'Histoire-Géo',
       'EMC',
       'Enseignement Scientifique',
