@@ -18,14 +18,14 @@ async function main() {
     where: { email: process.env.DEFAULT_ADMIN_EMAIL! },
     update: {
       nom: process.env.DEFAULT_ADMIN_NOM,
-      prenom: process.env.DEFUALT_ADMIN_PRENOM,
+      prenom: process.env.DEFAULT_ADMIN_PRENOM,
       login: process.env.DEFAULT_ADMIN_LOGIN!,
       hashed_password: await bcrypt.hash(process.env.DEFAULT_ADMIN_PASSWORD!, 10),
       role: 'administrateur',
     },
     create: {
       nom: process.env.DEFAULT_ADMIN_NOM,
-      prenom: process.env.DEFUALT_ADMIN_PRENOM,
+      prenom: process.env.DEFAULT_ADMIN_PRENOM,
       login: process.env.DEFAULT_ADMIN_LOGIN!,
       email: process.env.DEFAULT_ADMIN_EMAIL!,
       hashed_password: await bcrypt.hash(process.env.DEFAULT_ADMIN_PASSWORD!, 10),
