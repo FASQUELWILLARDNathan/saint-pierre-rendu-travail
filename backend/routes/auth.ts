@@ -171,7 +171,7 @@ router.post('/sign-up', authLimiter, async (req: express.Request, res: express.R
       return res.status(409).json({ error: 'Cet email existe deja' })
     }
 
-    const hashedPassword = await bcrypt.hash(password, 12)
+    const hashedPassword = await bcrypt.hash(password, 10)
 
     // Créer l'utilisateur
     const result = await prisma.$transaction(async (tx) => {
@@ -270,6 +270,9 @@ router.post('/sign-up', authLimiter, async (req: express.Request, res: express.R
 // Route de connexion utilisateur.
 // Vérifie les identifiants et retourne un token JWT.
 router.post('/sign-in', signInLimiter, async (req: express.Request, res: express.Response) => {
+  console.log('SIGN-IN BODY =', req.body)
+  console.log('LOGIN =', req.body.login)
+  console.log('PASSWORD =', req.body.password)
   try {
     const { login, password } = req.body
 
@@ -369,12 +372,14 @@ router.post(
       // Envoie le mail de reinitialisation de mot de passe
       await sendResetPasswordEmail(email, resetToken)
 
-      res.json({ message: 'Si cet email existe, un lien de reinitialisation sera envoyer' })
+      res.json({
+        message: 'Si cet email existe, un lien de reinitialisation sera envoyer',
+      })
     } catch (error) {
       console.error('Erreur dans forgot-password:', error)
-      res
-        .status(500)
-        .json({ error: 'Echec lors de la requete de reinitialisation de mot de passe' })
+      res.status(500).json({
+        error: 'Echec lors de la requete de reinitialisation de mot de passe',
+      })
     }
   },
 )
@@ -410,7 +415,7 @@ router.post('/reset-password', authLimiter, async (req: express.Request, res: ex
     }
 
     // Encrypte le nouveau mot de passe
-    const hashedPassword = await bcrypt.hash(newPassword, 12)
+    const hashedPassword = await bcrypt.hash(newPassword, 10)
 
     // Met a jour le user et reset le password
     await prisma.utilisateur.update({

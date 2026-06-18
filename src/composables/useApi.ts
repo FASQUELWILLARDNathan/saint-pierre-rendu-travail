@@ -65,7 +65,7 @@ const request = async <T>(path: string, options: RequestInit = {}) => {
 export function useApi() {
   /** Connecte un utilisateur existant. Retourne le token JWT et les infos utilisateur. */
   const signIn = ({ login, password }: SignInPayload) =>
-    request<AuthResponse>('/auth/sign-in', {
+    request<AuthResponse>('/api/auth/sign-in', {
       method: 'POST',
       body: JSON.stringify({ login, password }),
     })
@@ -83,7 +83,7 @@ export function useApi() {
     specialites,
     options,
   }: SignUpPayload) =>
-    request<AuthResponse>('/auth/sign-up', {
+    request<AuthResponse>('/api/auth/sign-up', {
       method: 'POST',
       body: JSON.stringify({
         nom,
@@ -101,7 +101,7 @@ export function useApi() {
 
   /** Déconnecte l'utilisateur */
   const logout = () =>
-    request('/auth/logout', {
+    request('/api/auth/logout', {
       method: 'POST',
     })
 

@@ -13,6 +13,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - app-network
 
   backend:
     build:
@@ -29,20 +31,42 @@ services:
       MAILJET_FROM_EMAIL: ${MAILJET_FROM_EMAIL}
       MAILJET_FROM_NAME: ${MAILJET_FROM_NAME}
     ports:
-      - '3000:3000'
+      - "3000:3000"
     depends_on:
       postgres:
         condition: service_healthy
+    networks:
+      - app-network
 
   frontend:
     build:
       context: .
       dockerfile: Dockerfile.prod.frontend
-    env_file: .env
     ports:
-      - '8079:8079'
+      - "8080:80"
     depends_on:
       - backend
+    networks:
+      - app-network
+
+  nginx:
+    image: nginx:alpine
+    container_name: nginx-proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+      - /etc/letsencrypt:/etc/letsencrypt
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - app-network
 
 volumes:
   postgres_data:
+
+networks:
+  app-network:
+    driver: bridge

@@ -50,7 +50,7 @@ app.get('/api/health', (req, res) => {
 })
 
 // Public routes
-app.use('/auth', authRoutes)
+app.use('/api/auth', authRoutes)
 app.use('/api', publicRoutes)
 
 // Auth middleware

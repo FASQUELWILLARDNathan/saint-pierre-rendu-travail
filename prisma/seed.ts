@@ -16,13 +16,19 @@ async function main() {
   // ADMIN UNIQUEMENT
   const admin = await prisma.utilisateur.upsert({
     where: { email: process.env.DEFAULT_ADMIN_EMAIL! },
-    update: {},
+    update: {
+      nom: process.env.DEFAULT_ADMIN_NOM,
+      prenom: process.env.DEFUALT_ADMIN_PRENOM,
+      login: process.env.DEFAULT_ADMIN_LOGIN!
+      hashed_password: await bcrypt.hash(process.env.DEFAULT_ADMIN_PASSWORD!, 10),
+      role: 'administrateur',
+    },
     create: {
-      nom: 'Admin',
-      prenom: 'Serveur',
-      login: 'admin.serveur',
+      nom: process.env.DEFAULT_ADMIN_NOM,
+      prenom: process.env.DEFUALT_ADMIN_PRENOM,
+      login: process.env.DEFAULT_ADMIN_LOGIN!
       email: process.env.DEFAULT_ADMIN_EMAIL!,
-      hashed_password: await bcrypt.hash(process.env.DEFAULT_ADMIN_PASSWORD!, 12),
+      hashed_password: await bcrypt.hash(process.env.DEFAULT_ADMIN_PASSWORD!, 10),
       role: 'administrateur',
     },
   })
@@ -34,11 +40,11 @@ async function main() {
     update: {},
     create: {
       id_user: ghostId,
-      nom: 'Archive',
-      prenom: 'User',
-      login: 'archive.user',
-      email: 'archive@example.com',
-      hashed_password: await bcrypt.hash('unused_password', 12),
+      nom: process.env.GHOST_NOM,
+      prenom: process.env.GHOST_PRENOM,
+      login: process.env.GHOST_LOGIN,
+      email: process.env.GHOST_EMAIL,
+      hashed_password: await bcrypt.hash(process.env.GHOST_PASSWORD!, 10),
       role: 'eleve',
     },
   })
@@ -295,13 +301,7 @@ async function main() {
       'Sport',
       'EMC',
     ],
-    terminale: [
-      'Philosophie',
-      'Histoire-Géo',
-      'EMC',
-      'Enseignement Scientifique',
-      'Sport',
-    ],
+    terminale: ['Philosophie', 'Histoire-Géo', 'EMC', 'Enseignement Scientifique', 'Sport'],
   }
 
   const niveauMap: Record<string, keyof typeof matieresByNiveau> = {
