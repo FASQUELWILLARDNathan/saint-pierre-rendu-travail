@@ -594,7 +594,7 @@ const editCoursFileList = ref<UploadFileInfo[]>([])
 const matieres = ref<any[]>([])
 
 const showDetailModal = ref(false)
-const selectedCours = ref<any>(null)
+const selectedCours = ref<number | null>(null)
 const apiBase = import.meta.env.VITE_API_URL
 
 function getFileIcon(type: string) {
@@ -655,7 +655,7 @@ const devoirsForSelectedCours = computed(() =>
 )
 
 // Ouvrir la modal cours en forçant l'onglet devoirs + pré-remplir id_cours
-function openCreateDevoirFromCours(cours) {
+function openCreateDevoirFromCours(cours: any) {
   showDetailModal.value = false
   devoirForm.value = {
     nom_devoir: '',
@@ -668,7 +668,7 @@ function openCreateDevoirFromCours(cours) {
 }
 
 // Réinitialiser l'onglet à l'ouverture d'un cours
-function openCours(c) {
+function openCours(c: any) {
   selectedCours.value = c
   coursDetailTab.value = 'fichiers'
   showDetailModal.value = true
