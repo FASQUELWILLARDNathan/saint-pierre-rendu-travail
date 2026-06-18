@@ -26,7 +26,7 @@ async function main() {
     create: {
       nom: process.env.DEFAULT_ADMIN_NOM,
       prenom: process.env.DEFUALT_ADMIN_PRENOM,
-      login: process.env.DEFAULT_ADMIN_LOGIN!
+      login: process.env.DEFAULT_ADMIN_LOGIN!,
       email: process.env.DEFAULT_ADMIN_EMAIL!,
       hashed_password: await bcrypt.hash(process.env.DEFAULT_ADMIN_PASSWORD!, 10),
       role: 'administrateur',
