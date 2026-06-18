@@ -93,41 +93,38 @@ export async function promoteStudents() {
     for (const eleve of eleves) {
       const idEleve = eleve.id_user
 
-      // 1) Déplacer uniquement les rendus archivés
-      await prisma.rendu.updateMany({
-        where: {
-          id_user: idEleve,
-          archive: true,
-        },
-        data: {
-          id_user: ghostId,
-        },
+      await prisma.$transaction(async (tx) => {
+        // 1) Supprimer les rendus NON archivés
+        await tx.rendu.deleteMany({
+          where: {
+            id_user: idEleve,
+            archive: false,
+          },
+        })
+
+        // 2) Déplacer les rendus archivés vers le ghost user
+        await tx.rendu.updateMany({
+          where: {
+            id_user: idEleve,
+            archive: true,
+          },
+          data: {
+            id_user: ghostId,
+          },
+        })
+
+        // 3) Supprimer l’élève
+        await tx.eleve.delete({
+          where: { id_user: idEleve },
+        })
+
+        // 4) Supprimer l’utilisateur
+        await tx.utilisateur.delete({
+          where: { id_user: idEleve },
+        })
       })
 
-      // 2) Vérifier s’il reste des rendus non archivés
-      const remaining = await prisma.rendu.count({
-        where: {
-          id_user: idEleve,
-          archive: false,
-        },
-      })
-
-      if (remaining > 0) {
-        console.log(`❌ Élève ${idEleve} non supprimé : rendus non archivés`)
-        continue
-      }
-
-      // 3) Supprimer l’élève
-      await prisma.eleve.delete({
-        where: { id_user: idEleve },
-      })
-
-      // 4) Supprimer l’utilisateur
-      await prisma.utilisateur.delete({
-        where: { id_user: idEleve },
-      })
-
-      console.log(`✔️ Élève ${idEleve} supprimé`)
+      console.log(`✔️ Élève ${idEleve} supprimé (terminale)`)
     }
   }
 
@@ -166,6 +163,37 @@ export async function promoteStudents() {
 
       if (!nextClass) {
         continue
+      }
+
+      // Nettoyage des rendus avant promotion
+      const elevesClasse = await prisma.eleve.findMany({
+        where: { id_classe: classe.id_classe },
+        select: { id_user: true },
+      })
+
+      for (const eleve of elevesClasse) {
+        const idEleve = eleve.id_user
+
+        await prisma.$transaction(async (tx) => {
+          // 1) Supprimer les rendus NON archivés
+          await tx.rendu.deleteMany({
+            where: {
+              id_user: idEleve,
+              archive: false,
+            },
+          })
+
+          // 2) Déplacer les rendus archivés vers ghost user
+          await tx.rendu.updateMany({
+            where: {
+              id_user: idEleve,
+              archive: true,
+            },
+            data: {
+              id_user: ghostId,
+            },
+          })
+        })
       }
 
       const updated = await prisma.eleve.updateMany({
