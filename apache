@@ -1,0 +1,26 @@
+<VirtualHost *:80>
+    ServerName cssaintpierrecalais.fr
+    ServerAlias www.cssaintpierrecalais.fr
+
+    # Redirection HTTP → HTTPS
+    Redirect permanent / https://cssaintpierrecalais.fr/
+</VirtualHost>
+
+<VirtualHost *:443>
+    ServerName cssaintpierrecalais.fr
+    ServerAlias www.cssaintpierrecalais.fr
+
+    SSLEngine on
+    SSLCertificateFile /etc/letsencrypt/live/cssaintpierrecalais.fr/fullchain.pem
+    SSLCertificateKeyFile /etc/letsencrypt/live/cssaintpierrecalais.fr/privkey.pem
+
+    # FRONTEND (ton conteneur expose 8089:80)
+    ProxyPass "/" "http://localhost:8089/"
+    ProxyPassReverse "/" "http://localhost:8089/"
+
+    # BACKEND (ton conteneur expose 3000:3000)
+    ProxyPass "/api/" "http://localhost:3000/api/"
+    ProxyPassReverse "/api/" "http://localhost:3000/api/"
+
+    ProxyPreserveHost On
+</VirtualHost>
