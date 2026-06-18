@@ -24,7 +24,7 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3000
-    expose:
+    ports:
       - "3000:3000"
     depends_on:
       postgres:
@@ -36,7 +36,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.prod.frontend
-    expose:
+    ports:
       - "8089:80"
     depends_on:
       - backend

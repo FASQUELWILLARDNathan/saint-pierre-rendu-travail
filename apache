@@ -1,26 +1,18 @@
-<VirtualHost *:80>
-    ServerName cssaintpierrecalais.fr
-    ServerAlias www.cssaintpierrecalais.fr
-
-    # Redirection HTTP → HTTPS
-    Redirect permanent / https://cssaintpierrecalais.fr/
-</VirtualHost>
-
 <VirtualHost *:443>
-    ServerName cssaintpierrecalais.fr
-    ServerAlias www.cssaintpierrecalais.fr
+    ServerName www.neyznn.fr
+    ServerAlias neyznn.fr
 
     SSLEngine on
-    SSLCertificateFile /etc/letsencrypt/live/cssaintpierrecalais.fr/fullchain.pem
-    SSLCertificateKeyFile /etc/letsencrypt/live/cssaintpierrecalais.fr/privkey.pem
+    SSLCertificateFile /etc/letsencrypt/live/www.neyznn.fr/fullchain.pem
+    SSLCertificateKeyFile /etc/letsencrypt/live/www.neyznn.fr/privkey.pem
 
-    # FRONTEND (ton conteneur expose 8089:80)
-    ProxyPass "/" "http://localhost:8089/"
-    ProxyPassReverse "/" "http://localhost:8089/"
+    ProxyPreserveHost On
 
-    # BACKEND (ton conteneur expose 3000:3000)
+    # BACKEND (IMPORTANT : EN PREMIER)
     ProxyPass "/api/" "http://localhost:3000/api/"
     ProxyPassReverse "/api/" "http://localhost:3000/api/"
 
-    ProxyPreserveHost On
+    # FRONTEND
+    ProxyPass "/" "http://localhost:8089/"
+    ProxyPassReverse "/" "http://localhost:8089/"
 </VirtualHost>
