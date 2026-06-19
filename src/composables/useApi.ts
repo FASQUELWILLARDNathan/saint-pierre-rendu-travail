@@ -65,7 +65,7 @@ const request = async <T>(path: string, options: RequestInit = {}) => {
 export function useApi() {
   /** Connecte un utilisateur existant. Retourne le token JWT et les infos utilisateur. */
   const signIn = ({ login, password }: SignInPayload) =>
-    request<AuthResponse>('/api/auth/sign-in', {
+    request<AuthResponse>('/auth/sign-in', {
       method: 'POST',
       body: JSON.stringify({ login, password }),
     })
@@ -83,7 +83,7 @@ export function useApi() {
     specialites,
     options,
   }: SignUpPayload) =>
-    request<AuthResponse>('/api/auth/sign-up', {
+    request<AuthResponse>('/auth/sign-up', {
       method: 'POST',
       body: JSON.stringify({
         nom,
@@ -101,191 +101,191 @@ export function useApi() {
 
   /** Déconnecte l'utilisateur */
   const logout = () =>
-    request('/api/auth/logout', {
+    request('/auth/logout', {
       method: 'POST',
     })
 
   /** Récupère la liste de tous les cours */
-  const getCours = () => request('/api/cours')
+  const getCours = () => request('/cours')
 
   /** Récupère la liste de tous les devoirs */
-  const getDevoirs = () => request('/api/devoirs')
+  const getDevoirs = () => request('/devoirs')
 
   /** Récupère la liste de tous les rendus */
-  const getRendus = () => request('/api/rendus')
+  const getRendus = () => request('/rendus')
 
   /** Récupère la liste de tous les élèves */
-  const getEleves = () => request('/api/eleves')
+  const getEleves = () => request('/eleves')
 
   /** Récupère la liste de tous les professeurs */
-  const getProfesseurs = () => request('/api/professeurs')
+  const getProfesseurs = () => request('/professeurs')
 
   /** Récupère la liste de tous les utilisateurs */
-  const getUsers = () => request('/api/users/list/public')
+  const getUsers = () => request('/users/list/public')
 
   /** Récupère les travaux à rendre (devoirs non rendus) */
-  const getTravauxARendreRecents = () => request('/api/devoirs/travaux-a-rendre')
+  const getTravauxARendreRecents = () => request('/devoirs/travaux-a-rendre')
 
   /** Récupère les événements à venir */
-  const getEvenementsAVenir = () => request('/api/evenements/a-venir')
+  const getEvenementsAVenir = () => request('/evenements/a-venir')
 
   /** Récupère la liste de toutes les classes */
-  const getClasses = () => request('/api/classes')
+  const getClasses = () => request('/classes')
 
   /** Récupère la liste de toutes les matières */
-  const getMatieres = () => request('/api/profile/matieres')
+  const getMatieres = () => request('/profile/matieres')
 
   /** Récupère la liste de toutes les spécialités */
-  const getSpecialites = () => request('/api/specialites')
+  const getSpecialites = () => request('/specialites')
 
   /** Récupère la liste de toutes les options */
-  const getOptions = () => request('/api/options')
+  const getOptions = () => request('/options')
 
   /** Récupère le profil de l'utilisateur connecté */
-  const getProfil = () => request('/api/profile')
+  const getProfil = () => request('/profile')
 
   /** Met à jour le profil de l'utilisateur connecté */
   const updateProfil = (data: any) =>
-    request('/api/profile', {
+    request('/profile', {
       method: 'PUT',
       body: JSON.stringify(data),
     })
 
   /** Récupère tous les élèves */
-  const getAllEleves = () => request('/api/users/eleves/list')
+  const getAllEleves = () => request('/users/eleves/list')
 
   /** Récupère tous les professeurs (liste admin) */
-  const getAllProfs = () => request('/api/import/profs/list')
+  const getAllProfs = () => request('/import/profs/list')
 
   /** Importe des professeurs depuis un fichier XLSX */
   const importProfs = (data: FormData) =>
-    request('/api/import/profs', {
+    request('/import/profs', {
       method: 'POST',
       body: data,
     })
 
   /** Met à jour un utilisateur (élève) */
   const updateUser = (id: string | number, data: any) =>
-    request(`/api/users/${id}`, {
+    request(`/users/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
     })
 
   /** Crée un nouvel utilisateur (élève) */
   const createUser = (data: any) =>
-    request('/api/users', {
+    request('/users', {
       method: 'POST',
       body: JSON.stringify(data),
     })
 
   /** Supprime un utilisateur (élève) */
   const deleteUser = (id: string | number) =>
-    request(`/api/users/${id}`, {
+    request(`/users/${id}`, {
       method: 'DELETE',
     })
 
   /** Récupère les messages reçus */
   const getReceivedMessages = () =>
-    request('/api/messages/received', {
+    request('/messages/received', {
       method: 'GET',
     })
 
   /** Récupère les messages envoyés */
   const getSentMessages = () =>
-    request('/api/messages/sent', {
+    request('/messages/sent', {
       method: 'GET',
     })
 
   /** Récupère la conversation avec un utilisateur */
   const getConversation = (userId: string | number) =>
-    request(`/api/messages/conversation/${userId}`, {
+    request(`/messages/conversation/${userId}`, {
       method: 'GET',
     })
 
   /** Envoie un message avec pièces jointes */
   const sendMessage = (data: FormData) =>
-    request('/api/messages', {
+    request('/messages', {
       method: 'POST',
       body: data,
     })
 
   /** Marque un message comme lu */
   const markMessageAsRead = (messageId: string | number) =>
-    request(`/api/messages/${messageId}/read`, {
+    request(`/messages/${messageId}/read`, {
       method: 'PUT',
     })
 
   /** Supprime un message */
   const deleteMessage = (messageId: string | number) =>
-    request(`/api/messages/${messageId}`, {
+    request(`/messages/${messageId}`, {
       method: 'DELETE',
     })
 
   /** Récupère l'info de stockage de l'utilisateur */
   const getStorageInfo = () =>
-    request('/api/messages/storage/info', {
+    request('/messages/storage/info', {
       method: 'GET',
     })
 
   /** Supprime tous les messages de l'utilisateur */
   const deleteAllUserMessages = () =>
-    request('/api/messages/cleanup/user', {
+    request('/messages/cleanup/user', {
       method: 'DELETE',
     })
 
   /** Nettoie les pièces jointes orphelines de l'utilisateur */
   const cleanupUserOrphanedAttachments = () =>
-    request('/api/messages/cleanup/orphaned', {
+    request('/messages/cleanup/orphaned', {
       method: 'POST',
     })
 
   /** Nettoie toutes les pièces jointes orphelines (admin only) */
   const cleanupAllOrphanedAttachments = () =>
-    request('/api/messages/cleanup/orphaned-all', {
+    request('/messages/cleanup/orphaned-all', {
       method: 'POST',
     })
 
   const getCoursByCategory = (kind: 'matiere' | 'specialite' | 'option', id: string | number) =>
-    request(`/api/cours?kind=${encodeURIComponent(kind)}&id=${encodeURIComponent(String(id))}`)
+    request(`/cours?kind=${encodeURIComponent(kind)}&id=${encodeURIComponent(String(id))}`)
 
   const getCoursByMatiere = (matiereId: string | number) =>
-    request(`/api/cours/matiere/${matiereId}`)
+    request(`/cours/matiere/${matiereId}`)
 
   const getDevoirsByCategory = (kind: 'matiere' | 'specialite' | 'option', id: string | number) =>
     request(
-      `/api/devoirs/categorie?kind=${encodeURIComponent(kind)}&id=${encodeURIComponent(String(id))}`,
+      `/devoirs/categorie?kind=${encodeURIComponent(kind)}&id=${encodeURIComponent(String(id))}`,
     )
 
   const getDevoirsByMatiere = (matiereId: string | number) =>
-    request(`/api/devoirs/matiere/${matiereId}`)
+    request(`/devoirs/matiere/${matiereId}`)
 
   const getEvenementsByCategory = (
     kind: 'matiere' | 'specialite' | 'option',
     id: string | number,
   ) =>
     request(
-      `/api/evenements/categorie?kind=${encodeURIComponent(kind)}&id=${encodeURIComponent(String(id))}`,
+      `/evenements/categorie?kind=${encodeURIComponent(kind)}&id=${encodeURIComponent(String(id))}`,
     )
 
   const getEvenementsByMatiere = (matiereId: string | number) =>
-    request(`/api/evenements/matiere/${matiereId}`)
+    request(`/evenements/matiere/${matiereId}`)
 
-  const getAllMatieres = () => request('/api/matieres')
+  const getAllMatieres = () => request('/matieres')
 
   const createCours = (data: FormData) =>
-    request('/api/cours', {
+    request('/cours', {
       method: 'POST',
       body: data,
     })
 
   const createDevoir = (data: FormData) =>
-    request('/api/devoirs', {
+    request('/devoirs', {
       method: 'POST',
       body: data,
     })
 
   const importEleves = (data: FormData) =>
-    request('/api/import/eleves', {
+    request('/import/eleves', {
       method: 'POST',
       body: data,
     })
@@ -295,7 +295,7 @@ export function useApi() {
     const headers: Record<string, string> = {}
     if (token) headers['Authorization'] = `Bearer ${token as string}`
 
-    const res = await fetch(`${BASE_URL}/api/import/eleves?download=1`, {
+    const res = await fetch(`${BASE_URL}/import/eleves?download=1`, {
       method: 'POST',
       body: data,
       headers,
@@ -329,7 +329,7 @@ export function useApi() {
     const headers: Record<string, string> = { 'Content-Type': 'application/json' }
     if (token) headers['Authorization'] = `Bearer ${token as string}`
 
-    const res = await fetch(`${BASE_URL}/api/import/export-results`, {
+    const res = await fetch(`${BASE_URL}/import/export-results`, {
       method: 'POST',
       body: JSON.stringify({ results }),
       headers,
@@ -359,42 +359,42 @@ export function useApi() {
   }
 
   const createEvenement = (data: any) =>
-    request('/api/evenements', {
+    request('/evenements', {
       method: 'POST',
       body: JSON.stringify(data),
     })
 
   const createEvenementFromMatiere = (data: any) =>
-    request('/api/evenements/matiere', {
+    request('/evenements/matiere', {
       method: 'POST',
       body: JSON.stringify(data),
     })
 
   const createEvenementFromSpecialite = (data: any) =>
-    request('/api/evenements/specialite', {
+    request('/evenements/specialite', {
       method: 'POST',
       body: JSON.stringify(data),
     })
 
   const createEvenementFromOption = (data: any) =>
-    request('/api/evenements/option', {
+    request('/evenements/option', {
       method: 'POST',
       body: JSON.stringify(data),
     })
 
   const getCoursBySpecialite = (specialiteId: string | number) =>
-    request(`/api/cours/specialite/${specialiteId}`)
+    request(`/cours/specialite/${specialiteId}`)
 
-  const getCoursByOption = (optionId: string | number) => request(`/api/cours/option/${optionId}`)
+  const getCoursByOption = (optionId: string | number) => request(`/cours/option/${optionId}`)
 
-  const getMesDevoirs = () => request('/api/devoirs/mes-devoirs')
+  const getMesDevoirs = () => request('/devoirs/mes-devoirs')
 
-  const getMesNotes = () => request('/api/rendus/mes-notes')
+  const getMesNotes = () => request('/rendus/mes-notes')
 
-  const rendreDevoir = (data: FormData) => request('/api/rendus', { method: 'POST', body: data })
+  const rendreDevoir = (data: FormData) => request('/rendus', { method: 'POST', body: data })
 
   const deleteRendu = (idDevoir: string | number) =>
-    request(`/api/rendus/devoir/${idDevoir}`, {
+    request(`/rendus/devoir/${idDevoir}`, {
       method: 'DELETE',
     })
 
@@ -402,13 +402,13 @@ export function useApi() {
     idRendu: string | number,
     data: { note?: string | number | null; retour?: string | null },
   ) =>
-    request(`/api/rendus/${idRendu}`, {
+    request(`/rendus/${idRendu}`, {
       method: 'PUT',
       body: JSON.stringify(data),
     })
 
   const archiveRendu = (idRendu: string | number) =>
-    request(`/api/rendus/${idRendu}/archive`, {
+    request(`/rendus/${idRendu}/archive`, {
       method: 'POST',
     })
 
@@ -420,32 +420,32 @@ export function useApi() {
   }
 
   async function deleteCours(id: string) {
-    return request(`/api/cours/${id}`, {
+    return request(`/cours/${id}`, {
       method: 'DELETE',
     })
   }
 
   async function deleteDevoir(id: string) {
-    return request(`/api/devoirs/${id}`, {
+    return request(`/devoirs/${id}`, {
       method: 'DELETE',
     })
   }
 
   async function deleteEvenement(id: string) {
-    return request(`/api/evenements/${id}`, {
+    return request(`/evenements/${id}`, {
       method: 'DELETE',
     })
   }
 
   async function updateCours(id: string, data: FormData) {
-    return request(`/api/cours/${id}`, {
+    return request(`/cours/${id}`, {
       method: 'PUT',
       body: data,
     })
   }
 
   async function updateDevoir(id: string, data: FormData) {
-    return request(`/api/devoirs/${id}`, {
+    return request(`/devoirs/${id}`, {
       method: 'PUT',
       body: data,
     })

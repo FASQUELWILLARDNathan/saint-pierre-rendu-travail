@@ -177,7 +177,7 @@ router.beforeEach(async (to) => {
   if (authStore.isAuth) {
     const api = useApi()
     try {
-      const status = (await api.request('/api/profile/onboarding-status')) as any
+      const status = (await api.request('/profile/onboarding-status')) as any
       if (status.needs_onboarding) {
         onboardingStore.setShowModal(true)
         if (to.path !== ROUTES.HOME) {
