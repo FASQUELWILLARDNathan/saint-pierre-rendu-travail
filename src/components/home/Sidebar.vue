@@ -55,17 +55,19 @@
         <span class="menu-text">Classes</span>
       </router-link>
 
-      <router-link
-        to="/devoirs"
-        class="menu-item"
-        :class="{ active: $route.path === '/devoirs' }"
-        @click="isSidebarOpen = false"
-      >
-        <img src="/devoirs-icon.svg" alt="Devoirs" class="menu-icon" />
-        <span class="menu-text">Devoirs</span>
-      </router-link>
+     <router-link
+      v-if="authStore.user?.role !== 'administrateur'"
+      to="/devoirs"
+      class="menu-item"
+      :class="{ active: $route.path === '/devoirs' }"
+      @click="isSidebarOpen = false"
+    >
+      <img src="/devoirs-icon.svg" alt="Devoirs" class="menu-icon" />
+      <span class="menu-text">Devoirs</span>
+    </router-link>
 
       <router-link
+        v-if="authStore.user?.role !== 'administrateur'"
         to="/cours"
         class="menu-item"
         :class="{ active: $route.path === '/cours' }"

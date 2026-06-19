@@ -151,19 +151,6 @@
                     <n-button @click="onGeneratePassword" secondary>Générer</n-button>
                   </div>
                 </n-form-item>
-
-                <n-form-item label="Matière">
-                  <n-select
-                    v-model:value="currentProfForm.id_matiere"
-                    :options="
-                      matieres.map((m) => ({
-                        label: m.nom_matiere,
-                        value: String(m.id_matiere),
-                      }))
-                    "
-                    clearable
-                  />
-                </n-form-item>
               </n-form>
 
               <n-divider />
