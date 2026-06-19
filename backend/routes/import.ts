@@ -109,30 +109,41 @@ router.post('/profs', authenticateToken, upload.single('fichier'), async (req, r
         const password = generateSecurePassword()
         const hashed = await bcrypt.hash(password, 10)
 
-        const existing = await prisma.utilisateur.findFirst({
+        let existing = await prisma.utilisateur.findFirst({
           where: { OR: [{ login }, { email }] },
         })
+
+        let utilisateur
         if (existing) {
-          errors.push({ nom, prenom, erreur: 'Login/email déjà existant' })
-          continue
+          // Mise à jour de l'utilisateur existant
+          utilisateur = await prisma.utilisateur.update({
+            where: { id_user: existing.id_user },
+            data: {
+              nom,
+              prenom,
+              email,
+              hashed_password: hashed,
+            },
+          })
+        } else {
+          // Création d'un nouvel utilisateur
+          utilisateur = await prisma.utilisateur.create({
+            data: {
+              nom,
+              prenom,
+              login,
+              email,
+              hashed_password: hashed,
+              role: 'professeur',
+            },
+          })
+
+          await prisma.professeur.create({
+            data: {
+              id_user: utilisateur.id_user,
+            },
+          })
         }
-
-        const utilisateur = await prisma.utilisateur.create({
-          data: {
-            nom,
-            prenom,
-            login,
-            email,
-            hashed_password: hashed,
-            role: 'professeur',
-          },
-        })
-
-        await prisma.professeur.create({
-          data: {
-            id_user: utilisateur.id_user,
-          },
-        })
 
         results.push({
           nom,
@@ -479,14 +490,6 @@ async function creerEleve(data: any, classe: any, niveau: string, results: any[]
     const password = generateSecurePassword()
     const hashedPassword = await bcrypt.hash(password, 10)
 
-    const existing = await prisma.utilisateur.findFirst({
-      where: { OR: [{ login }, { email }] },
-    })
-    if (existing) {
-      errors.push({ nom: data.nom, prenom: data.prenom, erreur: 'Login/email déjà existant' })
-      return
-    }
-
     const specialitesUniques = [...new Set(data.specialites)] as string[]
     const optionsUniques = [...new Set(data.options)] as string[]
 
@@ -512,28 +515,62 @@ async function creerEleve(data: any, classe: any, niveau: string, results: any[]
       )
     ).filter(Boolean) as bigint[]
 
-    const utilisateur = await prisma.utilisateur.create({
-      data: {
-        nom: data.nom,
-        prenom: data.prenom,
-        login,
-        email,
-        hashed_password: hashedPassword,
-        role: 'eleve',
-      },
+    let existing = await prisma.utilisateur.findFirst({
+      where: { OR: [{ login }, { email }] },
     })
 
-    const annee = `${new Date().getFullYear()}-${new Date().getFullYear() + 1}`
+    let utilisateur
+    if (existing) {
+      // Mise à jour de l'utilisateur existant
+      utilisateur = await prisma.utilisateur.update({
+        where: { id_user: existing.id_user },
+        data: {
+          nom: data.nom,
+          prenom: data.prenom,
+          email,
+          hashed_password: hashedPassword,
+        },
+      })
 
-    await prisma.eleve.create({
-      data: {
-        id_user: utilisateur.id_user,
-        id_classe: classe.id_classe,
-        annee,
-        specialites: { create: specialiteIds.map((id) => ({ id_specialite: id })) },
-        options: { create: optionIds.map((id) => ({ id_option: id })) },
-      },
-    })
+      // Mise à jour de l'enregistrement élève
+      const annee = `${new Date().getFullYear()}-${new Date().getFullYear() + 1}`
+      await prisma.eleve.update({
+        where: { id_user: utilisateur.id_user },
+        data: {
+          id_classe: classe.id_classe,
+          annee,
+          specialites: {
+            deleteMany: {},
+            create: specialiteIds.map((id) => ({ id_specialite: id })),
+          },
+          options: { deleteMany: {}, create: optionIds.map((id) => ({ id_option: id })) },
+        },
+      })
+    } else {
+      // Création d'un nouvel utilisateur
+      utilisateur = await prisma.utilisateur.create({
+        data: {
+          nom: data.nom,
+          prenom: data.prenom,
+          login,
+          email,
+          hashed_password: hashedPassword,
+          role: 'eleve',
+        },
+      })
+
+      const annee = `${new Date().getFullYear()}-${new Date().getFullYear() + 1}`
+
+      await prisma.eleve.create({
+        data: {
+          id_user: utilisateur.id_user,
+          id_classe: classe.id_classe,
+          annee,
+          specialites: { create: specialiteIds.map((id) => ({ id_specialite: id })) },
+          options: { create: optionIds.map((id) => ({ id_option: id })) },
+        },
+      })
+    }
 
     results.push({
       nom: data.nom,

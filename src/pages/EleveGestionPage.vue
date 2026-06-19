@@ -510,7 +510,7 @@ async function testPromotion() {
   try {
     isTesting.value = true
 
-    const res = await api.post('/api/profile/test-promotion')
+    const res = await api.post('/profile/test-promotion')
 
     console.log(res)
     message.success('Test promotion terminé')
